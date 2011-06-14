@@ -26,10 +26,6 @@ public class Main_TimeControl {
     public int meteo_monde_type = 3;
     public int meteo_monde_storm = 0;
     
-    //public int wave_done_cron = 0;
-    //public int next_wave_cron = 10000;
-	//public int wave_cron = 0;
-    
     private int storm_next_tick;
     private int storm_tick_n = 0;
     private int meteotick = 0;
@@ -37,30 +33,6 @@ public class Main_TimeControl {
     public Main_TimeControl(Main parent) {
         this.plugin = parent;
     }
-    
-    // THREAD
-	/*public Runnable runThread_time(final Main plugin) {
-		if(thread_01 == null) {
-			thread_01 = new Thread(new Runnable() {
-				@SuppressWarnings("static-access")
-				public void run()
-				{
-			    	try {
-			    		if (plugin.playerInServer()) {
-			    			do_cron();
-			    			plugin.timetamps = plugin.timetamps();
-			    		}
-			        } catch (Exception e) {
-			        	e.printStackTrace();
-			        }
-		            return;
-				}
-			});
-			thread_01.setPriority(Thread.MIN_PRIORITY);
-			thread_01.setDaemon(false);
-		}
-		return thread_01;
-	}*/
 	
 	public Runnable runThread_meteo(final Main plugin) {
 		if(thread_02 == null) {
@@ -82,7 +54,6 @@ public class Main_TimeControl {
 		}
 		return thread_02;
 	}
-    // THREAD
     
 	private static int showRandomInteger(int aStart, int aEnd, Random aRandom){
 	    if ( aStart > aEnd ) {
@@ -232,8 +203,10 @@ public class Main_TimeControl {
 		    	setThundering(false);
 			}
 		}
+		
 		meteo_monde_tick++;
 		meteotick++;
+		
     	if(storm_tick_n >= storm_next_tick) {
 	    	storm_tick_n = 0;
 	    	storm_next_tick = showRandomInteger(50, 250, rand);
@@ -263,48 +236,14 @@ public class Main_TimeControl {
 	    			}
 	    		}
 	    	}
+			
     	}else{
     		storm_tick_n++;
     	}
 	}
 	
-	/*if(p.isOnline() && p.getWorld().getName().contains("deathworld")) {
-		if(p.getWorld().hasStorm() && p.getWorld().isThundering()) {
-			World pworld = p.getWorld();
-			if(pworld.getHighestBlockYAt(p.getLocation())-20 < p.getLocation().getBlockY()) {
-				if(showRandomInteger(1, 2, rand) == 2) {
-					if(showRandomInteger(1, 100, rand) < 80) {
-		    			if(showRandomInteger(1, 2, rand) == 1) {
-		    				Location loc = new Location(pworld, p.getLocation().getBlockX()+showRandomInteger(1, 16, rand), 0, p.getLocation().getBlockZ()+showRandomInteger(1, 16, rand));
-		    				pworld.strikeLightning(new Location(loc.getWorld(), loc.getBlockX(), p.getWorld().getHighestBlockYAt(loc), loc.getBlockZ()));
-		    			}else{
-		    				Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 16, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 16, rand));
-		    				pworld.strikeLightning(new Location(loc.getWorld(), loc.getBlockX(), p.getWorld().getHighestBlockYAt(loc), loc.getBlockZ()));
-		    			}
-					}else{
-						Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 3, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 3, rand));
-						pworld.strikeLightning(new Location(loc.getWorld(), loc.getBlockX(), p.getWorld().getHighestBlockYAt(loc), loc.getBlockZ()));
-					}
-				}
-			}
-		}
-	}else{*/
-	//}
 	
 	/*private void do_cron() {
-		if(wave_cron > next_wave_cron) {
-			if(wave_done_cron > 3000) {
-				next_wave_cron = showRandomInteger(5000, 30000, rand);
-				wave_done_cron = 0;
-				wave_cron = 0;
-				plugin.deathwave = false;
-			}else{
-				plugin.deathwave = true;
-				wave_done_cron++;
-			}
-		}else{
-			wave_cron++;
-		}
 		
 		if(cron_tick > 200) {
 			cron_tick = 0;

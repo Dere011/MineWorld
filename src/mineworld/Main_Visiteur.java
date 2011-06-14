@@ -64,7 +64,7 @@ public class Main_Visiteur {
     		if(is_visiteur(p) && p.getHealth() < 100) {
     			p.setHealth(100);
     		}
-			if(p.isOnline() && !p.isOp() && !plugin.modo.contains(p.getName())) {
+			if(p.isOnline() && (!p.isOp() && !plugin.modo.contains(p.getName()))) {
 				for (Entity ent : p.getNearbyEntities(35, 35, 35)) {
 					if (ent instanceof Player) {
 						if(!plugin.isbot((Player) ent) && is_visiteur((Player) ent) != is_visiteur(p)) {
@@ -79,10 +79,10 @@ public class Main_Visiteur {
     }
     
     public Boolean is_visiteur(Player player) {
-    	if (visiteur.isEmpty() || !visiteur.contains(player)) {
-    		return false;
+    	if (!visiteur.isEmpty() && visiteur.contains(player)) {
+    		return true;
     	}
-    	return true;
+    	return false;
     }
     
     public void denied_message(Player player) {

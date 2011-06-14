@@ -140,7 +140,6 @@ public class Main extends JavaPlugin {
     public static Entity slime;
     public static Entity spider;
     
-    // Maintenance
     public Boolean maintenance_status = false;
     public String maintenance_message = "Notre serveur est actuellement en maintenance.";
     
@@ -310,151 +309,8 @@ public class Main extends JavaPlugin {
 				}
 			}
 		}
+		sendInfo("Suppression des items.");
     }
-    
-    /*public void Holerun() {
-    	if(cron_tick_hole > 1) {
-    		cron_tick_hole = 0;
-	    	Location loc = lasthole.getLocation();
-	    	for (Entity e : loc.getWorld().getEntities()) {
-				if (e instanceof Creature || e instanceof Player) {
-					double range = getdistance(e, loc);
-					if (range < 100) {
-						Main_MoveControl.attireEntity(e, loc);
-					}
-	    		}
-			}
-	    }else{
-			cron_tick_hole++;
-		}
-    }*/
-    
-	//if(nuke && lastbomb != null) { lastbomb.run(); }
-	//if(hole && lasthole != null) { Holerun(); }
-    
-    /*if(deathwave) {
-		if(cron_tick_deathwave > wavetimer) {
-			cron_tick_deathwave = 0;
-    		for (Entity e : getServer().getWorld("deathworld").getEntities()) {
-    			if (e instanceof Creature) {
-    				if (e instanceof Monster || e instanceof Chicken) {
-    					double lastdistance = 1000000.0;
-    					Entity thetarget = null;
-	    				for (Entity ee : e.getNearbyEntities(75.0, 75.0, 75.0)) {
-	    					if (ee instanceof Player) {
-	    						if(((Creature) e).getTarget() == null) {
-		    						if(!((Player) ee).isOp() && !ee.isDead() && ((Player) ee).isOnline()) {
-		    							double distance = getdistance(ee, e);
-		    							if (distance < lastdistance) {
-			    							thetarget = ee;
-			    							lastdistance = distance;
-		    							}
-		    						}
-	    						}else{
-	    							if(deathwavetarget) {
-			    						if(!((Player) ee).isOp() && !ee.isDead() && ((Player) ee).isOnline()) {
-			    							double distance = getdistance(ee, e);
-			    							if (distance < lastdistance) {
-				    							thetarget = ee;
-				    							lastdistance = distance;
-			    							}
-			    						}
-	    							}
-	    						}
-	    					}
-	    				}
-	    				if(thetarget != null) {
-	    					double d = 8.0;
-	    					if(deathwavetarget) {
-	    						d = 4.0;
-	    					}
-		    				if (checkLocation(thetarget.getLocation(), e.getLocation(), d)) {
-		    					((Creature) e).setTarget((LivingEntity) thetarget);
-		    				}else{
-		    					Main_MoveControl.moveCloserToLocation(e, thetarget.getLocation());
-		    				}
-    					}
-	    			}
-    			}
-    		}
-		}else{
-			cron_tick_deathwave++;
-		}
-	}*/
-    
-			/*if(cron_storm > 250) {
-		cron_storm = 0;
-		conf_server.load();
-		List<String> stormlist = conf_server.getKeys("load-storm");
-		if(stormlist != null && !stormlist.isEmpty()) {
-			ConfigurationNode node = conf_server.getNode("load-storm");
-			for(String storm : stormlist){
-				if(showRandomInteger(1, 100, rand) < 60) {
-					Double x = node.getDouble(storm + ".x", 0);
-					Double y = node.getDouble(storm + ".y", 0);
-					Double z = node.getDouble(storm + ".z", 0);
-					String w = node.getString(storm + ".world");
-					getServer().getWorld(w).strikeLightning(new Location(getServer().getWorld(w), x, y, z));
-				}
-			}
-		}
-	}else{
-		cron_storm++;
-	}
-	if(cron_radiation > 160) {
-		cron_radiation = 0;
-		Boolean isdamagedtick = false;
-		if(isdamagedtick_tick > 1) {
-			isdamagedtick_tick = 0;
-			isdamagedtick = true;
-		}else{
-			isdamagedtick_tick++;
-		}
-		conf_server.load();
-		List<String> nukeliste = conf_server.getKeys("nukes");
-		if(nukeliste != null && !nukeliste.isEmpty()) {
-			ConfigurationNode node = conf_server.getNode("nukes");
-			for(String nuke : nukeliste){
-	    		for (Player p : getServer().getWorld("deathworld").getPlayers()) {
-					Double x = node.getDouble(nuke + ".x", 0);
-					Double y = node.getDouble(nuke + ".y", 0);
-					Double z = node.getDouble(nuke + ".z", 0);
-					String w = node.getString(nuke + ".world");
-					double range = getdistance(p.getLocation(), new Location(getServer().getWorld(w), x, y, z));
-					if(range < 130) {
-						if(p.getInventory().getHelmet().getTypeId() == 314 && p.getInventory().getChestplate().getTypeId() == 315 && p.getInventory().getLeggings().getTypeId() == 316) {
-							if(isdamagedtick) {
-								short helmetd = p.getInventory().getHelmet().getDurability();
-								short plated = p.getInventory().getChestplate().getDurability();
-								short leggd = p.getInventory().getLeggings().getDurability();
-								p.getInventory().getHelmet().setDurability((short) (helmetd+1));
-								p.getInventory().getChestplate().setDurability((short) (plated+1));
-								p.getInventory().getLeggings().setDurability((short) (leggd+1));
-							}
-						}else{
-							p.damage(1, bomb_r);
-							p.sendMessage(ChatColor.DARK_GREEN +"Cette zone est sous des radiations.");
-						}
-					}
-				}
-			}
-		}
-	}else{
-		cron_radiation++;
-	}
-	if(cron_tick_rpname > 150) {
-		cron_tick_rpname = 0;
-		for (Player p : getServer().getOnlinePlayers()) {
-		    String rpname = (String) getPlayerConfig(p, "rpname", "string");
-		    if(rpname != null && rpname != p.getDisplayName()) {
-		    	if(rpname.length() < 15 && !p.isOp() && !rpname.contains("none")) {
-		    		p.setDisplayName(ChatColor.DARK_GRAY+ "("+ p.getName() + ") "+ ChatColor.WHITE + rpname);
-		    	}
-		    }
-		}
-	}else{
-		cron_tick_rpname++;
-	}*/
     
     public boolean isbot(Player p) {
         BasicHumanNpc npc = Main_NPC.HumanNPCList.getBasicHumanNpc(p);
@@ -535,11 +391,6 @@ public class Main extends JavaPlugin {
 					}
 				}
 				setServerConfig("informations.number_mobs", number_creature);
-		    	try {
-					Main_Visiteur.charge_whitelist();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 			}else{
 				cron_tick_gen++;
 			}
@@ -591,38 +442,37 @@ public class Main extends JavaPlugin {
 	    	
 	    	if(cron_tick_mobcontrol > 10) {
 	    		cron_tick_mobcontrol = 0;
-	    		if(!isDay(getServer().getWorld("world"))) {
-		    		for (Entity e : getServer().getWorld("world").getEntities()) {
-		    			if (e instanceof Creature) {
-		    				if (e instanceof Monster) {
-		    					double lastdistance = 1000000.0;
-		    					Entity thetarget = null;
-			    				for (Entity ee : e.getNearbyEntities(50, 50, 50)) {
-			    					if (ee instanceof Player) {
-			    						if(((Creature) e).getTarget() == null && !Main_Visiteur.is_visiteur((Player) ee)) {
-				    						if(!((Player) ee).isOp() && !ee.isDead() && ((Player) ee).isOnline()) {
-				    							double distance = getdistance(ee, e);
-				    							if (distance < lastdistance) {
-					    							thetarget = ee;
-					    							lastdistance = distance;
-				    							}
-				    						}
-			    						}
-			    					}
-			    				}
-			    				if(thetarget != null) {
-			    					double range = 12.0;
-			    					if(thetarget.getLocation().getBlock().getLightLevel() < 8) {
-			    						range = 6.0;
-			    					}
-				    				if (checkLocation(thetarget.getLocation(), e.getLocation(), range)) {
-				    					((Creature) e).setTarget((LivingEntity) thetarget);
-				    				}else{
-				    					Main_MoveControl.moveCloserToLocation(e, thetarget.getLocation());
-				    				}
-		    					}
-			    			}
-		    			}
+				World world = getServer().getWorld("world");
+	    		if(!isDay(world)) {
+		    		for (Entity e : world.getEntities()) {
+		    			if (e instanceof Monster) {
+							double lastdistance = 1000000.0;
+							Entity thetarget = null;
+							for (Entity ee : e.getNearbyEntities(50, 50, 50)) {
+								if (ee instanceof Player) {
+									if(((Creature) e).getTarget() == null && !Main_Visiteur.is_visiteur((Player) ee)) {
+										if(!((Player) ee).isOp() && !ee.isDead() && ((Player) ee).isOnline()) {
+											double distance = getdistance(ee, e);
+											if (distance < lastdistance) {
+												thetarget = ee;
+												lastdistance = distance;
+											}
+										}
+									}
+								}
+							}
+							if(thetarget != null) {
+								double range = 12.0;
+								if(thetarget.getLocation().getBlock().getLightLevel() < 8) {
+									range = 5.0;
+								}
+								if (checkLocation(thetarget.getLocation(), e.getLocation(), range)) {
+									((Creature) e).setTarget((LivingEntity) thetarget);
+								}else{
+									Main_MoveControl.moveCloserToLocation(e, thetarget.getLocation());
+								}
+							}
+			    		}
 		    		}
 	    		}
 			}else{
@@ -801,5 +651,4 @@ public class Main extends JavaPlugin {
 						+ (deltaz * deltaz));
 		return distance;
     }
-    
 }

@@ -140,7 +140,6 @@ public class Main_PlayerListener extends PlayerListener {
 	    	}
     	}
     	
-    	// BRUIT BOUTON / LEVIER
     	if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
     		Block block = event.getClickedBlock();
     		if(block.getType() == Material.STONE_BUTTON || block.getType() == Material.LEVER) {
@@ -192,70 +191,8 @@ public class Main_PlayerListener extends PlayerListener {
 	    		event.getPlayer().sendMessage("Heure (Long) : "+ event.getPlayer().getWorld().getTime());
 	    		event.getPlayer().sendMessage("Nom du monde : "+ event.getPlayer().getWorld().getName());
 	    	}
-		//}else if(event.getAction() == Action.LEFT_CLICK_AIR) {
-		//	if(event.getItem() == null)  { return; }
-		//	int handid = event.getItem().getTypeId();
-		//	if(handid == 345) {
-	    //  
-		//	}
 		}
     }
-    
-	/*int taux = 0;
-	plugin.conf_server.load();
-	List<String> nukeliste = plugin.conf_server.getKeys("nukes");
-	if(nukeliste != null && !nukeliste.isEmpty()) {
-		ConfigurationNode node = plugin.conf_server.getNode("nukes");
-		for(String nuke : nukeliste){
-				Double x = node.getDouble(nuke + ".x", 0);
-				Double y = node.getDouble(nuke + ".y", 0);
-				Double z = node.getDouble(nuke + ".z", 0);
-				String w = node.getString(nuke + ".world");
-				double range = plugin.getdistance(event.getPlayer().getLocation(), new Location(plugin.getServer().getWorld(w), x, y, z));
-				if(range < 100) {
-					taux = (int) range;
-					break;
-				}
-		}
-	}
-	event.getPlayer().sendMessage("Taux de radio-activité : "+ taux);*/
-    
-		/*if(!event.getPlayer().isOp()) { return; }
-		if(handid == 266 && plugin.burn) {
-			Main_AimBlock aiming = new Main_AimBlock(event.getPlayer());
-	        Block block = aiming.getTargetBlock();
-			event.getPlayer().getWorld().strikeLightning(block.getLocation());
-		}
-	    if(handid == 347 && plugin.nuke) {
-		    if(plugin.sure == false) {
-		    	event.getPlayer().sendMessage("NUKE: Tu est sûre ?");
-		    	plugin.sure = true;
-		    }else{
-		    	if(plugin.lastbomb != null) { plugin.lastbomb.is_destroyed = true; }
-		    	plugin.lastbomb = new Main_BombA(plugin, event.getClickedBlock(), 1);
-		    	event.getPlayer().sendMessage("Bombe set");
-		    }
-	    }else if(handid == 347 && plugin.hole) {
-	    	if(plugin.sure == false) {
-		   		event.getPlayer().sendMessage("BLACKHOLE: Tu est sûre ?");
-		   		plugin.sure = true;
-		   	}else{
-		   		plugin.lasthole = event.getClickedBlock();
-		   		event.getPlayer().sendMessage("Hole set");
-		   	}
-	    }else{
-	    	plugin.sure = false;
-	    }
-	}else if(event.getAction() == Action.RIGHT_CLICK_AIR) {
-		if(!event.getPlayer().isOp()) { return; }
-		if(event.getItem() == null)  { return; }
-		int handid = event.getItem().getTypeId();
-		if(handid == 266 && plugin.burn) {
-			Main_AimBlock aiming = new Main_AimBlock(event.getPlayer());
-	        Block block = aiming.getTargetBlock();
-			event.getPlayer().getWorld().strikeLightning(block.getLocation());
-		}
-	}*/
     
     public void Main_onPlayerJoin_do(PlayerJoinEvent event) {
     	Player p = event.getPlayer();
@@ -656,21 +593,21 @@ public class Main_PlayerListener extends PlayerListener {
     
     public void onPlayerPreLogin (PlayerPreLoginEvent event) {
     	plugin.conf_player.load();
+		
     	try {
 			plugin.Main_Visiteur.charge_whitelist();
 		} catch (IOException e) {
 		}
+		
     	Boolean banned = plugin.conf_player.getBoolean("load-player."+ event.getName() +".banned", false);
 		Boolean admin = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_admin", false);
 		Boolean modo = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_modo", false);
-		
 		Boolean anim = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_anim", false);
 		Boolean correc = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_correc", false);
 		
 		if(modo && !plugin.modo.contains(event.getName())) {
 			plugin.modo.add(event.getName());
 		}
-		
 		if(anim && !plugin.anim.contains(event.getName())) {
 			plugin.anim.add(event.getName());
 		}

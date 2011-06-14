@@ -116,9 +116,9 @@ public class Main_ChunkControl {
 					}
 				}
 			}else if (entity instanceof EntityItem) {
-					CraftPlayer unHide = (CraftPlayer) player;
-					EntityItem unHideFrom = (EntityItem) entity;
-					unHide.getHandle().netServerHandler.sendPacket(new Packet21PickupSpawn(unHideFrom));
+				CraftPlayer unHide = (CraftPlayer) player;
+				EntityItem unHideFrom = (EntityItem) entity;
+				unHide.getHandle().netServerHandler.sendPacket(new Packet21PickupSpawn(unHideFrom));
 			}
 		}
 	}
@@ -161,58 +161,56 @@ public class Main_ChunkControl {
 			if(!p.isOnline()) {
 				PlayerOR.remove(p);
 			}
-			
-			if(plugin.Main_Visiteur.is_visiteur(p) || !p.getWorld().getName().contains("world")) {
+			if(plugin.Main_Visiteur.is_visiteur(p) || (!p.getWorld().getName().contains("world") || p.getWorld().getName().contains("oldworld"))) {
 				continue;
 			}
 			
-	    	if(p.getWorld().getName().contains("world") || !p.getWorld().getName().contains("oldworld")) {
-		    	String pchunkid = (String) plugin.getPlayerConfig(p, "last_chunkid", "string");
-		    	Boolean good = true;
-		    	int x = p.getWorld().getChunkAt(p.getLocation()).getX();
-		    	int z = p.getWorld().getChunkAt(p.getLocation()).getZ();
-				for (int i = x-3; i <= x+3; i++) {
-					for (int o = z-3; o <= z+3; o++) {
-						String chunkid = i+" "+o;
-						if (chunkid.equals(pchunkid)) {
-							good = false;
-							break;
-						}
-					}	
-				}
-		    	if (good) {
-		    		plugin.Main_ChunkControl.CacheOnlyChunk(p);
-		    		String schunkid = p.getWorld().getChunkAt(p.getLocation()).getX()+" "+p.getWorld().getChunkAt(p.getLocation()).getZ();
-		    		plugin.setPlayerConfig(p, "last_chunkid", schunkid);
-		    	}
-	    	}
+			String pchunkid = (String) plugin.getPlayerConfig(p, "last_chunkid", "string");
+			Boolean good = true;
+			int x = p.getWorld().getChunkAt(p.getLocation()).getX();
+			int z = p.getWorld().getChunkAt(p.getLocation()).getZ();
+			for (int i = x-3; i <= x+3; i++) {
+				for (int o = z-3; o <= z+3; o++) {
+					String chunkid = i+" "+o;
+					if (chunkid.equals(pchunkid)) {
+						good = false;
+						break;
+					}
+				}	
+			}
+			if (good) {
+				plugin.Main_ChunkControl.CacheOnlyChunk(p);
+				String schunkid = p.getWorld().getChunkAt(p.getLocation()).getX()+" "+p.getWorld().getChunkAt(p.getLocation()).getZ();
+				plugin.setPlayerConfig(p, "last_chunkid", schunkid);
+			}
 			
 			ArrayList<Block> pblock = new ArrayList<Block>();
 			Main_AimBlock aiming = new Main_AimBlock(p);
 			if(aiming != null) {
 		        Block theblock = aiming.getTargetBlock();
 		        if(theblock != null) {
-					int vpx = theblock.getLocation().getBlockX();
-					int vpz = theblock.getLocation().getBlockZ();
-					int vpy = theblock.getLocation().getBlockY();
-		            for (int x = vpx-2; x <= vpx+2; x++) {
-			            for (int z = vpz-2; z <= vpz+2; z++) {
-			                for (int y = vpy-2; y <= vpy+2; y++) {
-			                	Block viewblock = p.getWorld().getBlockAt(x, y, z);
-			                	int bid = viewblock.getTypeId();
-				                if(bid != 0 && is_blocs(bid)) {
-					                if(plugin.checkLocation(p.getLocation(), viewblock.getLocation(), 10.0)) {
-					                	if(player_blocs.get(p) == null || !player_blocs.get(p).contains(viewblock)) {
-					                		p.sendBlockChange(viewblock.getLocation(), bid, viewblock.getData());
-					                	}
-					                	pblock.add(viewblock);
-					                }
-				                }
-			                }
-			            }
-			        }
+					if(plugin.checkLocation(p.getLocation(), theblock.getLocation(), 10.0)) {
+						int vpx = theblock.getLocation().getBlockX();
+						int vpz = theblock.getLocation().getBlockZ();
+						int vpy = theblock.getLocation().getBlockY();
+						for (int x = vpx-2; x <= vpx+2; x++) {
+							for (int z = vpz-2; z <= vpz+2; z++) {
+								for (int y = vpy-2; y <= vpy+2; y++) {
+									Block viewblock = p.getWorld().getBlockAt(x, y, z);
+									int bid = viewblock.getTypeId();
+									if(bid != 0 && is_blocs(bid)) {
+										if(player_blocs.get(p) == null || !player_blocs.get(p).contains(viewblock)) {
+											p.sendBlockChange(viewblock.getLocation(), bid, viewblock.getData());
+										}
+										pblock.add(viewblock);
+									}
+								}
+							}
+						}
+					}
 		        }
 			}
+			
 			Location location = p.getLocation();
 			int px = location.getBlockX();
 			int pz = location.getBlockZ();
@@ -235,6 +233,7 @@ public class Main_ChunkControl {
 	                }
 	            }
 	        }
+			
         	if(player_blocs.containsKey(p)) {
 		        for (Block tblock : player_blocs.get(p)) {
 		        	int thebid = tblock.getTypeId();
@@ -248,6 +247,7 @@ public class Main_ChunkControl {
 		        }
 		        player_blocs.remove(p);
         	}
+			
 	        if(!pblock.isEmpty()) {
 		        player_blocs.put(p, pblock);
 			}
@@ -313,7 +313,7 @@ public class Main_ChunkControl {
 			{
 				player_chunkupdate.put(p, false);
 			}
-    	}, (long) 200);
+    	}, (long) 150);
 	}
     
 	public void CacheOnlyChunk(final Player p) {

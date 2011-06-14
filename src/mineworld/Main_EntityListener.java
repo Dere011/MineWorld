@@ -35,48 +35,6 @@ public class Main_EntityListener extends EntityListener {
 		}
     }
     
-    /*String type = "SpawnDome";
-    	Entity entity = event.getEntity();
-    	if (entity.getWorld().getName().contains("deathworld")) {
-	    	if (entity instanceof Creature) {
-				Creature c = (Creature) entity;
-				if(plugin.attackedby.containsKey(c)) {
-					conf_player.load();
-					for (Player p : plugin.getServer().getOnlinePlayers()) {
-						if(plugin.attackedby.get(c).contains((LivingEntity) p)) {
-							conf_player.load();
-							int p_reputation = conf_player.getInt("load-player."+ p.getName() +".npc_reputation_"+ type, 0);
-							int p_xp = conf_player.getInt("load-player."+ p.getName() +".xp", 0);
-							p_xp++;
-							p_reputation = (int) ((p_reputation)+(0.01));
-					    	if(p_reputation < -5) {
-					    		conf_player.setProperty("load-player."+ p.getName() +".npc_reputation_"+ type, p_reputation);
-					    	}else if(p_reputation < 5) {
-					    		conf_player.setProperty("load-player."+ p.getName() +".npc_reputation_"+ type, p_reputation);
-					    	}
-					    	conf_player.setProperty("load-player."+ p.getName() +".xp", p_xp);
-						}
-					}
-					conf_player.save();
-					plugin.attackedby.remove(c);
-				}	
-			}
-    	}
-    }*/
-    
-		/*if (event.getEntity().getWorld().getName().contains("deathworld")) {
-		if (dmgByEntity != null && dmgByEntity.getDamager() != null && event.getEntity() instanceof Creature) {
-			Creature c = (Creature) event.getEntity();
-			if (plugin.attackedby.containsKey(c)) {
-				List<LivingEntity> entites = new ArrayList<LivingEntity>(plugin.attackedby.get(c));
-				entites.add((LivingEntity) dmgByEntity.getDamager());
-				plugin.attackedby.put(c, entites);
-			} else {
-				plugin.attackedby.put(c, Arrays.asList((LivingEntity) dmgByEntity.getDamager()));
-			}
-		}
-	}*/
-    
     public void onEntityDamage(EntityDamageEvent event) {
 	    if (event instanceof EntityDamageByEntityEvent) {
 	    	EntityDamageByEntityEvent dmgByEntity = (EntityDamageByEntityEvent) event;
