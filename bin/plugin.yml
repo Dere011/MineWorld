@@ -1,0 +1,15 @@
+name: MineWorld
+main: mineworld.Main
+version: 5.0
+website: http://mineworld.fr/
+authors:
+  - Dere011
+description: MineWorld
+commands:
+  mn:
+    description: Main npc command
+    usage: /mn
+  mineworld:
+    description: Main mineworld command
+    usage: /mineworld
+           
