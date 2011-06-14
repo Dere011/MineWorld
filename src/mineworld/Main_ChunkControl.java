@@ -1,0 +1,332 @@
+package mineworld;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import java.util.List;
+import java.util.Map;
+
+import net.minecraft.server.EntityItem;
+import net.minecraft.server.Packet20NamedEntitySpawn;
+import net.minecraft.server.Packet21PickupSpawn;
+import net.minecraft.server.Packet51MapChunk;
+
+import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.CraftChunk;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+
+public class Main_ChunkControl {
+	
+    private final Main plugin;
+    
+    Thread thread_01;
+    Thread thread_02;
+    Thread thread_03;
+    
+    List<Player> PlayerOR = new ArrayList<Player>();
+    public Map<Player, ArrayList<Block>> player_blocs = new HashMap<Player, ArrayList<Block>>();
+    public Map<Player, Boolean> player_chunkupdate = new HashMap<Player, Boolean>();
+    
+    public Main_ChunkControl(Main parent) {
+        this.plugin = parent;
+    }
+    
+    // THREAD
+    
+	public Runnable runThread_1(final Main plugin) {
+		if(thread_01 == null) {
+			
+			thread_01 = new Thread(new Runnable() {
+			public void run()
+			{
+			    	try {
+			    		if (plugin.playerInServer()) {
+			    			anti_invisible_do();
+			    		}
+			        } catch (Exception e) {
+			        	e.printStackTrace();
+			        }
+		            return;
+				}
+			});
+			thread_01.setPriority(Thread.MIN_PRIORITY);
+			thread_01.setDaemon(false);
+		}
+		return thread_01;
+	}
+	
+	public Runnable runThread_2(final Main plugin) {
+		if(thread_02 == null) {
+			thread_02 = new Thread(new Runnable() {
+			public void run()
+			{
+			    	try {
+			    		if (plugin.playerInServer()) {
+			    			do_orcontrol();
+			    		}
+			        } catch (Exception e) {
+			        	e.printStackTrace();
+			        }
+		            return;
+				}
+			});
+			thread_02.setPriority(Thread.MIN_PRIORITY);
+			thread_02.setDaemon(false);
+		}
+		return thread_02;
+	}
+	
+	public Runnable runThread_3(final Main plugin, final Player player) {
+		if(thread_03 == null) {
+			thread_03 = new Thread(new Runnable() {
+			public void run()
+			{
+			    	try {
+			    		if (player.isOnline()) {
+			    			CacheOnlyChunk_do(player);
+			    		}
+			        } catch (Exception e) {
+			        	e.printStackTrace();
+			        }
+		            return;
+				}
+			});
+			thread_03.setPriority(Thread.MIN_PRIORITY);
+			thread_03.setDaemon(false);
+		}
+		return thread_03;
+	}
+	
+	// ANTI INVISIBLE
+	
+	private void anti_invisible_tick(Player player) {
+		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
+			if (entity instanceof Player) {
+				if(!((Player) entity).isOp()) {
+					if(!plugin.isbot(player) && plugin.Main_Visiteur.is_visiteur((Player) entity) == plugin.Main_Visiteur.is_visiteur(player)) {
+						CraftPlayer unHide = (CraftPlayer) player;
+						CraftPlayer unHideFrom = (CraftPlayer) entity;
+						unHide.getHandle().netServerHandler.sendPacket(new Packet20NamedEntitySpawn(unHideFrom.getHandle()));
+					}
+				}
+			}else if (entity instanceof EntityItem) {
+					CraftPlayer unHide = (CraftPlayer) player;
+					EntityItem unHideFrom = (EntityItem) entity;
+					unHide.getHandle().netServerHandler.sendPacket(new Packet21PickupSpawn(unHideFrom));
+			}
+		}
+	}
+	
+	public void anti_invisible_delayed(final Player p) {
+    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			public void run()
+			{
+				anti_invisible_tick(p);
+			}
+    	}, (long) 30);
+	}
+	
+	private void anti_invisible_do() {
+		for (Player p : plugin.getServer().getOnlinePlayers()) {
+			if(plugin.Main_Visiteur.is_visiteur(p)) {
+				continue;
+			}
+			if(p.isSneaking()) {
+				anti_invisible_tick(p);
+			}
+		}
+	}
+	
+	// ANTI XRAY
+	
+	public double get_rangebyid(int blockid) {
+			return 3.0;
+	}
+	
+	public boolean is_blocs(int blockid) {
+		if(blockid == 56 || blockid == 14 || blockid == 15 || blockid == 16 || blockid == 21 || blockid == 73) {
+			return true;
+		}
+		return false;
+	}
+	
+	private void do_orcontrol() {
+		for (Player p : PlayerOR) {
+			if(!p.isOnline()) {
+				PlayerOR.remove(p);
+			}
+			
+			if(plugin.Main_Visiteur.is_visiteur(p) || !p.getWorld().getName().contains("world")) {
+				continue;
+			}
+			
+	    	if(p.getWorld().getName().contains("world") || !p.getWorld().getName().contains("oldworld")) {
+		    	String pchunkid = (String) plugin.getPlayerConfig(p, "last_chunkid", "string");
+		    	Boolean good = true;
+		    	int x = p.getWorld().getChunkAt(p.getLocation()).getX();
+		    	int z = p.getWorld().getChunkAt(p.getLocation()).getZ();
+				for (int i = x-3; i <= x+3; i++) {
+					for (int o = z-3; o <= z+3; o++) {
+						String chunkid = i+" "+o;
+						if (chunkid.equals(pchunkid)) {
+							good = false;
+							break;
+						}
+					}	
+				}
+		    	if (good) {
+		    		plugin.Main_ChunkControl.CacheOnlyChunk(p);
+		    		String schunkid = p.getWorld().getChunkAt(p.getLocation()).getX()+" "+p.getWorld().getChunkAt(p.getLocation()).getZ();
+		    		plugin.setPlayerConfig(p, "last_chunkid", schunkid);
+		    	}
+	    	}
+			
+			ArrayList<Block> pblock = new ArrayList<Block>();
+			Main_AimBlock aiming = new Main_AimBlock(p);
+			if(aiming != null) {
+		        Block theblock = aiming.getTargetBlock();
+		        if(theblock != null) {
+					int vpx = theblock.getLocation().getBlockX();
+					int vpz = theblock.getLocation().getBlockZ();
+					int vpy = theblock.getLocation().getBlockY();
+		            for (int x = vpx-2; x <= vpx+2; x++) {
+			            for (int z = vpz-2; z <= vpz+2; z++) {
+			                for (int y = vpy-2; y <= vpy+2; y++) {
+			                	Block viewblock = p.getWorld().getBlockAt(x, y, z);
+			                	int bid = viewblock.getTypeId();
+				                if(bid != 0 && is_blocs(bid)) {
+					                if(plugin.checkLocation(p.getLocation(), viewblock.getLocation(), 10.0)) {
+					                	if(player_blocs.get(p) == null || !player_blocs.get(p).contains(viewblock)) {
+					                		p.sendBlockChange(viewblock.getLocation(), bid, viewblock.getData());
+					                	}
+					                	pblock.add(viewblock);
+					                }
+				                }
+			                }
+			            }
+			        }
+		        }
+			}
+			Location location = p.getLocation();
+			int px = location.getBlockX();
+			int pz = location.getBlockZ();
+			int py = location.getBlockY();
+	        for (int x = px-2; x <= px+2; x++) {
+	            for (int z = pz-2; z <= pz+2; z++) {
+	                for (int y = py-2; y <= py+2; y++) {
+	                	Block block = p.getWorld().getBlockAt(x, y, z);
+	                	int bid = block.getTypeId();
+		                if(bid != 0 && is_blocs(bid)) {
+			                if(plugin.checkLocation(p.getLocation(), block.getLocation(), get_rangebyid(bid))) {
+			                	if(player_blocs.get(p) == null || !player_blocs.get(p).contains(block)) {
+			                		p.sendBlockChange(block.getLocation(), bid, block.getData());
+			                	}
+			                	if(!pblock.contains(block)) {
+				                	pblock.add(block);
+			                	}
+			                }
+		                }
+	                }
+	            }
+	        }
+        	if(player_blocs.containsKey(p)) {
+		        for (Block tblock : player_blocs.get(p)) {
+		        	int thebid = tblock.getTypeId();
+		        	if(pblock.contains(tblock)) {
+		        		p.sendBlockChange(tblock.getLocation(), thebid, tblock.getData());
+		        	}else{
+		        		if(is_blocs(thebid)) {
+		        			p.sendBlockChange(tblock.getLocation(), Material.STONE, tblock.getData());
+		        		}
+		        	}
+		        }
+		        player_blocs.remove(p);
+        	}
+	        if(!pblock.isEmpty()) {
+		        player_blocs.put(p, pblock);
+			}
+		}
+	}
+	
+    public boolean sendChunkChange(CraftPlayer player, Location loc, int sx, int sy, int sz, byte[] data) {
+        int x = loc.getBlockX();
+        int y = loc.getBlockY();
+        int z = loc.getBlockZ();
+
+        int cx = x >> 4;
+        int cz = z >> 4;
+
+        if (sx <= 0 || sy <= 0 || sz <= 0) {
+            return false;
+        }
+
+        if ((x + sx - 1) >> 4 != cx || (z + sz - 1) >> 4 != cz || y < 0 || y + sy > 128) {
+            return false;
+        }
+
+        if (data.length != (sx * sy * sz * 5) / 2) {
+            return false;
+        }
+        
+        Packet51MapChunk packet = new Packet51MapChunk(x, y, z, sx, sy, sz, data);
+        player.getHandle().netServerHandler.sendPacket(packet);
+        return true;
+    }
+    
+	public void CacheOnlyChunk_do(final Player p) {
+		if(player_chunkupdate.containsKey(p) && player_chunkupdate.get(p).booleanValue()) {
+			return;
+		}
+		player_chunkupdate.put(p, true);
+		Chunk chunk_debut = p.getWorld().getChunkAt(p.getLocation());
+		for (int i = chunk_debut.getX()-4; i <= chunk_debut.getX()+4; i++) {
+			for (int o = chunk_debut.getZ()-4; o <= chunk_debut.getZ()+4; o++) {
+				Chunk chunk = p.getWorld().getChunkAt(i, o);
+				CraftChunk craftchunk = (CraftChunk) chunk;
+				Main_ChunkCopy chunkcopy = getChunkSnapshot(craftchunk);
+				Block theblock = chunk.getBlock(0, 0, 0);
+				Location lastlocation = theblock.getLocation();
+		        for (int x = 0; x <= 16; x++) {
+	                for (int z = 0; z <= 16; z++) {
+		                for (int y = 0; y <= 80; y++) {
+		                	Block block = chunk.getBlock(x, y, z);
+		                	int bid = block.getTypeId();
+		                    if(bid != 0 && is_blocs(bid)) {
+			                	chunkcopy.setRawTypeId(x, y, z, Material.STONE.getId());
+		                    }
+		                }
+		            }
+		        }
+		        if(lastlocation != null) {
+					sendChunkChange((CraftPlayer) p, new Location(lastlocation.getWorld(), lastlocation.getBlockX(), 0, lastlocation.getBlockZ()), 16, 80, 16, chunkcopy.getdata());
+		        }
+			}
+		}
+    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			public void run()
+			{
+				player_chunkupdate.put(p, false);
+			}
+    	}, (long) 200);
+	}
+    
+	public void CacheOnlyChunk(final Player p) {
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, runThread_3(plugin, p), 1);
+	}
+	
+	public Main_ChunkCopy getChunkSnapshot(CraftChunk thechunk) {
+	        net.minecraft.server.Chunk chunk = thechunk.getHandle();
+	        byte[] buf = new byte[32768 + 16384 + 16384 + 16384];
+	        chunk.a(buf, 0, 0, 0, 16, 128, 16, 0);
+	        byte[] hmap = new byte[256];
+	        System.arraycopy(chunk.h, 0, hmap, 0, 256);
+	        World w = thechunk.getWorld();
+	        return new Main_ChunkCopy(thechunk.getX(), thechunk.getZ(), w.getName(), w.getFullTime(), buf, hmap);
+	}
+}
