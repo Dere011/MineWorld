@@ -61,9 +61,6 @@ public class Main_Visiteur {
     
     public void visiteur_do() {
     	for (Player p : plugin.getServer().getOnlinePlayers()) {
-    		if(is_visiteur(p) && p.getHealth() < 100) {
-    			p.setHealth(100);
-    		}
 			if(p.isOnline() && (!p.isOp() && !plugin.modo.contains(p.getName()))) {
 				for (Entity ent : p.getNearbyEntities(35, 35, 35)) {
 					if (ent instanceof Player) {

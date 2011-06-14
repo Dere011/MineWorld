@@ -15,13 +15,6 @@ public class Main_TimeControl {
     Thread thread_01;
     Thread thread_02;
     
-    //private Boolean is_burningday = false;
-    //public Boolean is_preburningday = false;
-    //private int is_burningday_tick = 0;
-    //private int is_preburningday_tick = 0;
-    //private int cron_tick = 0;
-    //private int burningday_ntick = 0;
-    
     public int meteo_monde_tick = 0;
     public int meteo_monde_type = 3;
     public int meteo_monde_storm = 0;
@@ -64,29 +57,6 @@ public class Main_TimeControl {
 	    int randomNumber =  (int)(fraction + aStart);
 	    return randomNumber;
 	}
-    
-	/*public boolean shouldBurn(Location loc) {
-		if (isDay(loc.getWorld())) {
-			if (loc.getWorld().getBlockAt(loc.getBlockX(), loc.getBlockY() + 1, loc.getBlockZ()).getLightLevel() >= 15) {
-					return true;
-			}
-		}
-		return false;
-	}
-	
-	public boolean isDay(World world) {
-		return world.getTime() < 12000 || world.getTime() == 24000;
-	}
-	
-	public void dayburning_tick() {
-		for (Player p : plugin.getServer().getWorld("deathworld").getPlayers()) {
-			if(!p.isDead() && !p.isOp() && shouldBurn(p.getLocation())) {
-				p.damage(2, mynpc.thesun.getBukkitEntity());
-				p.setFireTicks(500);
-				p.sendMessage(ChatColor.RED + "Les rayons du "+ ChatColor.YELLOW + "soleil"+ ChatColor.RED + " vous brule.");
-			}
-    	}
-	}*/
 	
 	public void setTime(String world, int time) {
 		plugin.getServer().getWorld(world).setTime(time);
@@ -135,19 +105,14 @@ public class Main_TimeControl {
 	}
 	
 	private void do_meteo() {
-		if(meteotick > 50) {
+		if(meteotick > 5) {
 			meteotick = 0;
 			if(meteo_monde_type == 2) {
-				if(meteo_monde_tick > 8000) {
+				if(meteo_monde_tick > 800) {
 					meteo_monde_tick = 0;
 					meteo_monde_type = 1;
 			    	setStorm(false);
 			    	setThundering(false);
-				}else if(meteo_monde_tick > 4000) { 
-					if(!isStorm()) {
-				    	setStorm(true);
-				    	setThundering(true);
-					}
 				}else{
 					if(!isStorm()) {
 				    	setStorm(true);
@@ -155,12 +120,12 @@ public class Main_TimeControl {
 					}
 				}
 			}else if(meteo_monde_type == 1) {
-				if(meteo_monde_tick > 60000) {
+				if(meteo_monde_tick > 6000) {
 					meteo_monde_tick = 0;
 					meteo_monde_type = 2;
 			    	setStorm(true);
 			    	setThundering(true);
-				}else if(meteo_monde_tick > 58000) {
+				}else if(meteo_monde_tick > 5800) {
 					if (meteo_monde_storm == 0) {
 						meteo_monde_storm = showRandomInteger(1, 10, rand);
 					}
@@ -177,7 +142,7 @@ public class Main_TimeControl {
 						setStorm(false);
 				    	setThundering(false);
 					}
-				}else if(meteo_monde_tick < 1000) {
+				}else if(meteo_monde_tick < 100) {
 					if (meteo_monde_storm > 1) {
 						for (Player p : plugin.getServer().getOnlinePlayers()) {
 			    			World pworld = p.getWorld();
@@ -187,7 +152,7 @@ public class Main_TimeControl {
 					    	}
 						}
 					}
-				}else if(meteo_monde_tick > 1000 && meteo_monde_tick < 1500) {
+				}else if(meteo_monde_tick > 100 && meteo_monde_tick < 150) {
 					if (meteo_monde_storm > 1) {
 						meteo_monde_storm = 0;
 					}
@@ -209,13 +174,13 @@ public class Main_TimeControl {
 		
     	if(storm_tick_n >= storm_next_tick) {
 	    	storm_tick_n = 0;
-	    	storm_next_tick = showRandomInteger(50, 250, rand);
+	    	storm_next_tick = showRandomInteger(5, 25, rand);
 	    	if(meteo_monde_storm > 1) {
 	    		for (Player p : plugin.getServer().getOnlinePlayers()) {
 	    			if(plugin.Main_Visiteur.is_visiteur(p)) {
 	    				continue;
 	    			}
-	    			if(p.getWorld().hasStorm() && p.getWorld().isThundering()) {
+	    			if(isStorm() && isThundering()) {
 	    				World pworld = p.getWorld();
 		    			if(pworld.getHighestBlockYAt(p.getLocation())-10 < p.getLocation().getBlockY()) {
 			    			if(showRandomInteger(1, 2, rand) == 2) {
@@ -236,76 +201,8 @@ public class Main_TimeControl {
 	    			}
 	    		}
 	    	}
-			
     	}else{
     		storm_tick_n++;
     	}
 	}
-	
-	
-	/*private void do_cron() {
-		
-		if(cron_tick > 200) {
-			cron_tick = 0;
-			World deathworld = plugin.getServer().getWorld("deathworld");
-			long deathworld_time = deathworld.getTime();
-			World spawndome = plugin.getServer().getWorld("spawndome");
-			if(!is_burningday) {
-				if((deathworld_time >= 20000 && deathworld_time < 24000) || deathworld_time < 12900) {
-					deathworld.setTime(14000);
-					burningday_ntick++;
-					plugin.sendDebug("DeadDay: Night tick");
-				}
-		    }else{
-		    	if(deathworld_time < 23100 && deathworld_time > 12900) {
-			    	deathworld.setTime(14000);
-					is_burningday = false;
-					is_preburningday = false;
-					plugin.sendDebug("DeadDay: Stop burning day.");  
-		    	}
-		    }
-			if(spawndome != null) {
-				long spawndome_time = spawndome.getTime();
-			    if(spawndome_time < 23100 && spawndome_time > 12900) {
-			    	spawndome.setTime(23100);
-			    }
-			}
-		}else{
-			cron_tick++;
-		}
-    	
-    	if(!is_preburningday) {
-    		if(burningday_ntick >= 10) {
-    			is_preburningday = true;
-    			burningday_ntick = 0;
-    			plugin.sendDebug("DeadDay: Pre burning day.");  
-    		}
-    	}
-	
-    	if (is_preburningday) {
-    		if(!is_burningday) {
-	    		if(is_preburningday_tick >= 500) {
-	    			is_burningday = true;
-	    			setTime("deathworld", 2000);
-	    			plugin.Main_MessageControl.sendMessageToAll(ChatColor.RED + "[DEATHWORLD] "+ ChatColor.GOLD + "Le "+ ChatColor.YELLOW + "soleil"+ ChatColor.GOLD + " se lève sur le monde DeathWorld.");
-		    		plugin.sendDebug("DeadDay: Start burning day."); 
-		    		plugin.setServerConfig("informations.pre_burningday", false);
-	    		}else{
-	    			is_preburningday_tick++;
-	    			plugin.setServerConfig("informations.pre_burningday", true);
-	    		}
-    		}
-    	}else{
-    		is_burningday = false;
-    		is_preburningday_tick = 0;
-    	}
-		
-		if(is_burningday_tick > 35) {
-			is_burningday_tick = 0;
-			if(is_burningday) {
-				dayburning_tick();
-			}
-	 	}
-		is_burningday_tick++;
-	}*/
 }

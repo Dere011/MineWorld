@@ -371,7 +371,7 @@ public class Main_PlayerListener extends PlayerListener {
     	}
    	 	String[] anTxt = plugin.Main_MessageControl.createstrings(2);
    	 	anTxt[0] = "Bienvenue sur MineWorld 2.0, le serveur semi-roleplay post-apocalypse.";
-   	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.GOLD + "V5.2.2" + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.6.6";
+   	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.RED + "V5.2.2 ALPHA" + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.6.6";
    	 	plugin.Main_MessageControl.sendTaggedMessage(player, anTxt, 2, "");
    	 	
    	 	int lastdeconnexion = (Integer) plugin.getPlayerConfig(player, "time_lastdeconnexion", "int");
@@ -406,6 +406,7 @@ public class Main_PlayerListener extends PlayerListener {
 		}else{
 			plugin.Main_MessageControl.sendTaggedMessage(player, "Vous avez un compte visiteur.", 1, "[WHITELIST]");
 			plugin.Main_Visiteur.add_visiteur(player);
+			player.setHealth(1000);
 			event.setJoinMessage(ChatColor.DARK_GRAY + "Un visiteur a rejoint le serveur.");
 			player.setDisplayName("visiteur");
 			setSpawnTimed(player);
@@ -593,18 +594,15 @@ public class Main_PlayerListener extends PlayerListener {
     
     public void onPlayerPreLogin (PlayerPreLoginEvent event) {
     	plugin.conf_player.load();
-		
     	try {
 			plugin.Main_Visiteur.charge_whitelist();
 		} catch (IOException e) {
 		}
-		
     	Boolean banned = plugin.conf_player.getBoolean("load-player."+ event.getName() +".banned", false);
 		Boolean admin = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_admin", false);
 		Boolean modo = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_modo", false);
 		Boolean anim = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_anim", false);
 		Boolean correc = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_correc", false);
-		
 		if(modo && !plugin.modo.contains(event.getName())) {
 			plugin.modo.add(event.getName());
 		}
@@ -614,7 +612,6 @@ public class Main_PlayerListener extends PlayerListener {
 		if(correc && !plugin.correct.contains(event.getName())) {
 			plugin.correct.add(event.getName());
 		}
-		
 		if(admin) {
 			event.allow();
 		}else{

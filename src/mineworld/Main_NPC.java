@@ -32,7 +32,6 @@ public class Main_NPC {
 	
 	private int last_npc_reload = 0;
 	private int is_core_tick = 0;
-	private int is_skin_tick = 0;
 	
 	Thread t_01;
     
@@ -160,29 +159,15 @@ public class Main_NPC {
      }
 	
 	public void do_cron() {
-		
-		is_skin_tick++;
-		
 		Configuration conf_npc = plugin.conf_npc;
 		Configuration conf_player = plugin.conf_player;
 		
 		if(is_core_tick >= 3) {
 				is_core_tick = 0;
 		    	for (BasicHumanNpc entry : HumanNPCList.GetNPCS()) {
+		    		
 		    			String npcid = entry.getUniqueId();
 			    		if(Main.chicken == null) {
-			    			//if(npcid.contains("587")) {
-				    		//	thesun = entry;
-				    		//}
-			    			//if(npcid.contains("70000")) {
-				    		//	thebot = entry;
-				    		//}
-			    			//if(npcid.contains("70001")) {
-			    			//	plugin.bomb_e = entry.getBukkitEntity();
-			    			//}
-			    			//if(npcid.contains("70002")) {
-			    			//	plugin.bomb_r = entry.getBukkitEntity();
-			    			//}
 			    			if(npcid.contains("500000")) {
 			    				Main.chicken = entry.getBukkitEntity();
 			    			}
@@ -230,26 +215,23 @@ public class Main_NPC {
 							    			}
 							    		}
 				    			}else{
-				    				//if(!plugin.deathwave) {
-				    					if (e instanceof Monster) {
-							    			if (plugin.checkLocation(entry.getBukkitEntity().getLocation(), e.getLocation(), 4.0)) {
-							    				conf_npc.load();
-							        			ConfigurationNode node = conf_npc.getNode("load-npcs");
-							        			Boolean nontueur = node.getBoolean("npc_"+ npcid +".nontueur", false);
-							    				if(nontueur == false) {
-								    				rotateNPCToCreature(entry, e);
-								    				entry.animateArmSwing();
-								    				c.damage(100, entry.getBukkitEntity());
-								    				c.remove();
-								    				is_attaqued = true;
-							                        break;
-							    				}
-							    			}
-				    					}
-				    				//}
+			    					if (e instanceof Monster) {
+						    			if (plugin.checkLocation(entry.getBukkitEntity().getLocation(), e.getLocation(), 4.0)) {
+						    				conf_npc.load();
+						        			ConfigurationNode node = conf_npc.getNode("load-npcs");
+						        			Boolean nontueur = node.getBoolean("npc_"+ npcid +".nontueur", false);
+						    				if(nontueur == false) {
+							    				rotateNPCToCreature(entry, e);
+							    				entry.animateArmSwing();
+							    				c.damage(100, entry.getBukkitEntity());
+							    				c.remove();
+							    				is_attaqued = true;
+						                        break;
+						    				}
+						    			}
+			    					}
 				    			}
 			    			}
-			    			
 			    			if(is_attaqued == false) {
 				    			if (e instanceof Player) {
 					    			Player p = (Player) e;
@@ -263,24 +245,6 @@ public class Main_NPC {
 							    					rotateNPCToPlayer(entry, p);
 							    					opishere = true;
 												}
-							    				conf_npc.load();
-											    if(npcid.contains("7003")) {
-									    			if(is_skin_tick >= 1000) {
-												    	if(!entry.getName().contains(p.getName())) {
-												    		is_skin_tick = 0;
-													    	entry.setName(p.getName());
-											                conf_npc.load();
-											                conf_npc.setProperty("load-npcs.npc_7003.name", p.getName());
-											                conf_npc.save();
-															if(HumanNPCList != null) {
-																HumanNPCList.removeAllNpc();
-															}
-											        		HumanNPCList = new BasicHumanNpcList();
-											        		ReloadAllNpcs();
-													    	continue;
-												    	}
-									    			}
-											    }	
 						    			}
 						    			if (plugin.checkLocation(p.getLocation(), entry.getBukkitEntity().getLocation(), 3.0)) {
 						    				conf_npc.load();
@@ -332,7 +296,6 @@ public class Main_NPC {
 			}else{
 				is_core_tick++;
 			}
-				
 			if(last_npc_reload > 2000) {
 				last_npc_reload = 0;
 				if(HumanNPCList != null) {
@@ -423,7 +386,6 @@ public class Main_NPC {
 						Double z = node.getDouble(npc + ".loc.z", 0);
 						float yaw = node.getInt(npc + ".loc.yaw", 0);
 						float pitch = node.getInt(npc + ".loc.pitch", 0);
-						
 						if(HumanNPCList.get(id) == null && enabled) {
 							World world = plugin.getServer().getWorld(w);
 							BasicHumanNpc hnpc = NpcSpawner.SpawnBasicHumanNpc(id, name, world, x, y, z, yaw, pitch);

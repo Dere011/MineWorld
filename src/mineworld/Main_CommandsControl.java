@@ -9,11 +9,12 @@ import org.bukkit.entity.Player;
 public class Main_CommandsControl {
 	
 	Main plugin;
-	int restartsure = 0;
 
     public Main_CommandsControl(Main parent) {
     	plugin = parent;
     }
+    
+	public long restartsure = 0;
     
     public Boolean Main_onCommand_do(CommandSender sender, Command command, String commandLabel, String[] args) {
     	String subCommand = args[0].toLowerCase();
@@ -92,10 +93,10 @@ public class Main_CommandsControl {
         
 		if (command.getName().toLowerCase().equals("modo")) {
 			if (subCommand.equals("restart")) {
-				if(restartsure){
+				if((restartsure+30) > plugin.timetamps){
 					
 				}else{
-					restartsure = true;
+					restartsure = plugin.timetamps;
 					plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment redémarrer le serveur (/modo restart pour confirmer) ?", 2, "[MODO]");
 				}
 			}else if (subCommand.equals("spy")) {
@@ -164,6 +165,8 @@ public class Main_CommandsControl {
 					}
 				}
 				plugin.Main_MessageControl.sendTaggedMessage(player, "Il y a "+visiteur+" visiteurs autour de vous...", 1, "");
+			}
+		}
 		return false;
     }
     

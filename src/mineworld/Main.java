@@ -77,26 +77,6 @@ public class Main extends JavaPlugin {
 	public Boolean npc_is_first_loaded = false;
 	private Boolean debug_enable = false;
 	
-	/*
-	public Map<Creature, List<LivingEntity>> attackedby = new HashMap<Creature, List<LivingEntity>>();
-	public Boolean is_dayburning = false;
-	public Boolean is_predayburning = false;
-	public Boolean followbot = false;
-	public Boolean followbot_see = false;
-	public Boolean deathwave = false;
-	public Boolean deathwavetarget = false;
-	public Boolean nuke = false;
-	public Boolean sure = false;
-	public int isdamagedtick_tick = 0;
-	public int cron_radiation = 0;
-	public int wavetimer = 8;
-	public int cron_tick_player = 0;
-	public int cron_tick_hole = 0;
-	public int cron_tick_rpname = 0;
-	public Boolean hole = false;
-	public Location nukeLocation;
-	*/
-	
 	public Boolean burn = false;
 	
 	public int cron_tick_stats = 0;
@@ -127,13 +107,6 @@ public class Main extends JavaPlugin {
     Thread t_01;
     Thread t_02;
     Thread t_03;
-    
-    private int tickticklatick = 0;
-    
-    //public Entity bomb_e;
-    //public Entity bomb_r;
-	//public Main_BombA lastbomb;
-	//public Block lasthole;
 	
     public static Entity chicken;
     public static Entity zombie;
@@ -309,7 +282,6 @@ public class Main extends JavaPlugin {
 				}
 			}
 		}
-		sendInfo("Suppression des items.");
     }
     
     public boolean isbot(Player p) {
@@ -366,7 +338,7 @@ public class Main extends JavaPlugin {
     
     public void do_cron_02() {
     	if(playerInServer()) {
-	    	if(cron_tick_gen > 1500) {
+	    	if(cron_tick_gen > 15) {
 				cron_tick_gen = 0;
 				number_creature = 0;
 				for (World w : getServer().getWorlds()) {
@@ -394,7 +366,7 @@ public class Main extends JavaPlugin {
 			}else{
 				cron_tick_gen++;
 			}
-			if(cron_tick_stats > 22000) {
+			if(cron_tick_stats > 220) {
 				cron_tick_stats = 0;
 				for (Player p : getServer().getOnlinePlayers()) {
 			    	if (Main_Visiteur.is_visiteur(p)) {
@@ -414,91 +386,60 @@ public class Main extends JavaPlugin {
     
     public void do_cron_03() {
     	if(playerInServer()) {
-	    	if(tickticklatick > 150) {
-	    		tickticklatick = 0;
-	    		for (World w : getServer().getWorlds()) {
-		    		for (Entity e : w.getLivingEntities()) {
-						if (e instanceof Creature) {
-							Creature c = (Creature) e;
-							if(w.getBlockAt(c.getLocation()).getTypeId() == 8 || w.getBlockAt(c.getLocation()).getTypeId() == 9) {
-								boolean playerinrange = false;
-								for (Entity p : e.getNearbyEntities(13, 13, 13)) {
-									if (p instanceof Player) {
-										if(!Main_Visiteur.is_visiteur((Player) p)) {
-											playerinrange = true;
-											break;
+			World world = getServer().getWorld("world");
+    		if(!isDay(world)) {
+	    		for (Entity e : world.getEntities()) {
+	    			if (e instanceof Monster) {
+						double lastdistance = 1000000.0;
+						Entity thetarget = null;
+						for (Entity ee : e.getNearbyEntities(50, 50, 50)) {
+							if (ee instanceof Player) {
+								if(((Creature) e).getTarget() == null && !Main_Visiteur.is_visiteur((Player) ee)) {
+									if(!((Player) ee).isOp() && !ee.isDead() && ((Player) ee).isOnline()) {
+										double distance = getdistance(ee, e);
+										if (distance < lastdistance) {
+											thetarget = ee;
+											lastdistance = distance;
 										}
 									}
-								}
-								if(!playerinrange) {
-									c.remove();
 								}
 							}
 						}
-					}
-	    		}
-	    	}
-	    	tickticklatick++;
-	    	
-	    	if(cron_tick_mobcontrol > 10) {
-	    		cron_tick_mobcontrol = 0;
-				World world = getServer().getWorld("world");
-	    		if(!isDay(world)) {
-		    		for (Entity e : world.getEntities()) {
-		    			if (e instanceof Monster) {
-							double lastdistance = 1000000.0;
-							Entity thetarget = null;
-							for (Entity ee : e.getNearbyEntities(50, 50, 50)) {
-								if (ee instanceof Player) {
-									if(((Creature) e).getTarget() == null && !Main_Visiteur.is_visiteur((Player) ee)) {
-										if(!((Player) ee).isOp() && !ee.isDead() && ((Player) ee).isOnline()) {
-											double distance = getdistance(ee, e);
-											if (distance < lastdistance) {
-												thetarget = ee;
-												lastdistance = distance;
-											}
-										}
-									}
-								}
+						if(thetarget != null) {
+							double range = 12.0;
+							if(thetarget.getLocation().getBlock().getLightLevel() < 8) {
+								range = 5.0;
 							}
-							if(thetarget != null) {
-								double range = 12.0;
-								if(thetarget.getLocation().getBlock().getLightLevel() < 8) {
-									range = 5.0;
-								}
-								if (checkLocation(thetarget.getLocation(), e.getLocation(), range)) {
-									((Creature) e).setTarget((LivingEntity) thetarget);
-								}else{
-									Main_MoveControl.moveCloserToLocation(e, thetarget.getLocation());
-								}
+							if (checkLocation(thetarget.getLocation(), e.getLocation(), range)) {
+								((Creature) e).setTarget((LivingEntity) thetarget);
+							}else{
+								Main_MoveControl.moveCloserToLocation(e, thetarget.getLocation());
 							}
-			    		}
+						}
 		    		}
 	    		}
-			}else{
-				cron_tick_mobcontrol++;
-			}
+    		}
     	}
     }
     
     private void runAllThread() {
     	// Main
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_01(), 1, 1); 
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_02(), 1, 1); 
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_03(), 1, 1); 
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_02(), 1, 100); 
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_03(), 1, 10); 
     	
     	// Visiteur
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_Visiteur.runThread_1(this), 1, 25); 
 
     	// NPC
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_NPC.runThread(this), 1, 1); 
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_NPC.runThread(this), 1, 1);
     	
     	// TIMECONTROL
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_TimeControl.runThread_meteo(this), 1, 1);
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_TimeControl.runThread_meteo(this), 1, 10);
     	
     	// CHUNKCONTROL | ANTI-INVISIBLE
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_ChunkControl.runThread_1(this), 1, 50); 
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_ChunkControl.runThread_2(this), 1, 50);
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_ChunkControl.runThread_2(this), 1, 25);
     }
     
 	public Object getNPCConfig(String npcname, String name, String type) {
