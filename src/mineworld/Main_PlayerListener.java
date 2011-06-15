@@ -412,8 +412,6 @@ public class Main_PlayerListener extends PlayerListener {
 			setSpawnTimed(player);
 			return;
 		}
-		
-		plugin.setPlayerConfig(player, "last_chunkid", "NON");
     	
     	// Main
     	Main_onPlayerJoin_do(event);

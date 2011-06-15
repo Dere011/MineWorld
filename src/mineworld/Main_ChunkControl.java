@@ -32,6 +32,7 @@ public class Main_ChunkControl {
     List<Player> PlayerOR = new ArrayList<Player>();
     public Map<Player, ArrayList<Block>> player_blocs = new HashMap<Player, ArrayList<Block>>();
     public Map<Player, Boolean> player_chunkupdate = new HashMap<Player, Boolean>();
+    public Map<Player, String> player_lastchunk = new HashMap<Player, String>();
     
     public Main_ChunkControl(Main parent) {
         this.plugin = parent;
@@ -164,24 +165,30 @@ public class Main_ChunkControl {
 			if(plugin.Main_Visiteur.is_visiteur(p) || (!p.getWorld().getName().contains("world") || p.getWorld().getName().contains("oldworld"))) {
 				continue;
 			}
-			String pchunkid = (String) plugin.getPlayerConfig(p, "last_chunkid", "string");
+			
 			Boolean good = true;
-			int cx = p.getWorld().getChunkAt(p.getLocation()).getX();
-			int cz = p.getWorld().getChunkAt(p.getLocation()).getZ();
-			for (int i = cx-3; i <= cx+3; i++) {
-				for (int o = cz-3; o <= cz+3; o++) {
-					String chunkid = i+" "+o;
-					if (chunkid.equals(pchunkid)) {
-						good = false;
-						break;
-					}
-				}	
+			if(player_lastchunk.containsKey(p)) {
+				String pchunkid = player_lastchunk.get(p);
+				int cx = p.getWorld().getChunkAt(p.getLocation()).getX();
+				int cz = p.getWorld().getChunkAt(p.getLocation()).getZ();
+				for (int i = cx-3; i <= cx+3; i++) {
+					for (int o = cz-3; o <= cz+3; o++) {
+						String chunkid = i+" "+o;
+						if (chunkid.equals(pchunkid)) {
+							good = false;
+							break;
+						}
+					}	
+				}
+			}else{
+				good = true;
 			}
 			if (good) {
 				plugin.Main_ChunkControl.CacheOnlyChunk(p);
 				String schunkid = p.getWorld().getChunkAt(p.getLocation()).getX()+" "+p.getWorld().getChunkAt(p.getLocation()).getZ();
-				plugin.setPlayerConfig(p, "last_chunkid", schunkid);
+				player_lastchunk.put(p, schunkid);
 			}
+			
 			ArrayList<Block> pblock = new ArrayList<Block>();
 			Main_AimBlock aiming = new Main_AimBlock(p);
 			if(aiming != null) {
@@ -279,6 +286,12 @@ public class Main_ChunkControl {
 			return;
 		}
 		player_chunkupdate.put(p, true);
+    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			public void run()
+			{
+				player_chunkupdate.put(p, false);
+			}
+    	}, (long) 300);
 		int time = 0;
 		Chunk chunk_debut = p.getWorld().getChunkAt(p.getLocation());
 		for (int i = chunk_debut.getX()-4; i <= chunk_debut.getX()+4; i++) {
@@ -286,8 +299,8 @@ public class Main_ChunkControl {
 				time = time+10;
 				Chunk chunk = p.getWorld().getChunkAt(i, o);
 				CraftChunk craftchunk = (CraftChunk) chunk;
-				final Main_ChunkCopy chunkcopy = getChunkSnapshot(craftchunk);
 				Block theblock = chunk.getBlock(0, 0, 0);
+				final Main_ChunkCopy chunkcopy = getChunkSnapshot(craftchunk);
 				final Location lastlocation = theblock.getLocation();
 		        for (int x = 0; x <= 16; x++) {
 	                for (int z = 0; z <= 16; z++) {
@@ -310,12 +323,6 @@ public class Main_ChunkControl {
 		        }
 			}
 		}
-    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			public void run()
-			{
-				player_chunkupdate.put(p, false);
-			}
-    	}, (long) 300);
 	}
     
 	public void CacheOnlyChunk(final Player p) {
