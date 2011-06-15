@@ -44,8 +44,7 @@ public class Main_EntityListener extends EntityListener {
     	    		event.setCancelled(true);
     	    		return;
     	    	}
-        	}
-        	if (dmgByEntity.getDamager() instanceof Player) {
+        	}else if (dmgByEntity.getDamager() instanceof Player) {
     	    	if (plugin.Main_Visiteur.is_visiteur((Player) dmgByEntity.getDamager())) {
     	    		plugin.Main_Visiteur.denied_message((Player) dmgByEntity.getDamager());
     	    		event.setCancelled(true);

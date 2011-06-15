@@ -148,7 +148,6 @@ public class Main_PlayerListener extends PlayerListener {
     	}
     	
 		if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-			
 			if (event.getPlayer().getItemInHand().getTypeId() == 324 || event.getPlayer().getItemInHand().getTypeId() == 330)
     	    {
     		    if (event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.NORTH).getType() == Material.CACTUS)
@@ -209,7 +208,8 @@ public class Main_PlayerListener extends PlayerListener {
     public void onPlayerMove(PlayerMoveEvent event) {
     	Player p = event.getPlayer();
     	if (plugin.Main_Visiteur.is_visiteur(p)) {
-    		if(!p.getWorld().getName().contains("world") || p.getWorld().getName().contains("oldworld")) {
+			String WorldName = p.getWorld().getName();
+    		if(!WorldName.contains("world") || WorldName.contains("oldworld")) {
 	        	int time_last_vdteleport = (Integer) plugin.getPlayerConfig(p, "time_last_vdteleport", "int");
 	    	    if((plugin.timetamps-time_last_vdteleport) > 20) {
 	    	    	plugin.Main_MessageControl.sendTaggedMessage(p, "Les visiteurs ne peuvent pas prendre ce téléporteur.", 1, "[DENIED]");
@@ -406,10 +406,10 @@ public class Main_PlayerListener extends PlayerListener {
 		}else{
 			plugin.Main_MessageControl.sendTaggedMessage(player, "Vous avez un compte visiteur.", 1, "[WHITELIST]");
 			plugin.Main_Visiteur.add_visiteur(player);
-			player.setHealth(1000);
 			event.setJoinMessage(ChatColor.DARK_GRAY + "Un visiteur a rejoint le serveur.");
 			player.setDisplayName("visiteur");
 			setSpawnTimed(player);
+			player.setHealth(200);
 			return;
 		}
     	

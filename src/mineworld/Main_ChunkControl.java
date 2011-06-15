@@ -86,16 +86,16 @@ public class Main_ChunkControl {
 	public Runnable runThread_3(final Main plugin, final Player player) {
 		if(thread_03 == null) {
 			thread_03 = new Thread(new Runnable() {
-			public void run()
-			{
-			    	try {
-			    		if (player.isOnline()) {
-			    			CacheOnlyChunk_do(player);
-			    		}
-			        } catch (Exception e) {
-			        	e.printStackTrace();
-			        }
-		            return;
+				public void run()
+				{
+					try {
+						if (player.isOnline()) {
+							CacheOnlyChunk_do(player);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					return;
 				}
 			});
 			thread_03.setPriority(Thread.MIN_PRIORITY);
@@ -296,7 +296,7 @@ public class Main_ChunkControl {
 		Chunk chunk_debut = p.getWorld().getChunkAt(p.getLocation());
 		for (int i = chunk_debut.getX()-4; i <= chunk_debut.getX()+4; i++) {
 			for (int o = chunk_debut.getZ()-4; o <= chunk_debut.getZ()+4; o++) {
-				time = time+10;
+				Delayed_time = Delayed_time+5;
 				Chunk chunk = p.getWorld().getChunkAt(i, o);
 				CraftChunk craftchunk = (CraftChunk) chunk;
 				Block theblock = chunk.getBlock(0, 0, 0);
@@ -304,12 +304,16 @@ public class Main_ChunkControl {
 				final Location lastlocation = theblock.getLocation();
 		        for (int x = 0; x <= 16; x++) {
 	                for (int z = 0; z <= 16; z++) {
-		                for (int y = 0; y <= 80; y++) {
-		                	Block block = chunk.getBlock(x, y, z);
-		                	int bid = block.getTypeId();
-		                    if(bid != 0 && is_blocs(bid)) {
-			                	chunkcopy.setRawTypeId(x, y, z, Material.STONE.getId());
-		                    }
+		                for (int y = 0; y <= 128; y++) {
+							if(y > chunk.getHautBloc(x, y, z)) {
+								break;
+							}else{
+								Block block = chunk.getBlock(x, y, z);
+								int bid = block.getTypeId();
+								if(bid != 0 && is_blocs(bid)) {
+									chunkcopy.setRawTypeId(x, y, z, Material.STONE.getId());
+								}
+							}
 		                }
 		            }
 		        }
@@ -319,7 +323,7 @@ public class Main_ChunkControl {
 		    			{
 		    				sendChunkChange((CraftPlayer) p, new Location(lastlocation.getWorld(), lastlocation.getBlockX(), 0, lastlocation.getBlockZ()), 16, 128, 16, chunkcopy.getdata());
 		    			}
-		        	}, (long) time);
+		        	}, (long) Delayed_time);
 		        }
 			}
 		}

@@ -54,9 +54,6 @@ public class Main extends JavaPlugin {
     public Main_TimeControl Main_TimeControl;
     public Main_ChunkControl Main_ChunkControl;
     
-    public List<Chunk> DontChunkChecked = new ArrayList<Chunk>();
-    public List<Player> DontChunkCheckedPlayer = new ArrayList<Player>();
-    
     public List<String> modo = new ArrayList<String>();
     public List<String> correct = new ArrayList<String>();
     public List<String> anim = new ArrayList<String>();
@@ -90,23 +87,13 @@ public class Main extends JavaPlugin {
 	public int lastreload = 0;
 	public int lasttimereload = 0;
 	public int lastplayerleft = 0;
-	public int lastfirestick = 0;
-	public int is_predayburning_tick = 0;
-    public int lastburnstart = 0;
     public int is_core_tick = 0;
-    public int is_skin_tick = 0;
-    public int is_FOLLOW_tick = 0;
     public int refreshchunkt = 0;
-    public int cron_tick_deathwave = 0;
-    public int burnradius = 10;
-    public int cron_tick_mobcontrol = 0;
-    
-    public boolean thor = false;
-    public int cron_storm = 0;
     
     Thread t_01;
     Thread t_02;
     Thread t_03;
+    Thread t_04;
 	
     public static Entity chicken;
     public static Entity zombie;
@@ -218,6 +205,25 @@ public class Main extends JavaPlugin {
 			this.t_03.setDaemon(true);
 		}
 		return this.t_03;
+	}
+	
+	public Runnable runThread_04() {
+		if(this.t_04 == null) {
+			this.t_04 = new Thread(new Runnable() {
+				public void run()
+				{
+			    	try {
+			    		do_cron_04();
+			        } catch (Exception e) {
+			        	e.printStackTrace();
+			        }
+		            return;
+				}
+			});
+			this.t_04.setPriority(Thread.MIN_PRIORITY);
+			this.t_04.setDaemon(true);
+		}
+		return this.t_04;
 	}
     
 	int showRandomInteger(int aStart, int aEnd, Random aRandom){
@@ -421,13 +427,91 @@ public class Main extends JavaPlugin {
     		}
     	}
     }
+	
+    public void do_cron_04() { 
+		if(!modo.isEmpty()) {
+			for (String name : modo) {
+				getServer().
+			}
+		}
+		
+		if(!correct.isEmpty()) {
+			for (String name : correct) {
+				getServer().
+			}
+		}
+		
+		if(!anim.isEmpty()) {
+			for (String name : anim) {
+				getServer().
+			}
+		}
+		
+		if(!world_whitelist.isEmpty()) {
+			for (Player player : world_whitelist) {
+				if(!player.isOnline()) {
+					world_whitelist.remove(player);
+				}
+			}
+		}
+		
+		if(!move_last.isEmpty()) {
+			for (Entity entity : move_last) {
+				if(entity.isDead()) {
+					move_last.remove(entity);
+				}
+			}
+		}
+		
+		if(!Main_ChunkControl.PlayerOR.isEmpty()) {
+			for (Player player : Main_ChunkControl.PlayerOR) {
+				if(!player.isOnline()) {
+					Main_ChunkControl.PlayerOR.remove(player);
+				}
+			}
+		}
+		
+		if(!Main_ChunkControl.player_blocs.isEmpty()) {
+			for (Player player : Main_ChunkControl.player_blocs) {
+				if(!player.isOnline()) {
+					Main_ChunkControl.player_blocs.remove(player);
+				}
+			}
+		}
+		
+		if(!Main_ChunkControl.player_chunkupdate.isEmpty()) {
+			for (Player player : Main_ChunkControl.player_chunkupdate) {
+				if(!player.isOnline()) {
+					Main_ChunkControl.player_chunkupdate.remove(player);
+				}
+			}
+		}
+		
+		if(!Main_ChunkControl.player_lastchunk.isEmpty()) {
+			for (Player player : Main_ChunkControl.player_lastchunk) {
+				if(!player.isOnline()) {
+					Main_ChunkControl.player_lastchunk.remove(player);
+				}
+			}
+		}	
+		
+		if(!Main_Visiteur.visiteur.isEmpty()) {
+			for (Player player : Main_Visiteur.visiteur) {
+				if(!player.isOnline()) {
+					Main_Visiteur.visiteur.remove(player);
+				}
+			}
+		}	
+		
+    }
     
     private void runAllThread() {
     	// Main
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_01(), 1, 1); 
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_02(), 1, 100); 
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_03(), 1, 10); 
-    	
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_04(), 1, 5000);
+		
     	// Visiteur
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_Visiteur.runThread_1(this), 1, 25); 
 
