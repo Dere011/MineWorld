@@ -13,7 +13,6 @@ import java.util.logging.Level;
 import npcspawner.BasicHumanNpc;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -429,7 +428,7 @@ public class Main extends JavaPlugin {
     }
 	
     public void do_cron_04() { 
-		if(!modo.isEmpty()) {
+		/*if(!modo.isEmpty()) {
 			for (String name : modo) {
 				getServer().
 			}
@@ -445,7 +444,7 @@ public class Main extends JavaPlugin {
 			for (String name : anim) {
 				getServer().
 			}
-		}
+		}*/
 		
 		if(!world_whitelist.isEmpty()) {
 			for (Player player : world_whitelist) {
@@ -455,13 +454,13 @@ public class Main extends JavaPlugin {
 			}
 		}
 		
-		if(!move_last.isEmpty()) {
+		/*if(!move_last.isEmpty()) {
 			for (Entity entity : move_last) {
 				if(entity.isDead()) {
 					move_last.remove(entity);
 				}
 			}
-		}
+		}*/
 		
 		if(!Main_ChunkControl.PlayerOR.isEmpty()) {
 			for (Player player : Main_ChunkControl.PlayerOR) {
@@ -471,7 +470,7 @@ public class Main extends JavaPlugin {
 			}
 		}
 		
-		if(!Main_ChunkControl.player_blocs.isEmpty()) {
+		/*if(!Main_ChunkControl.player_blocs.isEmpty()) {
 			for (Player player : Main_ChunkControl.player_blocs) {
 				if(!player.isOnline()) {
 					Main_ChunkControl.player_blocs.remove(player);
@@ -493,7 +492,7 @@ public class Main extends JavaPlugin {
 					Main_ChunkControl.player_lastchunk.remove(player);
 				}
 			}
-		}	
+		}*/
 		
 		if(!Main_Visiteur.visiteur.isEmpty()) {
 			for (Player player : Main_Visiteur.visiteur) {

@@ -91,7 +91,7 @@ public class Main_CommandsControl {
 		
         Player player = (Player) sender;
         
-		if (command.getName().toLowerCase().equals("modo")) {
+		/*if (command.getName().toLowerCase().equals("modo")) {
 			if (subCommand.equals("restart")) {
 				if((restartsure+30) > plugin.timetamps){
 					
@@ -106,7 +106,7 @@ public class Main_CommandsControl {
 			}else if (subCommand.equals("laststart")) {
 				
 			}
-		}
+		}*/
         
 		if (command.getName().toLowerCase().equals("mineworld")) {
 			if (subCommand.equals("unlock")) {

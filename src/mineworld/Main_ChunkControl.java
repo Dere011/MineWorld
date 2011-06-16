@@ -84,24 +84,20 @@ public class Main_ChunkControl {
 	}
 	
 	public Runnable runThread_3(final Main plugin, final Player player) {
-		if(thread_03 == null) {
-			thread_03 = new Thread(new Runnable() {
-				public void run()
-				{
-					try {
-						if (player.isOnline()) {
-							CacheOnlyChunk_do(player);
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
+		Thread thread = new Thread(new Runnable() {
+			public void run()
+			{
+				try {
+					if (player.isOnline()) {
+						CacheOnlyChunk_do(player);
 					}
-					return;
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-			});
-			thread_03.setPriority(Thread.MIN_PRIORITY);
-			thread_03.setDaemon(false);
-		}
-		return thread_03;
+				return;
+			}
+		});
+		return thread;
 	}
 	
 	// ANTI INVISIBLE
@@ -159,9 +155,11 @@ public class Main_ChunkControl {
 	
 	private void do_orcontrol() {
 		for (Player p : PlayerOR) {
+			
 			if(!p.isOnline()) {
 				PlayerOR.remove(p);
 			}
+			
 			if(plugin.Main_Visiteur.is_visiteur(p) || (!p.getWorld().getName().contains("world") || p.getWorld().getName().contains("oldworld"))) {
 				continue;
 			}
@@ -180,8 +178,6 @@ public class Main_ChunkControl {
 						}
 					}	
 				}
-			}else{
-				good = true;
 			}
 			if (good) {
 				plugin.Main_ChunkControl.CacheOnlyChunk(p);
@@ -282,7 +278,7 @@ public class Main_ChunkControl {
     }
     
 	public void CacheOnlyChunk_do(final Player p) {
-		if(player_chunkupdate.containsKey(p) && player_chunkupdate.get(p).booleanValue()) {
+		if(player_chunkupdate.containsKey(p) && player_chunkupdate.get(p)) {
 			return;
 		}
 		player_chunkupdate.put(p, true);
@@ -292,7 +288,7 @@ public class Main_ChunkControl {
 				player_chunkupdate.put(p, false);
 			}
     	}, (long) 300);
-		int time = 0;
+		int Delayed_time = 0;
 		Chunk chunk_debut = p.getWorld().getChunkAt(p.getLocation());
 		for (int i = chunk_debut.getX()-4; i <= chunk_debut.getX()+4; i++) {
 			for (int o = chunk_debut.getZ()-4; o <= chunk_debut.getZ()+4; o++) {
@@ -305,7 +301,7 @@ public class Main_ChunkControl {
 		        for (int x = 0; x <= 16; x++) {
 	                for (int z = 0; z <= 16; z++) {
 		                for (int y = 0; y <= 128; y++) {
-							if(y > chunk.getHautBloc(x, y, z)) {
+							if(y > chunk.getWorld().getHighestBlockYAt(theblock.getLocation())) {
 								break;
 							}else{
 								Block block = chunk.getBlock(x, y, z);
