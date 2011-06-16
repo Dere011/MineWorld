@@ -126,7 +126,7 @@ public class Main_ChunkControl {
 			{
 				anti_invisible_tick(p);
 			}
-    	}, (long) 30);
+    	}, (long) 150);
 	}
 	
 	private void anti_invisible_do() {
@@ -282,17 +282,19 @@ public class Main_ChunkControl {
 			return;
 		}
 		player_chunkupdate.put(p, true);
+		
     	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			public void run()
 			{
 				player_chunkupdate.put(p, false);
 			}
     	}, (long) 300);
+		
 		int Delayed_time = 0;
 		Chunk chunk_debut = p.getWorld().getChunkAt(p.getLocation());
 		for (int i = chunk_debut.getX()-4; i <= chunk_debut.getX()+4; i++) {
 			for (int o = chunk_debut.getZ()-4; o <= chunk_debut.getZ()+4; o++) {
-				Delayed_time = Delayed_time+5;
+				Delayed_time = Delayed_time+3;
 				Chunk chunk = p.getWorld().getChunkAt(i, o);
 				CraftChunk craftchunk = (CraftChunk) chunk;
 				Block theblock = chunk.getBlock(0, 0, 0);

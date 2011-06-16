@@ -26,9 +26,9 @@ public class Main_PlayerListener extends PlayerListener {
     
     public void sendTeleportEffect(final Player player) {
     	final Location location = player.getLocation();
-        for (int x = location.getBlockX() - 2; x <= location.getBlockX() + 2; x++) {
-            for (int z = location.getBlockZ() - 2; z <= location.getBlockZ() + 2; z++) {
-                for (int y = location.getBlockY(); y <= location.getBlockY() + 2; y++) {
+        for (int x = location.getBlockX() - 1; x <= location.getBlockX() + 1; x++) {
+            for (int z = location.getBlockZ() - 1; z <= location.getBlockZ() + 1; z++) {
+                for (int y = location.getBlockY() + 1; y <= location.getBlockY() + 2; y++) {
                 	Block block = location.getWorld().getBlockAt(x, y, z);
 	                player.sendBlockChange(block.getLocation(), Material.PORTAL, (byte) 0);
                 }
@@ -37,9 +37,9 @@ public class Main_PlayerListener extends PlayerListener {
     	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				public void run()
 				{
-			        for (int x = location.getBlockX() - 2; x <= location.getBlockX() + 2; x++) {
-			            for (int z = location.getBlockZ() - 2; z <= location.getBlockZ() + 2; z++) {
-			                for (int y = location.getBlockY() - 2; y <= location.getBlockY() + 2; y++) {
+			        for (int x = location.getBlockX() - 1; x <= location.getBlockX() + 1; x++) {
+			            for (int z = location.getBlockZ() - 1; z <= location.getBlockZ() + 1; z++) {
+			                for (int y = location.getBlockY() + 1; y <= location.getBlockY() + 2; y++) {
 			                	Block block = location.getWorld().getBlockAt(x, y, z);
 				                player.sendBlockChange(block.getLocation(), block.getTypeId(), block.getData());
 			                }
@@ -114,7 +114,7 @@ public class Main_PlayerListener extends PlayerListener {
 					Location home = getHomeLocation(player);
 					if(home != null) {
 						player.teleport(home);
-						plugin.Main_MessageControl.sendTaggedMessage(player, "Teleportation...", 1, "");
+						plugin.Main_MessageControl.sendTaggedMessage(player, "Teleportation en cours.", 1, "");
 					}else{
 						plugin.Main_MessageControl.sendTaggedMessage(player, "Teleportation impossible.", 1, "");
 					}
@@ -230,9 +230,15 @@ public class Main_PlayerListener extends PlayerListener {
 	    		event.setCancelled(true);
 	    		return;
     		}else if (plugin.Main_Visiteur.is_visiteur(p)) {
-	    		plugin.Main_MessageControl.chatMessageToAllVisiteur(p, event.getMessage());
-	    		event.setCancelled(true);
-	    		return;
+				if(plugin.Main_Visiteur.visiteur_number() > 1) {
+					plugin.Main_MessageControl.chatMessageToAllVisiteur(p, event.getMessage());
+					event.setCancelled(true);
+					return;
+				}else{
+					plugin.Main_MessageControl.sendTaggedMessage(p, "Impossible, il n'y a que vous en visiteur sur le serveur.", 1, "[DENIED]");
+					event.setCancelled(true);
+					return;
+				}
 	    	}else{
 	    		plugin.Main_MessageControl.chatMessageToAllNonVisiteur(p, event.getMessage());
 	    		event.setCancelled(true);
@@ -551,7 +557,7 @@ public class Main_PlayerListener extends PlayerListener {
 	    		return;
     		}
     	}
-    	
+
     	// ANTI INVISIBLE
     	plugin.Main_ChunkControl.anti_invisible_delayed(player);
     	
@@ -596,7 +602,7 @@ public class Main_PlayerListener extends PlayerListener {
 			plugin.Main_Visiteur.charge_whitelist();
 		} catch (IOException e) {
 		}
-    	Boolean banned = plugin.conf_player.getBoolean("load-player."+ event.getName() +".banned", false);
+    	Boolean banned = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_banned", false);
 		Boolean admin = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_admin", false);
 		Boolean modo = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_modo", false);
 		Boolean anim = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_anim", false);
@@ -614,7 +620,7 @@ public class Main_PlayerListener extends PlayerListener {
 			event.allow();
 		}else{
 	    	if(banned) {
-	    		String msg = plugin.conf_player.getString("load-player."+ event.getName() +".bannedmsg");
+	    		String msg = plugin.conf_player.getString("load-player."+ event.getName() +".banned_msg");
 	    		if(msg != "") {
 	    			event.disallow(Result.KICK_BANNED, "Votre compte est banni, la raison est : "+ msg);
 	    		}else{

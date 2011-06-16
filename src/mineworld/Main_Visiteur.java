@@ -58,6 +58,16 @@ public class Main_Visiteur {
 	    }
 	    reader.close();
     }
+	
+   public int visiteur_number() {
+		int number = 0;
+    	for (Player p : plugin.getServer().getOnlinePlayers()) {
+			if(p.isOnline() && is_visiteur(p)) {
+				number++;
+			}
+		}
+		return number;
+    }
     
     public void visiteur_do() {
     	for (Player p : plugin.getServer().getOnlinePlayers()) {

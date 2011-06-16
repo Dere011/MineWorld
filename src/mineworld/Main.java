@@ -73,8 +73,6 @@ public class Main extends JavaPlugin {
 	public Boolean npc_is_first_loaded = false;
 	private Boolean debug_enable = false;
 	
-	public Boolean burn = false;
-	
 	public int cron_tick_stats = 0;
 	public int cron_tick = 0;
 	public int cron_tick_gen = 0;
@@ -302,7 +300,7 @@ public class Main extends JavaPlugin {
     	timetamps();
     	if(playerInServer()) {
 			if(cron_tick_heal > 150) {
-				Boolean terre = true;
+				Boolean isgood = true;
 				cron_tick_heal = 0;
 				for (Player p : getServer().getOnlinePlayers()) {
 			    	if (Main_Visiteur.is_visiteur(p)) {
@@ -314,11 +312,11 @@ public class Main extends JavaPlugin {
 						}
 					}else{
 						if(p.getWorld().getName().contains("world")) {
-							terre = false;
+							isgood = false;
 						}
 					}
 				}
-				if(terre) {
+				if(isgood) {
 					getServer().getWorld("world").setFullTime(23100);
 				}
 			}else{
@@ -328,13 +326,7 @@ public class Main extends JavaPlugin {
     	}else{
 			if(lastplayerleft > 5000) {
 				lastplayerleft = 0;
-				for (World w : getServer().getWorlds()) {
-					for (Entity e : w.getEntities()) {
-						if (e instanceof Creature) {
-							((Creature) e).remove();
-						}
-					}
-				}
+				removeallitems();
 			}else{
 				lastplayerleft++;
 			}
@@ -470,7 +462,7 @@ public class Main extends JavaPlugin {
 			}
 		}
 		
-		/*if(!Main_ChunkControl.player_blocs.isEmpty()) {
+		if(!Main_ChunkControl.player_blocs.isEmpty()) {
 			for (Player player : Main_ChunkControl.player_blocs) {
 				if(!player.isOnline()) {
 					Main_ChunkControl.player_blocs.remove(player);
@@ -478,7 +470,7 @@ public class Main extends JavaPlugin {
 			}
 		}
 		
-		if(!Main_ChunkControl.player_chunkupdate.isEmpty()) {
+		/*if(!Main_ChunkControl.player_chunkupdate.isEmpty()) {
 			for (Player player : Main_ChunkControl.player_chunkupdate) {
 				if(!player.isOnline()) {
 					Main_ChunkControl.player_chunkupdate.remove(player);
