@@ -24,16 +24,12 @@ import org.bukkit.entity.Player;
 public class Main_ChunkControl {
 	
     private final Main plugin;
-    
-    Thread thread_01;
-    Thread thread_02;
-    Thread thread_03;
-    
+    Thread thread_01, thread_02, thread_03;
     List<Player> PlayerOR = new ArrayList<Player>();
     public Map<Player, ArrayList<Block>> player_blocs = new HashMap<Player, ArrayList<Block>>();
     public Map<Player, Boolean> player_chunkupdate = new HashMap<Player, Boolean>();
     public Map<Player, String> player_lastchunk = new HashMap<Player, String>();
-    
+	
     public Main_ChunkControl(Main parent) {
         this.plugin = parent;
     }
@@ -278,8 +274,8 @@ public class Main_ChunkControl {
     }
     
 	public void CacheOnlyChunk_do(final Player p) {
-		if(player_chunkupdate.containsKey(p) && player_chunkupdate.get(p)) {
-			return;
+		if(player_chunkupdate.containsKey(p) && player_chunkupdate.get(p)) { 
+			return; 
 		}
 		player_chunkupdate.put(p, true);
 		
