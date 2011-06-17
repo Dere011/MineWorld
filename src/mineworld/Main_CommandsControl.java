@@ -14,7 +14,8 @@ public class Main_CommandsControl {
     	plugin = parent;
     }
     
-	public long restartsure = 0;
+	private long restartsure = 0;
+	private long maintenancesure = 0;
     
     public Boolean Main_onCommand_do(CommandSender sender, Command command, String commandLabel, String[] args) {
     	String subCommand = args[0].toLowerCase();
@@ -91,22 +92,36 @@ public class Main_CommandsControl {
 		
         Player player = (Player) sender;
         
-		/*if (command.getName().toLowerCase().equals("modo")) {
+		if (command.getName().toLowerCase().equals("modo")) {
+			if(!plugin.ismodo(player)) {
+				plugin.Main_MessageControl.sendTaggedMessage(player, "Commande interdite.", 2, "[DENIED]");
+				return false;
+			}
 			if (subCommand.equals("restart")) {
 				if((restartsure+30) > plugin.timetamps){
-					
 				}else{
 					restartsure = plugin.timetamps;
 					plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment redémarrer le serveur (/modo restart pour confirmer) ?", 2, "[MODO]");
 				}
-			}else if (subCommand.equals("spy")) {
-				
+			//}else if (subCommand.equals("spy")) {
+			//	
 			}else if (subCommand.equals("maintenance")) {
-				
-			}else if (subCommand.equals("laststart")) {
-				
+				if((maintenancesure+30) > plugin.timetamps){
+					plugin.maintenance_status = true;
+					plugin.maintenance_message = "Serveur en maintenance (défini par "+ player.getDisplayName() +").";
+		    		for (Player p : plugin.getServer().getOnlinePlayers()) {
+		    			if(!p.isOp()) {
+		    				p.kickPlayer("Serveur en maintenance (défini par "+ player.getDisplayName() +").");
+		    			}
+		        	}
+				}else{
+					maintenancesure = plugin.timetamps;
+					plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment définir le mode maintenance (/modo maintenance pour confirmer) ?", 2, "[MODO]");
+				}
+			//}else if (subCommand.equals("laststart")) {
+			//	
 			}
-		}*/
+		}
         
 		if (command.getName().toLowerCase().equals("mineworld")) {
 			if (subCommand.equals("unlock")) {

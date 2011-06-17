@@ -26,9 +26,11 @@ public class Main_ChunkControl {
     private final Main plugin;
     Thread thread_01, thread_02, thread_03;
     List<Player> PlayerOR = new ArrayList<Player>();
+    
     public Map<Player, ArrayList<Block>> player_blocs = new HashMap<Player, ArrayList<Block>>();
     public Map<Player, Boolean> player_chunkupdate = new HashMap<Player, Boolean>();
     public Map<Player, String> player_lastchunk = new HashMap<Player, String>();
+    public Map<Chunk, ArrayList<Block>> cache_antixray = new HashMap<Chunk, ArrayList<Block>>();
 	
     public Main_ChunkControl(Main parent) {
         this.plugin = parent;
@@ -292,28 +294,49 @@ public class Main_ChunkControl {
 		int z_debut = chunk_debut.getZ();
 		for (int i = x_debut-4; i <= x_debut+4; i++) {
 			for (int o = z_debut-4; o <= z_debut+4; o++) {
-				Delayed_time = Delayed_time+3;
 				Chunk chunk = p.getWorld().getChunkAt(i, o);
 				CraftChunk craftchunk = (CraftChunk) chunk;
+				Delayed_time = Delayed_time+3;
 				Block theblock = chunk.getBlock(0, 0, 0);
 				final Main_ChunkCopy chunkcopy = getChunkSnapshot(craftchunk);
 				final Location lastlocation = theblock.getLocation();
-		        for (int x = 0; x <= 16; x++) {
-	                for (int z = 0; z <= 16; z++) {
-	                	int hblocky = chunk.getWorld().getHighestBlockYAt(theblock.getLocation());
-		                for (int y = 0; y <= 128; y++) {
-							if(y > hblocky) {
-								break;
-							}else{
-								Block block = chunk.getBlock(x, y, z);
-								int bid = block.getTypeId();
-								if(bid != 0 && is_blocs(bid)) {
-									chunkcopy.setRawTypeId(x, y, z, Material.STONE.getId());
+				if(cache_antixray.containsKey(chunk)) {
+					for (Block tblock : cache_antixray.get(chunk)) {
+						int xx = tblock.getX();
+						int yy = tblock.getY();
+						int zz = tblock.getZ();
+						Block block = chunk.getBlock(xx, yy, zz);
+						int bid = block.getTypeId();
+						if(bid != 0 && is_blocs(bid)) {
+							chunkcopy.setRawTypeId(xx, yy, zz, Material.STONE.getId());
+						}else{
+							cache_antixray.get(chunk).remove(block);
+						}
+					}
+				}else{
+					ArrayList<Block> blocktmp = new ArrayList<Block>();
+			        for (int x = 0; x <= 16; x++) {
+		                for (int z = 0; z <= 16; z++) {
+		                	int hblocky = chunk.getWorld().getHighestBlockYAt(theblock.getLocation());
+			                for (int y = 0; y <= 128; y++) {
+								if(y > hblocky) {
+									break;
+								}else{
+									Block block = chunk.getBlock(x, y, z);
+									int bid = block.getTypeId();
+									if(bid != 0 && is_blocs(bid)) {
+										chunkcopy.setRawTypeId(x, y, z, Material.STONE.getId());
+										blocktmp.add(block);
+									}
 								}
-							}
-		                }
-		            }
-		        }
+			                }
+			            }
+			        }
+			        if(!blocktmp.isEmpty()) {
+			        	cache_antixray.put(chunk, blocktmp);
+			        	blocktmp.clear();
+			        }
+				}
 		        if(lastlocation != null) {
 		        	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 		    			public void run()

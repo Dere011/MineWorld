@@ -66,6 +66,8 @@ public class Main extends JavaPlugin {
 	protected File Player_configFile = new File(maindir, "player_config.yml");
 	protected File Server_configFile = new File(maindir, "server_config.yml");
 	
+	public File shema_01 = new File(maindir, "01.shema");
+	
 	Configuration conf_player = new Configuration(Player_configFile);
 	Configuration conf_npc = new Configuration(NPC_configFile);
 	Configuration conf_server = new Configuration(Server_configFile);
@@ -285,6 +287,14 @@ public class Main extends JavaPlugin {
 				}
 			}
 		}
+    }
+    
+    public boolean ismodo(Player p) {
+    	if(modo.contains(p)) {
+    		return true;
+    	}else{
+    		return false;
+    	}
     }
     
     public boolean isbot(Player p) {
