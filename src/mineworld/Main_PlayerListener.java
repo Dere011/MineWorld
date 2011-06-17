@@ -124,7 +124,7 @@ public class Main_PlayerListener extends PlayerListener {
     
     public void onPlayerInteract(PlayerInteractEvent event) {
     	Player player = event.getPlayer();
-    	if (plugin.Main_Visiteur.is_visiteur(player)) {
+    	if (plugin.is_spy(player) || plugin.Main_Visiteur.is_visiteur(player)) {
     		event.setCancelled(true);
     		return;
     	}
@@ -225,6 +225,11 @@ public class Main_PlayerListener extends PlayerListener {
     	Player p = event.getPlayer();
     	boolean muted = (Boolean) plugin.getPlayerConfig(p, "is_muted", "boolean");
     	if (!muted) {
+    		if(plugin.is_spy(p)) {
+    			plugin.Main_MessageControl.sendTaggedMessage(p, "Le mode SPY interdit l'utilisation du chat.", 1, "[DENIED]");
+	    		event.setCancelled(true);
+	    		return;
+    		}
     		if(p.isOp()) {
 	    		plugin.Main_MessageControl.chatMessageToAll(p, event.getMessage());
 	    		event.setCancelled(true);
@@ -244,6 +249,9 @@ public class Main_PlayerListener extends PlayerListener {
 	    		event.setCancelled(true);
 	    		return;
 	    	}
+    	}else{
+    		event.setCancelled(true);
+    		return;
     	}
     }
     
@@ -590,7 +598,7 @@ public class Main_PlayerListener extends PlayerListener {
     		return;
     	}
     	String worldname = event.getPlayer().getWorld().getName();
-    	if(!event.getPlayer().isOp() && (worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
+    	if(!event.getPlayer().isOp() && (plugin.is_spy(event.getPlayer()) || worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
     		event.setCancelled(true);
     		return;
     	}

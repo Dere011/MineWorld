@@ -1,8 +1,11 @@
 package mineworld;
 
+import net.minecraft.server.Packet20NamedEntitySpawn;
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
@@ -16,25 +19,37 @@ public class Main_CommandsControl {
     
 	private long restartsure = 0;
 	private long maintenancesure = 0;
+	
+	public void kickall(String message, Boolean withop) {
+		for (Player p : plugin.getServer().getOnlinePlayers()) {
+			if(!p.isOp() || withop) {
+				p.kickPlayer(message);
+			}
+    	}
+	}
     
     public Boolean Main_onCommand_do(CommandSender sender, Command command, String commandLabel, String[] args) {
     	String subCommand = args[0].toLowerCase();
+        Player player = (Player) sender;
     	
     	if ((sender instanceof Player) == false) {
 	    	if (subCommand.equals("kickall4774")) {
-	    		for (Player p : plugin.getServer().getOnlinePlayers()) {
-	    			p.kickPlayer("Restart de routine (Le serveur sera de retour dans moins de 30 secondes).");
-	    			plugin.maintenance_status = true;
-	        	}
+	    		kickall("Restart de routine (Le serveur sera de retour dans moins de 30 secondes).", false);
+	    		plugin.maintenance_status = true;
 	    		plugin.removeallitems();
 	    		return false;
 	        }
 	    	
 	    	if (subCommand.equals("crash66565465") && plugin.maintenance_status != true) {
-	    		for (Player p : plugin.getServer().getOnlinePlayers()) {
-	    			p.kickPlayer("Le serveur est détecté comme planter. Restart en cours.");
-	    			plugin.maintenance_status = true;
-	        	}
+	    		kickall("Le serveur est détecté comme planter, restart en cours.", false);
+    			plugin.maintenance_status = true;
+	    		plugin.removeallitems();
+	    		return false;
+	        }
+	    	
+	    	if (subCommand.equals("kickall5000")) {
+	    		kickall("Le serveur va subir une mise a jour, restart en cours.", false);
+    			plugin.maintenance_status = true;
 	    		plugin.removeallitems();
 	    		return false;
 	        }
@@ -56,23 +71,10 @@ public class Main_CommandsControl {
 	    		}
 	    		return false;
 	        }
-   	
-	    	if (subCommand.equals("kickall5000")) {
-	    		for (Player p : plugin.getServer().getOnlinePlayers()) {
-	    			p.kickPlayer("Le serveur va subir une mise a jour, restart en cours.");
-	    			plugin.maintenance_status = true;
-	        	}
-	    		plugin.removeallitems();
-	    		return false;
-	        }
 	    	
 	    	if (subCommand.equals("maintenance34120")) {
 	    		if(plugin.maintenance_status == false) {
-		    		for (Player p : plugin.getServer().getOnlinePlayers()) {
-		    			if(!p.isOp()) {
-		    				p.kickPlayer("Notre serveur passe en maintenance.");
-		    			}
-		        	}
+		    		kickall("Notre serveur passe en maintenance.", false);
 		    		plugin.maintenance_status = true;
 	    		}else{
 	    			plugin.maintenance_status = false;
@@ -89,8 +91,6 @@ public class Main_CommandsControl {
 	    		return false;
 	        }
     	}
-		
-        Player player = (Player) sender;
         
 		if (command.getName().toLowerCase().equals("modo")) {
 			if(!plugin.ismodo(player)) {
@@ -99,27 +99,39 @@ public class Main_CommandsControl {
 			}
 			if (subCommand.equals("restart")) {
 				if((restartsure+30) > plugin.timetamps){
+					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" arrête le serveur.");
+					plugin.getServer().dispatchCommand(null, "/stop");
 				}else{
 					restartsure = plugin.timetamps;
 					plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment redémarrer le serveur (/modo restart pour confirmer) ?", 2, "[MODO]");
 				}
-			//}else if (subCommand.equals("spy")) {
-			//	
+			}else if (subCommand.equals("spy")) {
+				if(plugin.spy_player.contains(player)) {
+					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" désactive le mode SPY.");
+					plugin.Main_MessageControl.sendTaggedMessage(player, "Mode SPY innactif.", 2, "[MODO]");
+		    		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
+		    			if (entity instanceof Player) {
+							if(!((Player) entity).isOp()) {
+								CraftPlayer unHide = (CraftPlayer) player;
+								CraftPlayer unHideFrom = (CraftPlayer) entity;
+								unHide.getHandle().netServerHandler.sendPacket(new Packet20NamedEntitySpawn(unHideFrom.getHandle()));
+							}
+						}
+		    		}
+				}else{
+					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" active le mode SPY.");
+					plugin.Main_MessageControl.sendTaggedMessage(player, "Mode SPY actif.", 2, "[MODO]");
+				}
 			}else if (subCommand.equals("maintenance")) {
 				if((maintenancesure+30) > plugin.timetamps){
 					plugin.maintenance_status = true;
 					plugin.maintenance_message = "Serveur en maintenance (défini par "+ player.getDisplayName() +").";
-		    		for (Player p : plugin.getServer().getOnlinePlayers()) {
-		    			if(!p.isOp()) {
-		    				p.kickPlayer("Serveur en maintenance (défini par "+ player.getDisplayName() +").");
-		    			}
-		        	}
+					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" défini une maintenance.");
+		    		kickall("Serveur en maintenance (défini par "+ player.getDisplayName() +").", false);
 				}else{
 					maintenancesure = plugin.timetamps;
 					plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment définir le mode maintenance (/modo maintenance pour confirmer) ?", 2, "[MODO]");
 				}
-			//}else if (subCommand.equals("laststart")) {
-			//	
 			}
 		}
         

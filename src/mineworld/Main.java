@@ -10,15 +10,18 @@ import java.util.Random;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+import net.minecraft.server.Packet29DestroyEntity;
 import npcspawner.BasicHumanNpc;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
@@ -56,8 +59,9 @@ public class Main extends JavaPlugin {
     public List<String> modo = new ArrayList<String>();
     public List<String> correct = new ArrayList<String>();
     public List<String> anim = new ArrayList<String>();
-    
     public List<Player> world_whitelist = new ArrayList<Player>();
+    
+    public List<Player> spy_player = new ArrayList<Player>();
     
     public Map<Entity, Block> move_last = new HashMap<Entity, Block>();
 
@@ -80,6 +84,8 @@ public class Main extends JavaPlugin {
 	public int cron_tick_gen = 0;
 	public int number_creature = 0;
 	public int cron_tick_heal = 0;
+	
+	public int spy_tick_effect = 0;
 
 	public long timetamps = 0;
 	
@@ -89,10 +95,7 @@ public class Main extends JavaPlugin {
     public int is_core_tick = 0;
     public int refreshchunkt = 0;
     
-    Thread t_01;
-    Thread t_02;
-    Thread t_03;
-    Thread t_04;
+    Thread t_01, t_02, t_03, t_04, t_05;
 	
     public static Entity chicken;
     public static Entity zombie;
@@ -105,7 +108,7 @@ public class Main extends JavaPlugin {
     public void onEnable() {
     	PluginManager pm = getServer().getPluginManager();
     	PluginDescriptionFile pdfFile = getDescription();
-    	
+
         Main_NPC = new Main_NPC(this);
         Main_TimeControl = new Main_TimeControl(this);
         Main_ChunkControl = new Main_ChunkControl(this);
@@ -224,6 +227,25 @@ public class Main extends JavaPlugin {
 		}
 		return this.t_04;
 	}
+	
+	public Runnable runThread_05() {
+		if(this.t_05 == null) {
+			this.t_05 = new Thread(new Runnable() {
+				public void run()
+				{
+			    	try {
+			    		do_cron_05();
+			        } catch (Exception e) {
+			        	e.printStackTrace();
+			        }
+		            return;
+				}
+			});
+			this.t_05.setPriority(Thread.MIN_PRIORITY);
+			this.t_05.setDaemon(true);
+		}
+		return this.t_05;
+	}
     
 	int showRandomInteger(int aStart, int aEnd, Random aRandom){
 	    if ( aStart > aEnd ) {
@@ -307,9 +329,8 @@ public class Main extends JavaPlugin {
     }
     
     public void do_cron_01() {
-    	timetamps();
     	if(playerInServer()) {
-			if(cron_tick_heal > 150) {
+			if(cron_tick_heal > 15) {
 				Boolean isgood = true;
 				cron_tick_heal = 0;
 				for (Player p : getServer().getOnlinePlayers()) {
@@ -334,7 +355,7 @@ public class Main extends JavaPlugin {
 			}
 			lastplayerleft = 0;
     	}else{
-			if(lastplayerleft > 5000) {
+			if(lastplayerleft > 500) {
 				lastplayerleft = 0;
 				removeallitems();
 			}else{
@@ -503,15 +524,49 @@ public class Main extends JavaPlugin {
 				}
 			}
 		}	
-		
+    }
+    
+    public Boolean is_spy(Player player) {
+    	if(spy_player.contains(player)) {
+    		return true;
+    	}
+    	return false;
+    }
+    
+    public void do_cron_05() { 
+    	timetamps();
+    	if(!spy_player.isEmpty()) {
+    		Boolean tick = false;
+    		if(spy_tick_effect > 300) {
+    			spy_tick_effect = 0;
+    			tick = true;
+    		}
+	    	for (Player player : spy_player) {
+	    		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
+	    			if (entity instanceof Player) {
+						if(!((Player) entity).isOp()) {
+							CraftPlayer unHide = (CraftPlayer) entity;
+							CraftPlayer unHideFrom = (CraftPlayer) player;
+							unHide.getHandle().netServerHandler.sendPacket(new Packet29DestroyEntity(unHideFrom.getEntityId()));
+						}
+					}
+	    		}
+	    		if(tick) {
+	    			player.playEffect(player.getLocation(), Effect.BOW_FIRE, 1);
+	    		}
+	    	}
+	    }
     }
     
     private void runAllThread() {
     	// Main
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_01(), 1, 1); 
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_01(), 1, 10); 
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_02(), 1, 100); 
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_03(), 1, 10); 
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_04(), 1, 5000);
+    	
+    	// Main - UltraDO
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_05(), 1, 1);
 		
     	// Visiteur
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_Visiteur.runThread_1(this), 1, 25); 

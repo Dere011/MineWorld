@@ -104,7 +104,7 @@ public class Main_ChunkControl {
 		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
 			if (entity instanceof Player) {
 				if(!((Player) entity).isOp()) {
-					if(!plugin.isbot(player) && plugin.Main_Visiteur.is_visiteur((Player) entity) == plugin.Main_Visiteur.is_visiteur(player)) {
+					if(plugin.is_spy((Player) entity) && !plugin.isbot(player) && plugin.Main_Visiteur.is_visiteur((Player) entity) == plugin.Main_Visiteur.is_visiteur(player)) {
 						CraftPlayer unHide = (CraftPlayer) player;
 						CraftPlayer unHideFrom = (CraftPlayer) entity;
 						unHide.getHandle().netServerHandler.sendPacket(new Packet20NamedEntitySpawn(unHideFrom.getHandle()));
