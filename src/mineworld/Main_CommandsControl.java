@@ -5,6 +5,7 @@ import net.minecraft.server.Packet20NamedEntitySpawn;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -100,13 +101,17 @@ public class Main_CommandsControl {
 			if (subCommand.equals("restart")) {
 				if((restartsure+30) > plugin.timetamps){
 					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" arrête le serveur.");
-					plugin.getServer().dispatchCommand(null, "/stop");
+					CraftServer server = (CraftServer) plugin.getServer();
+					final CommandSender cs = server.getServer().console;
+					server.dispatchCommand(cs, "stop");
 				}else{
 					restartsure = plugin.timetamps;
 					plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment redémarrer le serveur (/modo restart pour confirmer) ?", 2, "[MODO]");
 				}
+				return false;
 			}else if (subCommand.equals("spy")) {
 				if(plugin.spy_player.contains(player)) {
+					plugin.spy_player.remove(player);
 					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" désactive le mode SPY.");
 					plugin.Main_MessageControl.sendTaggedMessage(player, "Mode SPY innactif.", 2, "[MODO]");
 		    		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
@@ -119,9 +124,11 @@ public class Main_CommandsControl {
 						}
 		    		}
 				}else{
+					plugin.spy_player.add(player);
 					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" active le mode SPY.");
 					plugin.Main_MessageControl.sendTaggedMessage(player, "Mode SPY actif.", 2, "[MODO]");
 				}
+				return false;
 			}else if (subCommand.equals("maintenance")) {
 				if((maintenancesure+30) > plugin.timetamps){
 					plugin.maintenance_status = true;
@@ -132,7 +139,9 @@ public class Main_CommandsControl {
 					maintenancesure = plugin.timetamps;
 					plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment définir le mode maintenance (/modo maintenance pour confirmer) ?", 2, "[MODO]");
 				}
+				return false;
 			}
+			
 		}
         
 		if (command.getName().toLowerCase().equals("mineworld")) {

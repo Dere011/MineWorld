@@ -1,6 +1,7 @@
 package mineworld;
 
 import org.bukkit.ChunkSnapshot;
+import org.bukkit.block.Biome;
 
 public class Main_ChunkCopy implements ChunkSnapshot {
     private final int x, z;
@@ -87,4 +88,22 @@ public class Main_ChunkCopy implements ChunkSnapshot {
     public long getCaptureFullTime() {
         return capture_fulltime;
     }
+
+	@Override
+	public Biome getBiome(int arg0, int arg1) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public double getRawBiomeRainfall(int arg0, int arg1) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getRawBiomeTemperature(int arg0, int arg1) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

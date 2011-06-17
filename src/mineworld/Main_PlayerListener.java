@@ -385,7 +385,7 @@ public class Main_PlayerListener extends PlayerListener {
     	}
    	 	String[] anTxt = plugin.Main_MessageControl.createstrings(2);
    	 	anTxt[0] = "Bienvenue sur MineWorld 2.0, le serveur semi-roleplay post-apocalypse.";
-   	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.RED + "V5.2.2 BETA" + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.6.6";
+   	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.RED + "V5.2.2" + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.6.6";
    	 	plugin.Main_MessageControl.sendTaggedMessage(player, anTxt, 2, "");
    	 	
    	 	int lastdeconnexion = (Integer) plugin.getPlayerConfig(player, "time_lastdeconnexion", "int");
@@ -449,7 +449,7 @@ public class Main_PlayerListener extends PlayerListener {
 					}
 				}
 			}
-    	}, (long) 150);
+    	}, (long) 50);
     }
     
     public void onPlayerQuit(PlayerQuitEvent event) {
@@ -458,6 +458,9 @@ public class Main_PlayerListener extends PlayerListener {
     		plugin.Main_Visiteur.remove_visiteur(event.getPlayer());
     	}else{
     		event.setQuitMessage(ChatColor.DARK_GRAY + event.getPlayer().getName() + " a quitté le serveur.");
+    	}
+    	if(plugin.Main_ChunkControl.player_lastchunk.containsKey(event.getPlayer())) {
+    		plugin.Main_ChunkControl.player_lastchunk.remove(event.getPlayer());
     	}
     	if(plugin.Main_ChunkControl.PlayerOR.contains(event.getPlayer())) {
     		plugin.Main_ChunkControl.PlayerOR.remove(event.getPlayer());

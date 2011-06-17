@@ -12,4 +12,7 @@ commands:
   mineworld:
     description: Main mineworld command
     usage: /mineworld
+  modo:
+    description: Main mineworld command
+    usage: /modo
            

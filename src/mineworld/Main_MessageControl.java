@@ -74,6 +74,7 @@ public class Main_MessageControl {
 			Packet61 packet = new Packet61(1000, player.getLocation().getBlockX(), player.getLocation().getBlockY()-5, player.getLocation().getBlockZ(), 1);
 			((CraftPlayer) player).getHandle().netServerHandler.sendPacket(packet);
 		}
+		
     	Boolean is_modo = ((Boolean) plugin.modo.contains(playerchat.getName()));
     	Boolean is_correct = ((Boolean) plugin.correct.contains(playerchat.getName()));
     	Boolean is_anim = ((Boolean) plugin.anim.contains(playerchat.getName()));

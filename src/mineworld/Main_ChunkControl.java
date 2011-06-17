@@ -20,6 +20,7 @@ import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 public class Main_ChunkControl {
 	
@@ -30,7 +31,7 @@ public class Main_ChunkControl {
     public Map<Player, ArrayList<Block>> player_blocs = new HashMap<Player, ArrayList<Block>>();
     public Map<Player, Boolean> player_chunkupdate = new HashMap<Player, Boolean>();
     public Map<Player, String> player_lastchunk = new HashMap<Player, String>();
-    public Map<Chunk, ArrayList<Block>> cache_antixray = new HashMap<Chunk, ArrayList<Block>>();
+    public Map<Chunk, ArrayList<Vector>> cache_antixray = new HashMap<Chunk, ArrayList<Vector>>();
 	
     public Main_ChunkControl(Main parent) {
         this.plugin = parent;
@@ -301,10 +302,10 @@ public class Main_ChunkControl {
 				final Main_ChunkCopy chunkcopy = getChunkSnapshot(craftchunk);
 				final Location lastlocation = theblock.getLocation();
 				if(cache_antixray.containsKey(chunk)) {
-					for (Block tblock : cache_antixray.get(chunk)) {
-						int xx = tblock.getX();
-						int yy = tblock.getY();
-						int zz = tblock.getZ();
+					for (Vector vec : cache_antixray.get(chunk)) {
+						int xx = vec.getBlockX();
+						int yy = vec.getBlockY();
+						int zz = vec.getBlockZ();
 						Block block = chunk.getBlock(xx, yy, zz);
 						int bid = block.getTypeId();
 						if(bid != 0 && is_blocs(bid)) {
@@ -314,7 +315,7 @@ public class Main_ChunkControl {
 						}
 					}
 				}else{
-					ArrayList<Block> blocktmp = new ArrayList<Block>();
+					ArrayList<Vector> blocktmp = new ArrayList<Vector>();
 			        for (int x = 0; x <= 16; x++) {
 		                for (int z = 0; z <= 16; z++) {
 		                	int hblocky = chunk.getWorld().getHighestBlockYAt(theblock.getLocation());
@@ -326,7 +327,7 @@ public class Main_ChunkControl {
 									int bid = block.getTypeId();
 									if(bid != 0 && is_blocs(bid)) {
 										chunkcopy.setRawTypeId(x, y, z, Material.STONE.getId());
-										blocktmp.add(block);
+										blocktmp.add(new Vector(x, y, z));
 									}
 								}
 			                }
@@ -334,7 +335,6 @@ public class Main_ChunkControl {
 			        }
 			        if(!blocktmp.isEmpty()) {
 			        	cache_antixray.put(chunk, blocktmp);
-			        	blocktmp.clear();
 			        }
 				}
 		        if(lastlocation != null) {

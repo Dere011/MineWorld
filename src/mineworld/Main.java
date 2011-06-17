@@ -264,7 +264,7 @@ public class Main extends JavaPlugin {
     
     public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
 	    try {
-	        if (!command.getName().toLowerCase().equals("mn") && !command.getName().toLowerCase().equals("mineworld")) {
+	        if (!command.getName().toLowerCase().equals("mn") && !command.getName().toLowerCase().equals("mineworld") && !command.getName().toLowerCase().equals("modo")) {
 	            return false;
 	        }
 	        Main_CommandsControl.Main_onCommand_do(sender, command, commandLabel, args);
@@ -275,7 +275,7 @@ public class Main extends JavaPlugin {
 	    } catch (Exception e) {
 	        sender.sendMessage("[MINEWORLD] Une erreur est survenue.");
 	        sendError(e.getMessage() + e.getStackTrace().toString());
-	        e.printStackTrace();
+	        //e.printStackTrace();
 	        return true;
 	    }
     }
@@ -312,7 +312,7 @@ public class Main extends JavaPlugin {
     }
     
     public boolean ismodo(Player p) {
-    	if(modo.contains(p)) {
+    	if(modo.contains(p.getName())) {
     		return true;
     	}else{
     		return false;
@@ -537,10 +537,11 @@ public class Main extends JavaPlugin {
     	timetamps();
     	if(!spy_player.isEmpty()) {
     		Boolean tick = false;
-    		if(spy_tick_effect > 300) {
+    		if(spy_tick_effect > 150) {
     			spy_tick_effect = 0;
     			tick = true;
     		}
+    		spy_tick_effect++;
 	    	for (Player player : spy_player) {
 	    		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
 	    			if (entity instanceof Player) {
@@ -552,7 +553,7 @@ public class Main extends JavaPlugin {
 					}
 	    		}
 	    		if(tick) {
-	    			player.playEffect(player.getLocation(), Effect.BOW_FIRE, 1);
+	    			player.playEffect(player.getLocation(), Effect.EXTINGUISH, 1);
 	    		}
 	    	}
 	    }
