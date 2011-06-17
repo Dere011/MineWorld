@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerPreLoginEvent.Result;
+import org.bukkit.event.world.ChunkPopulateEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class Main_PlayerListener extends PlayerListener {
@@ -377,7 +378,7 @@ public class Main_PlayerListener extends PlayerListener {
     	}
    	 	String[] anTxt = plugin.Main_MessageControl.createstrings(2);
    	 	anTxt[0] = "Bienvenue sur MineWorld 2.0, le serveur semi-roleplay post-apocalypse.";
-   	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.RED + "V5.2.2 ALPHA" + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.6.6";
+   	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.RED + "V5.2.2 BETA" + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.6.6";
    	 	plugin.Main_MessageControl.sendTaggedMessage(player, anTxt, 2, "");
    	 	
    	 	int lastdeconnexion = (Integer) plugin.getPlayerConfig(player, "time_lastdeconnexion", "int");

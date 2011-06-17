@@ -288,8 +288,10 @@ public class Main_ChunkControl {
 		
 		int Delayed_time = 0;
 		Chunk chunk_debut = p.getWorld().getChunkAt(p.getLocation());
-		for (int i = chunk_debut.getX()-4; i <= chunk_debut.getX()+4; i++) {
-			for (int o = chunk_debut.getZ()-4; o <= chunk_debut.getZ()+4; o++) {
+		int x_debut = chunk_debut.getX();
+		int z_debut = chunk_debut.getZ();
+		for (int i = x_debut-4; i <= x_debut+4; i++) {
+			for (int o = z_debut-4; o <= z_debut+4; o++) {
 				Delayed_time = Delayed_time+3;
 				Chunk chunk = p.getWorld().getChunkAt(i, o);
 				CraftChunk craftchunk = (CraftChunk) chunk;
@@ -298,8 +300,9 @@ public class Main_ChunkControl {
 				final Location lastlocation = theblock.getLocation();
 		        for (int x = 0; x <= 16; x++) {
 	                for (int z = 0; z <= 16; z++) {
+	                	int hblocky = chunk.getWorld().getHighestBlockYAt(theblock.getLocation());
 		                for (int y = 0; y <= 128; y++) {
-							if(y > chunk.getWorld().getHighestBlockYAt(theblock.getLocation())) {
+							if(y > hblocky) {
 								break;
 							}else{
 								Block block = chunk.getBlock(x, y, z);

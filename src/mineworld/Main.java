@@ -462,7 +462,7 @@ public class Main extends JavaPlugin {
 			}
 		}
 		
-		if(!Main_ChunkControl.player_blocs.isEmpty()) {
+		/*if(!Main_ChunkControl.player_blocs.isEmpty()) {
 			for (Player player : Main_ChunkControl.player_blocs) {
 				if(!player.isOnline()) {
 					Main_ChunkControl.player_blocs.remove(player);
@@ -470,7 +470,7 @@ public class Main extends JavaPlugin {
 			}
 		}
 		
-		/*if(!Main_ChunkControl.player_chunkupdate.isEmpty()) {
+		if(!Main_ChunkControl.player_chunkupdate.isEmpty()) {
 			for (Player player : Main_ChunkControl.player_chunkupdate) {
 				if(!player.isOnline()) {
 					Main_ChunkControl.player_chunkupdate.remove(player);
