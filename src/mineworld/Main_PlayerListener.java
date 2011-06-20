@@ -128,7 +128,6 @@ public class Main_PlayerListener extends PlayerListener {
     		event.setCancelled(true);
     		return;
     	}
-    	
     	String worldname = player.getWorld().getName();
     	if(!event.getPlayer().isOp() && (worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
 	    	if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
@@ -139,7 +138,6 @@ public class Main_PlayerListener extends PlayerListener {
 	    		}
 	    	}
     	}
-    	
     	if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
     		Block block = event.getClickedBlock();
     		if(block.getType() == Material.STONE_BUTTON || block.getType() == Material.LEVER) {
@@ -155,28 +153,24 @@ public class Main_PlayerListener extends PlayerListener {
     		    	event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.NORTH).setTypeId(0);
     		    	Location location = event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.NORTH).getLocation();
     		    	event.getClickedBlock().getWorld().dropItemNaturally(location,new ItemStack(81,1));
-
         		}
     	    	else if (event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.EAST).getType() == Material.CACTUS)
         		{
     	    		event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.EAST).setTypeId(0);
     	    		Location location = event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.EAST).getLocation();
     		    	event.getClickedBlock().getWorld().dropItemNaturally(location,new ItemStack(81,1));
-
         		}
     		    else if (event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.SOUTH).getType() == Material.CACTUS)
     	    	{
     		    	event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.SOUTH).setTypeId(0);
     		    	Location location = event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.SOUTH).getLocation();
     		    	event.getClickedBlock().getWorld().dropItemNaturally(location,new ItemStack(81,1));
-
         		}
     		    else if (event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.WEST).getType() == Material.CACTUS)
     	    	{
     		    	event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.WEST).setTypeId(0);
     		    	Location location = event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.WEST).getLocation();
     		    	event.getClickedBlock().getWorld().dropItemNaturally(location,new ItemStack(81,1));
-
         		}
     	    }
 			if(event.getItem() == null)  { return; }
@@ -383,9 +377,12 @@ public class Main_PlayerListener extends PlayerListener {
     		player.kickPlayer("Votre compte est bloqué.");
     		return;
     	}
-   	 	String[] anTxt = plugin.Main_MessageControl.createstrings(2);
+    	
+    	String version = (String) plugin.getServerConfig("informations.version", "string");
+   	 	String[] anTxt = plugin.Main_MessageControl.createstrings(3);
    	 	anTxt[0] = "Bienvenue sur MineWorld 2.0, le serveur semi-roleplay post-apocalypse.";
-   	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.RED + "V5.2.2" + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.6.6";
+   	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.RED + "V" + version + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.6.6";
+   	 	anTxt[2] = "Système de StarGate temporairement innactif.";
    	 	plugin.Main_MessageControl.sendTaggedMessage(player, anTxt, 2, "");
    	 	
    	 	int lastdeconnexion = (Integer) plugin.getPlayerConfig(player, "time_lastdeconnexion", "int");
@@ -426,12 +423,21 @@ public class Main_PlayerListener extends PlayerListener {
 			player.setHealth(200);
 			return;
 		}
-    	
+		
     	// Main
     	Main_onPlayerJoin_do(event);
 
         // NPC
     	NPC_onPlayerJoin_do(event);
+    	
+    	/*int itemgive = (Integer) plugin.getPlayerConfig(player, "itemgive_02", "int");
+    	if(itemgive == 0) {
+    		plugin.setPlayerConfig(player, "itemgive_02", plugin.timetamps);
+    		ItemStack stack = new ItemStack(Material.PAINTING);
+    		stack.setAmount(10);
+    		player.getWorld().dropItem(player.getLocation(), stack);
+       	 	plugin.Main_MessageControl.sendTaggedMessage(player, "Suite à un problème technique avec les peintures, MineWorld vous offre 10 peintures.", 2, "[CADEAU]");
+    	}*/
     	
     	int firsttime = (Integer) plugin.getPlayerConfig(player, "time_firsttime", "int");
     	if(firsttime == 0) {
@@ -473,6 +479,9 @@ public class Main_PlayerListener extends PlayerListener {
 		}
 		if(plugin.anim.contains(event.getPlayer().getName())) {
 			plugin.anim.remove(event.getPlayer().getName());
+		}
+		if(plugin.stop.contains(event.getPlayer().getName())) {
+			plugin.stop.remove(event.getPlayer().getName());
 		}
 		plugin.setPlayerConfig(event.getPlayer(), "time_lastdeconnexion", plugin.timetamps);
     }
@@ -618,6 +627,7 @@ public class Main_PlayerListener extends PlayerListener {
 		Boolean modo = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_modo", false);
 		Boolean anim = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_anim", false);
 		Boolean correc = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_correc", false);
+		Boolean stop = plugin.conf_player.getBoolean("load-player."+ event.getName() +".is_stop", false);
 		if(modo && !plugin.modo.contains(event.getName())) {
 			plugin.modo.add(event.getName());
 		}
@@ -626,6 +636,9 @@ public class Main_PlayerListener extends PlayerListener {
 		}
 		if(correc && !plugin.correct.contains(event.getName())) {
 			plugin.correct.add(event.getName());
+		}
+		if(stop && !plugin.stop.contains(event.getName())) {
+			plugin.stop.add(event.getName());
 		}
 		if(admin) {
 			event.allow();

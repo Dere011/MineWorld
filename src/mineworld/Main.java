@@ -59,6 +59,7 @@ public class Main extends JavaPlugin {
     public List<String> modo = new ArrayList<String>();
     public List<String> correct = new ArrayList<String>();
     public List<String> anim = new ArrayList<String>();
+    public List<String> stop = new ArrayList<String>();
     public List<Player> world_whitelist = new ArrayList<Player>();
     
     public List<Player> spy_player = new ArrayList<Player>();
@@ -69,8 +70,6 @@ public class Main extends JavaPlugin {
 	protected File NPC_configFile = new File(maindir, "npc_config.yml");
 	protected File Player_configFile = new File(maindir, "player_config.yml");
 	protected File Server_configFile = new File(maindir, "server_config.yml");
-	
-	public File shema_01 = new File(maindir, "01.shema");
 	
 	Configuration conf_player = new Configuration(Player_configFile);
 	Configuration conf_npc = new Configuration(NPC_configFile);
@@ -275,7 +274,7 @@ public class Main extends JavaPlugin {
 	    } catch (Exception e) {
 	        sender.sendMessage("[MINEWORLD] Une erreur est survenue.");
 	        sendError(e.getMessage() + e.getStackTrace().toString());
-	        //e.printStackTrace();
+	        e.printStackTrace();
 	        return true;
 	    }
     }
@@ -557,6 +556,17 @@ public class Main extends JavaPlugin {
 	    		}
 	    	}
 	    }
+    	
+    	if(!stop.isEmpty()) {
+	    	for (Player p : getServer().getOnlinePlayers()) {
+	    		if(stop.contains(p.getName())) {
+	    			Location ploc = p.getLocation();
+	    			for (int x = 0; x <= 300; x++) {
+	    				p.sendBlockChange(ploc, 0, (byte) 0);
+	    			}
+	    		}
+	    	}
+    	}
     }
     
     private void runAllThread() {

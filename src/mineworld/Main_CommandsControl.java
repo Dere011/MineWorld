@@ -31,25 +31,24 @@ public class Main_CommandsControl {
     
     public Boolean Main_onCommand_do(CommandSender sender, Command command, String commandLabel, String[] args) {
     	String subCommand = args[0].toLowerCase();
-        Player player = (Player) sender;
     	
     	if ((sender instanceof Player) == false) {
 	    	if (subCommand.equals("kickall4774")) {
-	    		kickall("Restart de routine (Le serveur sera de retour dans moins de 30 secondes).", false);
+	    		kickall("Restart de routine (Le serveur sera de retour dans moins de 30 secondes).", true);
 	    		plugin.maintenance_status = true;
 	    		plugin.removeallitems();
 	    		return false;
 	        }
 	    	
 	    	if (subCommand.equals("crash66565465") && plugin.maintenance_status != true) {
-	    		kickall("Le serveur est détecté comme planter, restart en cours.", false);
+	    		kickall("Le serveur est détecté comme planter, restart en cours.", true);
     			plugin.maintenance_status = true;
 	    		plugin.removeallitems();
 	    		return false;
 	        }
 	    	
 	    	if (subCommand.equals("kickall5000")) {
-	    		kickall("Le serveur va subir une mise a jour, restart en cours.", false);
+	    		kickall("Le serveur va subir une mise a jour, restart en cours.", true);
     			plugin.maintenance_status = true;
 	    		plugin.removeallitems();
 	    		return false;
@@ -92,6 +91,8 @@ public class Main_CommandsControl {
 	    		return false;
 	        }
     	}
+    	
+        Player player = (Player) sender;
         
 		if (command.getName().toLowerCase().equals("modo")) {
 			if(!plugin.ismodo(player)) {
