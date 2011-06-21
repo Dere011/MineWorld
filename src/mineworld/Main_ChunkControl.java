@@ -32,7 +32,8 @@ public class Main_ChunkControl {
     public Map<Player, Boolean> player_chunkupdate = new HashMap<Player, Boolean>();
     public Map<Player, String> player_lastchunk = new HashMap<Player, String>();
     public Map<Chunk, ArrayList<Vector>> cache_antixray = new HashMap<Chunk, ArrayList<Vector>>();
-	
+    public Map<Chunk, Long> cache_antixray_lastupdate = new HashMap<Chunk, Long>();
+    
     public Main_ChunkControl(Main parent) {
         this.plugin = parent;
     }
@@ -290,7 +291,7 @@ public class Main_ChunkControl {
 		Block theblock = chunk.getBlock(0, 0, 0);
 		final Main_ChunkCopy chunkcopy = getChunkSnapshot(craftchunk);
 		final Location lastlocation = theblock.getLocation();
-		if(cache_antixray.containsKey(chunk)) {
+		if((cache_antixray.containsKey(chunk) && cache_antixray.get(chunk).size() <= 0) && (cache_antixray_lastupdate.containsKey(chunk) && cache_antixray_lastupdate.get(chunk)+500 > plugin.timetamps)) {
 			for (Vector vec : cache_antixray.get(chunk)) {
 				int xx = vec.getBlockX();
 				int yy = vec.getBlockY();
@@ -328,6 +329,7 @@ public class Main_ChunkControl {
 	        }
 	        if(!blocktmp.isEmpty()) {
 	        	cache_antixray.put(chunk, blocktmp);
+	        	cache_antixray_lastupdate.put(chunk, plugin.timetamps);
 	        }
 		}
         if(lastlocation != null && chunkcopy.getBlockTypeId(0, 0, 0) != 0) {
@@ -335,6 +337,7 @@ public class Main_ChunkControl {
         }else{
         	if(cache_antixray.containsKey(chunk)) {
         		cache_antixray.remove(chunk);
+        		cache_antixray_lastupdate.remove(chunk);
         	}
         	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
     			public void run()
@@ -360,8 +363,8 @@ public class Main_ChunkControl {
 		Chunk chunk_debut = p.getWorld().getChunkAt(p.getLocation());
 		int x_debut = chunk_debut.getX();
 		int z_debut = chunk_debut.getZ();
-		for (int i = x_debut-6; i <= x_debut+6; i++) {
-			for (int o = z_debut-6; o <= z_debut+6; o++) {
+		for (int i = (x_debut)-6; i <= (x_debut)+6; i++) {
+			for (int o = (z_debut)-6; o <= (z_debut)+6; o++) {
 				final Chunk chunk = p.getWorld().getChunkAt(i, o);
 				Delayed_time = Delayed_time+2;
 		    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {

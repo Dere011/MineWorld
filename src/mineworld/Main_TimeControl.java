@@ -193,7 +193,7 @@ public class Main_TimeControl {
 					    				pworld.strikeLightningEffect(new Location(loc.getWorld(), loc.getBlockX(), p.getWorld().getHighestBlockYAt(loc), loc.getBlockZ()));
 					    			}
 			    				}else{
-			    					Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 16, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 16, rand));
+			    					Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 5, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 5, rand));
 			    					pworld.strikeLightning(new Location(loc.getWorld(), loc.getBlockX(), p.getWorld().getHighestBlockYAt(loc), loc.getBlockZ()));
 			    				}
 			    			}

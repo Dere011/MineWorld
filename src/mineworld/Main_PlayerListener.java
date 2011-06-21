@@ -128,6 +128,7 @@ public class Main_PlayerListener extends PlayerListener {
     		event.setCancelled(true);
     		return;
     	}
+    	
     	String worldname = player.getWorld().getName();
     	if(!event.getPlayer().isOp() && (worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
 	    	if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
@@ -138,6 +139,7 @@ public class Main_PlayerListener extends PlayerListener {
 	    		}
 	    	}
     	}
+    	
     	if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
     		Block block = event.getClickedBlock();
     		if(block.getType() == Material.STONE_BUTTON || block.getType() == Material.LEVER) {
@@ -379,10 +381,9 @@ public class Main_PlayerListener extends PlayerListener {
     	}
     	
     	String version = (String) plugin.getServerConfig("informations.version", "string");
-   	 	String[] anTxt = plugin.Main_MessageControl.createstrings(3);
+   	 	String[] anTxt = plugin.Main_MessageControl.createstrings(2);
    	 	anTxt[0] = "Bienvenue sur MineWorld 2.0, le serveur semi-roleplay post-apocalypse.";
    	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.RED + "V" + version + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.6.6";
-   	 	anTxt[2] = "Système de StarGate temporairement innactif.";
    	 	plugin.Main_MessageControl.sendTaggedMessage(player, anTxt, 2, "");
    	 	
    	 	int lastdeconnexion = (Integer) plugin.getPlayerConfig(player, "time_lastdeconnexion", "int");
@@ -403,6 +404,7 @@ public class Main_PlayerListener extends PlayerListener {
    	 	}else{
    	 		timetxt = "";
    	 	}
+   	 	
 		if(plugin.Main_Visiteur.whitelist.contains(player.getName().toLowerCase())) {
 			plugin.Main_MessageControl.sendTaggedMessage(player, "Votre compte est bien dans notre WhiteList.", 1, "[WHITELIST]");
 			if(lastdeconnexion == 0 || (lastdeconnexion+360) < plugin.timetamps) {
@@ -415,8 +417,8 @@ public class Main_PlayerListener extends PlayerListener {
 				event.setJoinMessage(ChatColor.DARK_GRAY + event.getPlayer().getName() + " est de retour ("+ timetxt +").");
 			}
 		}else{
-			plugin.Main_MessageControl.sendTaggedMessage(player, "Vous avez un compte visiteur.", 1, "[WHITELIST]");
 			plugin.Main_Visiteur.add_visiteur(player);
+			plugin.Main_MessageControl.sendTaggedMessage(player, "Vous avez un compte visiteur.", 1, "[WHITELIST]");
 			event.setJoinMessage(ChatColor.DARK_GRAY + "Un visiteur a rejoint le serveur.");
 			player.setDisplayName("visiteur");
 			setSpawnTimed(player);
@@ -429,15 +431,6 @@ public class Main_PlayerListener extends PlayerListener {
 
         // NPC
     	NPC_onPlayerJoin_do(event);
-    	
-    	/*int itemgive = (Integer) plugin.getPlayerConfig(player, "itemgive_02", "int");
-    	if(itemgive == 0) {
-    		plugin.setPlayerConfig(player, "itemgive_02", plugin.timetamps);
-    		ItemStack stack = new ItemStack(Material.PAINTING);
-    		stack.setAmount(10);
-    		player.getWorld().dropItem(player.getLocation(), stack);
-       	 	plugin.Main_MessageControl.sendTaggedMessage(player, "Suite à un problème technique avec les peintures, MineWorld vous offre 10 peintures.", 2, "[CADEAU]");
-    	}*/
     	
     	int firsttime = (Integer) plugin.getPlayerConfig(player, "time_firsttime", "int");
     	if(firsttime == 0) {

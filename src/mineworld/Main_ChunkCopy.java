@@ -6,8 +6,8 @@ import org.bukkit.block.Biome;
 public class Main_ChunkCopy implements ChunkSnapshot {
     private final int x, z;
     private final String worldname;
-    private final byte[] buf; // Flat buffer in uncompressed chunk file format
-    private final byte[] hmap; // Height map
+    private final byte[] buf;
+    private final byte[] hmap;
     private final long capture_fulltime;
 
     private static final int BLOCKDATA_OFF = 32768;
