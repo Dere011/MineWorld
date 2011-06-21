@@ -2,8 +2,11 @@ package mineworld;
 
 import java.util.Random;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 public class Main_TimeControl {
@@ -22,6 +25,10 @@ public class Main_TimeControl {
     private int storm_next_tick;
     private int storm_tick_n = 0;
     private int meteotick = 0;
+    
+    public boolean dead_sun = false;
+    private int dead_sun_tick = 0;
+    private int dead_sun_next = showRandomInteger(40000, 100000, rand);
     
     public Main_TimeControl(Main parent) {
         this.plugin = parent;
@@ -104,8 +111,51 @@ public class Main_TimeControl {
 		}
 	}
 	
+	public void strike_eclaire(Location location) {
+		int px = location.getBlockX();
+		int pz = location.getBlockZ();
+		
+		World world = location.getWorld();
+		double lastdistance = 1000000000;
+		Location lastlocation = null;
+		int lasttype = 0;
+		
+		for (int x = px-8; x <= px+8; x++) {
+            for (int z = pz-8; z <= pz+8; z++) {
+                int yblock = world.getHighestBlockYAt(x, z);
+                Block block = world.getBlockAt(new Location(world, x, yblock, z));
+                int bid = block.getTypeId();
+		        if(plugin.checkLocation(location, block.getLocation(), 10.0)) {
+	                if(bid == Material.IRON_BLOCK.getId()) {
+		                double distance = plugin.getdistance(location, block.getLocation());
+		                if(lastdistance > distance) {
+		                	lastdistance = distance;
+		                	lastlocation = block.getLocation();
+		                	lasttype = 1;
+		                }
+	                }else if(bid == Material.DISPENSER.getId()) {
+		                double distance = plugin.getdistance(location, block.getLocation());
+		                if((lastdistance > distance && lasttype > 1) || (lastdistance+5 > distance && lasttype == 1)) {
+		                	lastdistance = distance;
+		                	lastlocation = block.getLocation();
+		                	lasttype = 2;
+		                }
+	                }
+		        }
+            }
+        }
+		
+		if(lastlocation != null) {
+			world.strikeLightning(new Location(world, lastlocation.getBlockX(), lastlocation.getBlockY(), lastlocation.getBlockZ()));
+			world.strikeLightning(new Location(world, lastlocation.getBlockX(), lastlocation.getBlockY(), lastlocation.getBlockZ()));
+			world.createExplosion(lastlocation.getBlockX(), lastlocation.getBlockY(), lastlocation.getBlockZ(), 3, false);
+		}else{
+			world.strikeLightning(new Location(world, location.getBlockX(), world.getHighestBlockYAt(location), location.getBlockZ()));
+		}
+	}
+	
 	private void do_meteo() {
-		if(meteotick > 5) {
+		if(meteotick > 5 && !dead_sun) {
 			meteotick = 0;
 			if(meteo_monde_type == 2) {
 				if(meteo_monde_tick > 800) {
@@ -194,7 +244,7 @@ public class Main_TimeControl {
 					    			}
 			    				}else{
 			    					Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 5, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 5, rand));
-			    					pworld.strikeLightning(new Location(loc.getWorld(), loc.getBlockX(), p.getWorld().getHighestBlockYAt(loc), loc.getBlockZ()));
+			    					strike_eclaire(loc);
 			    				}
 			    			}
 		    			}
@@ -203,6 +253,44 @@ public class Main_TimeControl {
 	    	}
     	}else{
     		storm_tick_n++;
+    	}
+    	
+    	if(dead_sun) {
+    		for (Player p : plugin.getServer().getOnlinePlayers()) {
+    			if(plugin.Main_Visiteur.is_visiteur(p)) {
+    				continue;
+    			}
+    			if(p.getWorld().getHighestBlockYAt(p.getLocation()) <= p.getLocation().getBlockY() && p.getLocation().getBlock().getLightLevel() >= 13) {
+    				p.setFireTicks(1500);
+    				int aie_lasttime = (Integer) plugin.getPlayerConfig(p, "time_sundead_aie", "int");
+    				if((plugin.timetamps-aie_lasttime) > 30) {
+    					plugin.Main_MessageControl.sendTaggedMessage(p, "Attention, le soleil vous brule !", 1, "[DEAD SUN]");
+    					plugin.setPlayerConfig(p, "time_sundead_aie", plugin.timetamps);
+    				}
+    			}
+    		}
+    	}
+    	
+    	if(dead_sun_tick >= dead_sun_next) {
+    		dead_sun_tick = 0;
+    		if(dead_sun) {
+	    		dead_sun_next = showRandomInteger(40000, 100000, rand);
+	    		dead_sun = false;
+    			plugin.Main_ChunkControl.ResendAll.clear();
+	    		setTime("world", 15000);
+    		}else{
+    			dead_sun_next = 5000;
+    			dead_sun = true;
+    			plugin.Main_ChunkControl.ResendAll.clear();
+				plugin.Main_MessageControl.sendMessageToAll(ChatColor.RED + "Attention, le soleil brulant arrive !");
+    			setTime("world", 0);
+				if(isStorm()) {
+					setStorm(false);
+			    	setThundering(false);
+				}
+    		}
+    	}else{
+    		dead_sun_tick++;
     	}
 	}
 }

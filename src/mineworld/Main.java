@@ -139,7 +139,7 @@ public class Main extends JavaPlugin {
         pm.registerEvent(Type.BLOCK_BREAK, Main_BlockListener, Priority.Normal, this); 
         pm.registerEvent(Type.BLOCK_DAMAGE, Main_BlockListener, Priority.Normal, this); 
         pm.registerEvent(Type.BLOCK_PLACE, Main_BlockListener, Priority.Normal, this);
-        
+
     	runAllThread();
     	
     	try {
@@ -434,7 +434,7 @@ public class Main extends JavaPlugin {
 						}
 						if(thetarget != null) {
 							double range = 12.0;
-							if(thetarget.getLocation().getBlock().getLightLevel() < 8) {
+							if(thetarget.getLocation().getBlock().getLightLevel() < 10) {
 								range = 5.0;
 							}
 							if (checkLocation(thetarget.getLocation(), e.getLocation(), range)) {
@@ -556,13 +556,12 @@ public class Main extends JavaPlugin {
 	    		}
 	    	}
 	    }
-    	
     	if(!stop.isEmpty()) {
 	    	for (Player p : getServer().getOnlinePlayers()) {
 	    		if(stop.contains(p.getName())) {
 	    			Location ploc = p.getLocation();
 	    			for (int x = 0; x <= 300; x++) {
-	    				p.sendBlockChange(ploc, 0, (byte) 0);
+	    				p.sendBlockChange(ploc.add(0, 10, 0), 0, (byte) 0);
 	    			}
 	    		}
 	    	}

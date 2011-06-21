@@ -28,7 +28,7 @@ public class Main_BlockListener extends BlockListener {
     		return;
     	}
     	String worldname = event.getPlayer().getWorld().getName();
-    	if(!event.getPlayer().isOp() && (plugin.is_spy(event.getPlayer()) || worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
+    	if(!event.getPlayer().isOp() && (plugin.is_spy(event.getPlayer()) || !worldname.equals("world"))) {
     		event.setCancelled(true);
     		return;
     	}
@@ -41,7 +41,7 @@ public class Main_BlockListener extends BlockListener {
     		return;
     	}
     	String worldname = event.getPlayer().getWorld().getName();
-    	if(!event.getPlayer().isOp() && (plugin.is_spy(event.getPlayer()) || worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
+    	if(!event.getPlayer().isOp() && (plugin.is_spy(event.getPlayer()) || !worldname.equals("world"))) {
     		event.setCancelled(true);
     		return;
     	}
@@ -54,7 +54,7 @@ public class Main_BlockListener extends BlockListener {
     		return;
     	}
     	String worldname = event.getPlayer().getWorld().getName();
-    	if(!event.getPlayer().isOp() && (plugin.is_spy(event.getPlayer()) || worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
+    	if(!event.getPlayer().isOp() && (plugin.is_spy(event.getPlayer()) || !worldname.equals("world"))) {
     		event.setCancelled(true);
     		return;
     	}

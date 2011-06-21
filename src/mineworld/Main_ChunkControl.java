@@ -27,6 +27,7 @@ public class Main_ChunkControl {
     private final Main plugin;
     Thread thread_01, thread_02, thread_03;
     List<Player> PlayerOR = new ArrayList<Player>();
+    List<Player> ResendAll = new ArrayList<Player>();
     
     public Map<Player, ArrayList<Block>> player_blocs = new HashMap<Player, ArrayList<Block>>();
     public Map<Player, Boolean> player_chunkupdate = new HashMap<Player, Boolean>();
@@ -175,8 +176,9 @@ public class Main_ChunkControl {
 					}	
 				}
 			}
-			if (good) {
+			if (good || !ResendAll.contains(p)) {
 				plugin.Main_ChunkControl.CacheOnlyChunk(p);
+				ResendAll.add(p);
 				String schunkid = p.getWorld().getChunkAt(p.getLocation()).getX()+" "+p.getWorld().getChunkAt(p.getLocation()).getZ();
 				player_lastchunk.put(p, schunkid);
 			}
@@ -272,17 +274,30 @@ public class Main_ChunkControl {
         return true;
     }
     
-    public Boolean ChunkGenerator(Player player, Main_ChunkCopy chunkcopy, int bid, Vector vector) {
-    	/*if(plugin.ismodo(player)) {
+    public Boolean ChunkGenerator(Player player, Main_ChunkCopy chunkcopy, int bid, Vector vector, int hy) {
+    	if(plugin.Main_TimeControl.dead_sun) {
 	    	int x = vector.getBlockX();
 	    	int y = vector.getBlockY();
 	    	int z = vector.getBlockZ();
-	    	Material bname = Material.getMaterial(bid);
-	    	if(bname == Material.LEAVES) {
-	    		chunkcopy.setRawTypeId(x, y, z, Material.WOOL.getId());
-	    		return true;
+	    	Block block = player.getWorld().getBlockAt(new Location(player.getWorld(), vector.getX(), vector.getY(), vector.getZ()));
+	    	if(block.getLightLevel() > 13 && hy <= y) {
+		    	Material bname = Material.getMaterial(bid);
+		    	if(bname == Material.LEAVES) {
+		    		chunkcopy.setRawTypeId(x, y, z, Material.FIRE.getId());
+		    		return true;
+		    	}
+		    	if(bname == Material.GRASS) {
+		    		chunkcopy.setRawTypeId(x, y, z, Material.SAND.getId());
+		    		return true;
+		    	}
+		    	if(bname == Material.DIRT) {
+		    		chunkcopy.setRawTypeId(x, y, z, Material.SAND.getId());
+		    		return true;
+		    	}
+	    	}else{
+	    		
 	    	}
-    	}*/
+    	}
     	return false;
     }
     
@@ -291,7 +306,7 @@ public class Main_ChunkControl {
 		Block theblock = chunk.getBlock(0, 0, 0);
 		final Main_ChunkCopy chunkcopy = getChunkSnapshot(craftchunk);
 		final Location lastlocation = theblock.getLocation();
-		if((cache_antixray.containsKey(chunk) && cache_antixray.get(chunk).size() <= 0) && (cache_antixray_lastupdate.containsKey(chunk) && cache_antixray_lastupdate.get(chunk)+500 > plugin.timetamps)) {
+		if(!plugin.Main_TimeControl.dead_sun && (cache_antixray.containsKey(chunk) && cache_antixray.get(chunk).size() <= 0) && (cache_antixray_lastupdate.containsKey(chunk) && cache_antixray_lastupdate.get(chunk)+500 > plugin.timetamps)) {
 			for (Vector vec : cache_antixray.get(chunk)) {
 				int xx = vec.getBlockX();
 				int yy = vec.getBlockY();
@@ -300,7 +315,7 @@ public class Main_ChunkControl {
 				int bid = block.getTypeId();
 				if(bid != 0 && is_blocs(bid)) {
 					chunkcopy.setRawTypeId(xx, yy, zz, Material.STONE.getId());
-				}else if(ChunkGenerator(player, chunkcopy, bid, new Vector(xx, yy, zz)) == false){
+				}else if(ChunkGenerator(player, chunkcopy, bid, new Vector(xx, yy, zz), 0) == false){
 					cache_antixray.get(chunk).remove(block);
 				}
 			}
@@ -320,14 +335,14 @@ public class Main_ChunkControl {
 									chunkcopy.setRawTypeId(x, y, z, Material.STONE.getId());
 									blocktmp.add(new Vector(x, y, z));
 								}else{
-									ChunkGenerator(player, chunkcopy, bid, new Vector(x, y, z));
+									ChunkGenerator(player, chunkcopy, bid, new Vector(x, y, z), hblocky);
 								}
 							}
 						}
 	                }
 	            }
 	        }
-	        if(!blocktmp.isEmpty()) {
+	        if(!plugin.Main_TimeControl.dead_sun && !blocktmp.isEmpty()) {
 	        	cache_antixray.put(chunk, blocktmp);
 	        	cache_antixray_lastupdate.put(chunk, plugin.timetamps);
 	        }

@@ -33,7 +33,6 @@ public class CHumanNpc extends EntityPlayer {
     }
 
     public void animateArmSwing() {
-        //this.b.k.a(this, new Packet18ArmAnimation(this, 1));
     	EntityTracker entitytracker = this.b.b(this.dimension);
     	entitytracker.a(this, new Packet18ArmAnimation(this, 1));
     }
