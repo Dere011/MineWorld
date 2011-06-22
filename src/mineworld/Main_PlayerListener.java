@@ -271,6 +271,16 @@ public class Main_PlayerListener extends PlayerListener {
     		event.setCancelled(true);
     		return;
     	}
+    	if (plugin.Main_Visiteur.is_visiteur(event.getPlayer())) {
+    		plugin.Main_Visiteur.denied_message(event.getPlayer());
+    		event.setCancelled(true);
+    		return;
+    	}
+    	String worldname = event.getPlayer().getWorld().getName();
+    	if(!event.getPlayer().isOp() && (worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
+    		event.setCancelled(true);
+    		return;
+    	}
     	if (event.getMessage().contains("/sethome")) {
     		if(player.isSleeping() && player.getInventory().contains(Material.COMPASS)) {
 	    	 	int lasthome_set = (Integer) plugin.getPlayerConfig(player, "time_lasthomeset", "int");
@@ -284,6 +294,8 @@ public class Main_PlayerListener extends PlayerListener {
     		}else{
     			plugin.Main_MessageControl.sendTaggedMessage(player, "Vous devez être dans un lit avec une boussole pour définir votre point de home.", 1, "");
     		}
+    		event.setCancelled(true);
+    		return;
     	}
     	if (event.getMessage().contains("/home")) {
     		int lasthome = (Integer) plugin.getPlayerConfig(player, "time_lasthome", "int");
@@ -301,33 +313,19 @@ public class Main_PlayerListener extends PlayerListener {
     		if(player.isOp()) {
     			setSpawn(player);
     			player.sendMessage("Spawn set.");
-    			event.setCancelled(true);
-    			return;
     		}else{
     			player.kickPlayer("Commande interdite.");
-    			event.setCancelled(true);
-    			return;
     		}
+    		event.setCancelled(true);
+    		return;
     	}
     	if (event.getMessage().contains("/setspawn")) {
     		if(player.isOp()) {
     			player.getWorld().setSpawnLocation(player.getLocation().getBlockX(), player.getLocation().getBlockY(), player.getLocation().getBlockZ());
     			player.sendMessage("Spawn set.");
-    			event.setCancelled(true);
-    			return;
     		}else{
     			player.kickPlayer("Commande interdite.");
-    			event.setCancelled(true);
-    			return;
     		}
-    	}
-    	if (plugin.Main_Visiteur.is_visiteur(event.getPlayer())) {
-    		plugin.Main_Visiteur.denied_message(event.getPlayer());
-    		event.setCancelled(true);
-    		return;
-    	}
-    	String worldname = event.getPlayer().getWorld().getName();
-    	if(!event.getPlayer().isOp() && (worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
     		event.setCancelled(true);
     		return;
     	}

@@ -27,7 +27,7 @@ public class Main_TimeControl {
     private int meteotick = 0;
     
     public boolean dead_sun = false;
-    private int dead_sun_tick = 0;
+    public int dead_sun_tick = 0;
     private int dead_sun_next = showRandomInteger(40000, 100000, rand);
     
     public Main_TimeControl(Main parent) {
@@ -114,12 +114,10 @@ public class Main_TimeControl {
 	public void strike_eclaire(Location location) {
 		int px = location.getBlockX();
 		int pz = location.getBlockZ();
-		
 		World world = location.getWorld();
 		double lastdistance = 1000000000;
 		Location lastlocation = null;
 		int lasttype = 0;
-		
 		for (int x = px-8; x <= px+8; x++) {
             for (int z = pz-8; z <= pz+8; z++) {
                 int yblock = world.getHighestBlockYAt(x, z);
@@ -257,13 +255,13 @@ public class Main_TimeControl {
     	
     	if(dead_sun) {
     		for (Player p : plugin.getServer().getOnlinePlayers()) {
-    			if(plugin.Main_Visiteur.is_visiteur(p)) {
+    			if(plugin.Main_Visiteur.is_visiteur(p) || p.isOp()) {
     				continue;
     			}
     			if(p.getWorld().getHighestBlockYAt(p.getLocation()) <= p.getLocation().getBlockY() && p.getLocation().getBlock().getLightLevel() >= 13) {
-    				p.setFireTicks(1500);
+    				p.setFireTicks(100);
     				int aie_lasttime = (Integer) plugin.getPlayerConfig(p, "time_sundead_aie", "int");
-    				if((plugin.timetamps-aie_lasttime) > 30) {
+    				if((plugin.timetamps-aie_lasttime) > 15) {
     					plugin.Main_MessageControl.sendTaggedMessage(p, "Attention, le soleil vous brule !", 1, "[DEAD SUN]");
     					plugin.setPlayerConfig(p, "time_sundead_aie", plugin.timetamps);
     				}
@@ -277,11 +275,13 @@ public class Main_TimeControl {
 	    		dead_sun_next = showRandomInteger(40000, 100000, rand);
 	    		dead_sun = false;
     			plugin.Main_ChunkControl.ResendAll.clear();
+    			plugin.Main_ChunkControl.player_chunkupdate.clear();
 	    		setTime("world", 15000);
     		}else{
     			dead_sun_next = 5000;
     			dead_sun = true;
     			plugin.Main_ChunkControl.ResendAll.clear();
+    			plugin.Main_ChunkControl.player_chunkupdate.clear();
 				plugin.Main_MessageControl.sendMessageToAll(ChatColor.RED + "Attention, le soleil brulant arrive !");
     			setTime("world", 0);
 				if(isStorm()) {
