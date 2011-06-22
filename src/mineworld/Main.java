@@ -47,6 +47,7 @@ public class Main extends JavaPlugin {
     Main_Visiteur Main_Visiteur;
     Main_CommandsControl Main_CommandsControl;
     Main_MessageControl Main_MessageControl;
+    Main_ShopSystem Main_ShopSystem;
     
     public static Main_Visiteur Main_Visiteur_n;
     
@@ -61,6 +62,7 @@ public class Main extends JavaPlugin {
     public List<String> anim = new ArrayList<String>();
     public List<String> stop = new ArrayList<String>();
     public List<Player> world_whitelist = new ArrayList<Player>();
+    public List<Player> block_player = new ArrayList<Player>();
     
     public List<Player> spy_player = new ArrayList<Player>();
     
@@ -118,6 +120,7 @@ public class Main extends JavaPlugin {
         Main_Visiteur = new Main_Visiteur(this);
         Main_CommandsControl = new Main_CommandsControl(this);
         Main_MessageControl = new Main_MessageControl(this);
+        Main_ShopSystem = new Main_ShopSystem(this);
         
         pm.registerEvent(Type.PLAYER_JOIN, Main_PlayerListener, Priority.Normal, this); 
         pm.registerEvent(Type.PLAYER_QUIT, Main_PlayerListener, Priority.Normal, this); 
@@ -149,6 +152,18 @@ public class Main extends JavaPlugin {
 		}
     	
         logger.log(Level.INFO, pdfFile.getName() + " version " + pdfFile.getVersion() + " enabled.");
+    }
+    
+    public void freeze(Player player, Boolean bool) {
+    	if(bool) {
+			if(!block_player.contains(player)) {
+				block_player.add(player);
+			}
+    	}else{
+			if(block_player.contains(player)) {
+				block_player.remove(player);
+			}	
+    	}
     }
     
 	public Runnable runThread_01() {

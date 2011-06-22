@@ -28,7 +28,7 @@ public class Main_TimeControl {
     
     public boolean dead_sun = false;
     public int dead_sun_tick = 0;
-    private int dead_sun_next = showRandomInteger(40000, 100000, rand);
+    private int dead_sun_next = showRandomInteger(80000, 500000, rand);
     
     public Main_TimeControl(Main parent) {
         this.plugin = parent;
@@ -142,11 +142,8 @@ public class Main_TimeControl {
 		        }
             }
         }
-		
 		if(lastlocation != null) {
 			world.strikeLightning(new Location(world, lastlocation.getBlockX(), lastlocation.getBlockY(), lastlocation.getBlockZ()));
-			world.strikeLightning(new Location(world, lastlocation.getBlockX(), lastlocation.getBlockY(), lastlocation.getBlockZ()));
-			world.createExplosion(lastlocation.getBlockX(), lastlocation.getBlockY(), lastlocation.getBlockZ(), 3, false);
 		}else{
 			world.strikeLightning(new Location(world, location.getBlockX(), world.getHighestBlockYAt(location), location.getBlockZ()));
 		}
@@ -272,7 +269,7 @@ public class Main_TimeControl {
     	if(dead_sun_tick >= dead_sun_next) {
     		dead_sun_tick = 0;
     		if(dead_sun) {
-	    		dead_sun_next = showRandomInteger(40000, 100000, rand);
+	    		dead_sun_next = showRandomInteger(80000, 500000, rand);
 	    		dead_sun = false;
     			plugin.Main_ChunkControl.ResendAll.clear();
     			plugin.Main_ChunkControl.player_chunkupdate.clear();

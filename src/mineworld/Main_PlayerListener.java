@@ -26,6 +26,7 @@ public class Main_PlayerListener extends PlayerListener {
     
     public void sendTeleportEffect(final Player player) {
     	final Location location = player.getLocation();
+    	plugin.freeze(player, true);
         for (int x = location.getBlockX() - 1; x <= location.getBlockX() + 1; x++) {
             for (int z = location.getBlockZ() - 1; z <= location.getBlockZ() + 1; z++) {
                 for (int y = location.getBlockY() + 1; y <= location.getBlockY() + 2; y++) {
@@ -37,6 +38,7 @@ public class Main_PlayerListener extends PlayerListener {
     	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				public void run()
 				{
+			    	plugin.freeze(player, false);
 			        for (int x = location.getBlockX() - 1; x <= location.getBlockX() + 1; x++) {
 			            for (int z = location.getBlockZ() - 1; z <= location.getBlockZ() + 1; z++) {
 			                for (int y = location.getBlockY() + 1; y <= location.getBlockY() + 2; y++) {
@@ -203,6 +205,9 @@ public class Main_PlayerListener extends PlayerListener {
     
     public void onPlayerMove(PlayerMoveEvent event) {
     	Player p = event.getPlayer();
+    	if(plugin.block_player.contains(p)) {
+    		event.setCancelled(true);
+    	}
     	if (plugin.Main_Visiteur.is_visiteur(p)) {
 			String WorldName = p.getWorld().getName();
     		if(!WorldName.contains("world") || WorldName.contains("oldworld")) {
@@ -277,7 +282,7 @@ public class Main_PlayerListener extends PlayerListener {
     		return;
     	}
     	String worldname = event.getPlayer().getWorld().getName();
-    	if(!event.getPlayer().isOp() && (worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
+    	if(!event.getPlayer().isOp() && !worldname.equals("world")) {
     		event.setCancelled(true);
     		return;
     	}
@@ -402,7 +407,6 @@ public class Main_PlayerListener extends PlayerListener {
    	 	}else{
    	 		timetxt = "";
    	 	}
-   	 	
 		if(plugin.Main_Visiteur.whitelist.contains(player.getName().toLowerCase())) {
 			plugin.Main_MessageControl.sendTaggedMessage(player, "Votre compte est bien dans notre WhiteList.", 1, "[WHITELIST]");
 			if(lastdeconnexion == 0 || (lastdeconnexion+360) < plugin.timetamps) {

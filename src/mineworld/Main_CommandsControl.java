@@ -13,9 +13,13 @@ import org.bukkit.entity.Player;
 public class Main_CommandsControl {
 	
 	Main plugin;
+	Main_ShopSystem shop;
+	Main_MessageControl msg;
 
     public Main_CommandsControl(Main parent) {
     	plugin = parent;
+    	shop = plugin.Main_ShopSystem;
+    	msg = plugin.Main_MessageControl;
     }
     
 	private long restartsure = 0;
@@ -160,13 +164,6 @@ public class Main_CommandsControl {
 			    Integer news_rev = (Integer) plugin.getServerConfig("informations.news_rev", "int");
 				plugin.setPlayerConfig(player, "last_news_rev", news_rev);
 				return true;
-			}else if (subCommand.equals("no")) {
-			    plugin.Main_TimeControl.dead_sun_tick = 1000000000;
-				return true;
-			}else if (subCommand.equals("non")) {
-			    plugin.Main_TimeControl.meteo_monde_tick = 1000000000;
-			    plugin.Main_TimeControl.meteo_monde_type = 5;
-				return true;
 			}else if (subCommand.equals("tick")) {
 				boolean tick = (Boolean) plugin.getPlayerConfig(player, "message_tick", "boolean");
 				if(!tick) {
@@ -190,6 +187,9 @@ public class Main_CommandsControl {
 			}else if (subCommand.equals("removeme")) {
 				plugin.setPlayerConfig(player, "remove_me", true);
 				player.kickPlayer("Merci de votre visite sur MineWorld.");
+				return true;
+			}else if (subCommand.equals("buy")) {
+				shop.shop(player, args);
 				return true;
 			}else if (subCommand.equals("stats_pp")) {
 				plugin.conf_player.load();
