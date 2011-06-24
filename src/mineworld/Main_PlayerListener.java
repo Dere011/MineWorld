@@ -18,10 +18,16 @@ public class Main_PlayerListener extends PlayerListener {
 	
     private final Main plugin;
     private final Main_NPC mnpc;
+	Main_ShopSystem shop;
+	Main_MessageControl msg;
+	Main_ChunkControl cc;
     
     public Main_PlayerListener(Main parent) {
         this.plugin = parent;
-        this.mnpc = parent.Main_NPC;
+        mnpc = plugin.Main_NPC;
+    	shop = plugin.Main_ShopSystem;
+    	msg = plugin.Main_MessageControl;
+    	cc = plugin.Main_ChunkControl;
     }
     
     public void sendTeleportEffect(final Player player) {
@@ -108,7 +114,7 @@ public class Main_PlayerListener extends PlayerListener {
     }
     
     public void start_teleportation_tohome(final Player player) {
-		plugin.Main_MessageControl.sendTaggedMessage(player, "Teleportation dans 10 secondes.", 1, "");
+		msg.sendTaggedMessage(player, "Teleportation dans 10 secondes.", 1, "");
 		sendTeleportEffect(player);
     	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				public void run()
@@ -116,9 +122,9 @@ public class Main_PlayerListener extends PlayerListener {
 					Location home = getHomeLocation(player);
 					if(home != null) {
 						player.teleport(home);
-						plugin.Main_MessageControl.sendTaggedMessage(player, "Teleportation en cours.", 1, "");
+						msg.sendTaggedMessage(player, "Teleportation en cours.", 1, "");
 					}else{
-						plugin.Main_MessageControl.sendTaggedMessage(player, "Teleportation impossible.", 1, "");
+						msg.sendTaggedMessage(player, "Teleportation impossible.", 1, "");
 					}
 				}
     	}, (long) 150);
@@ -126,13 +132,14 @@ public class Main_PlayerListener extends PlayerListener {
     
     public void onPlayerInteract(PlayerInteractEvent event) {
     	Player player = event.getPlayer();
+    	
     	if (plugin.is_spy(player) || plugin.Main_Visiteur.is_visiteur(player)) {
     		event.setCancelled(true);
     		return;
     	}
     	
     	String worldname = player.getWorld().getName();
-    	if(!event.getPlayer().isOp() && (worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
+    	if(!event.getPlayer().isOp() && !worldname.equals("olddeathworld")) {
 	    	if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
 	    		Block block = event.getClickedBlock();
 	    		if(block.getType() != Material.WOOD_DOOR && block.getType() != Material.WOODEN_DOOR) {
@@ -146,6 +153,12 @@ public class Main_PlayerListener extends PlayerListener {
     		Block block = event.getClickedBlock();
     		if(block.getType() == Material.STONE_BUTTON || block.getType() == Material.LEVER) {
 		    	player.getWorld().playEffect(block.getLocation(), Effect.CLICK2, 1);
+    		}
+    		if(block.getType() == Material.CHEST) {
+    			if(!plugin.open_chest.contains(player)) {
+    				plugin.open_chest.add(player);
+    			}
+    			player.getWorld().playEffect(block.getLocation(), Effect.DOOR_TOGGLE, 1);
     		}
     	}
     	
@@ -197,9 +210,9 @@ public class Main_PlayerListener extends PlayerListener {
 	    boolean first_connexion = (Boolean) plugin.getPlayerConfig(p, "first_connexion", "boolean");
 	    int last_news_rev = (Integer) plugin.getPlayerConfig(p, "last_news_rev", "int");
 	    if(!first_connexion) {
-	    	plugin.Main_MessageControl.sendSmallNotRegisteredMsg(p);
+	    	msg.sendSmallNotRegisteredMsg(p);
 		}else if(last_news_rev < news_rev) {
-			plugin.Main_MessageControl.sendSmallLastNews(p);
+			msg.sendSmallLastNews(p);
 		}
     }
     
@@ -213,7 +226,7 @@ public class Main_PlayerListener extends PlayerListener {
     		if(!WorldName.contains("world") || WorldName.contains("oldworld")) {
 	        	int time_last_vdteleport = (Integer) plugin.getPlayerConfig(p, "time_last_vdteleport", "int");
 	    	    if((plugin.timetamps-time_last_vdteleport) > 20) {
-	    	    	plugin.Main_MessageControl.sendTaggedMessage(p, "Les visiteurs ne peuvent pas prendre ce téléporteur.", 1, "[DENIED]");
+	    	    	msg.sendTaggedMessage(p, "Les visiteurs ne peuvent pas prendre ce téléporteur.", 1, "[DENIED]");
 	    	    	plugin.setPlayerConfig(p, "time_last_vdteleport", plugin.timetamps);
 	    	    }
 	    	    respawn_player(p);
@@ -227,26 +240,26 @@ public class Main_PlayerListener extends PlayerListener {
     	boolean muted = (Boolean) plugin.getPlayerConfig(p, "is_muted", "boolean");
     	if (!muted) {
     		if(plugin.is_spy(p)) {
-    			plugin.Main_MessageControl.sendTaggedMessage(p, "Le mode SPY interdit l'utilisation du chat.", 1, "[DENIED]");
+    			msg.sendTaggedMessage(p, "Désolé, le mode SPY interdit l'utilisation du chat.", 1, "[DENIED]");
 	    		event.setCancelled(true);
 	    		return;
     		}
     		if(p.isOp()) {
-	    		plugin.Main_MessageControl.chatMessageToAll(p, event.getMessage());
+	    		msg.chatMessageToAll(p, event.getMessage());
 	    		event.setCancelled(true);
 	    		return;
     		}else if (plugin.Main_Visiteur.is_visiteur(p)) {
 				if(plugin.Main_Visiteur.visiteur_number() > 1) {
-					plugin.Main_MessageControl.chatMessageToAllVisiteur(p, event.getMessage());
+					msg.chatMessageToAllVisiteur(p, event.getMessage());
 					event.setCancelled(true);
 					return;
 				}else{
-					plugin.Main_MessageControl.sendTaggedMessage(p, "Impossible, il n'y a que vous en visiteur sur le serveur.", 1, "[DENIED]");
+					msg.sendTaggedMessage(p, "Impossible, il n'y a que vous en visiteur sur le serveur.", 1, "[DENIED]");
 					event.setCancelled(true);
 					return;
 				}
 	    	}else{
-	    		plugin.Main_MessageControl.chatMessageToAllNonVisiteur(p, event.getMessage());
+	    		msg.chatMessageToAllNonVisiteur(p, event.getMessage());
 	    		event.setCancelled(true);
 	    		return;
 	    	}
@@ -263,15 +276,15 @@ public class Main_PlayerListener extends PlayerListener {
         	if((plugin.timetamps-time_lastspawn) > 360) {
         		Location spawnpoint = getSpawnLocation();
         		if(spawnpoint != null) {
-        			plugin.Main_MessageControl.sendTaggedMessage(player, "Téléportation vers la zone de spawn dans 10 secondes.", 1, "[SPAWN]");
+        			msg.sendTaggedMessage(player, "Téléportation vers la zone de spawn dans 10 secondes.", 1, "[SPAWN]");
         	    	respawn_player_deleyed(player);
         	    	sendTeleportEffect(player);
         			plugin.setPlayerConfig(player, "time_lastspawn", plugin.timetamps);
         		}else{
-        			plugin.Main_MessageControl.sendTaggedMessage(player, "Erreur avec le point de spawn, téléportation impossible.", 1, "[SPAWN]");
+        			msg.sendTaggedMessage(player, "Erreur avec le point de spawn, téléportation impossible.", 1, "[SPAWN]");
         		}
         	}else{
-        		plugin.Main_MessageControl.sendTaggedMessage(player, "Merci d'attendre "+ ChatColor.BLUE +"360 secondes"+ ChatColor.WHITE +" entre chaque requête de spawn.", 1, "[SPAWN]");
+        		msg.sendTaggedMessage(player, "Merci d'attendre "+ ChatColor.BLUE +"360 secondes"+ ChatColor.WHITE +" entre chaque requête de spawn.", 1, "[SPAWN]");
         	}
     		event.setCancelled(true);
     		return;
@@ -286,18 +299,28 @@ public class Main_PlayerListener extends PlayerListener {
     		event.setCancelled(true);
     		return;
     	}
+    	if (event.getMessage().equals("/cancel")) {
+    		shop.cancel(player);
+    		event.setCancelled(true);
+    		return;
+    	}
+    	if (event.getMessage().equals("/buy")) {
+    		shop.buy(player);
+    		event.setCancelled(true);
+    		return;
+    	}
     	if (event.getMessage().contains("/sethome")) {
     		if(player.isSleeping() && player.getInventory().contains(Material.COMPASS)) {
 	    	 	int lasthome_set = (Integer) plugin.getPlayerConfig(player, "time_lasthomeset", "int");
 	        	if((plugin.timetamps-lasthome_set) > 60) {
 	        		setHomeLocation(player);
 	        		plugin.setPlayerConfig(player, "time_lasthomeset", plugin.timetamps);
-	        		plugin.Main_MessageControl.sendTaggedMessage(player, "Votre point de home est maintenant défini.", 1, "");
+	        		msg.sendTaggedMessage(player, "Votre point de home est maintenant défini.", 1, "");
 	        	}else{
-	        		plugin.Main_MessageControl.sendTaggedMessage(player, "Merci d'attendre 1 minute entre chaque requête.", 1, "");
+	        		msg.sendTaggedMessage(player, "Merci d'attendre 1 minute entre chaque requête.", 1, "");
 	        	}
     		}else{
-    			plugin.Main_MessageControl.sendTaggedMessage(player, "Vous devez être dans un lit avec une boussole pour définir votre point de home.", 1, "");
+    			msg.sendTaggedMessage(player, "Vous devez être dans un lit avec une boussole pour définir votre point de home.", 1, "");
     		}
     		event.setCancelled(true);
     		return;
@@ -306,10 +329,10 @@ public class Main_PlayerListener extends PlayerListener {
     		int lasthome = (Integer) plugin.getPlayerConfig(player, "time_lasthome", "int");
 	       	if((plugin.timetamps-lasthome) > 60) {
 	       		start_teleportation_tohome(player);
-	       		plugin.Main_MessageControl.sendTaggedMessage(player, "Vous devez utiliser une boussole pour définir un home.", 1, "[INFO]");
+	       		msg.sendTaggedMessage(player, "Vous devez utiliser une boussole pour définir un home.", 1, "[INFO]");
 	       		plugin.setPlayerConfig(player, "time_lasthome", plugin.timetamps);
 	       	}else{
-	       		plugin.Main_MessageControl.sendTaggedMessage(player, "Merci d'attendre 1 minute entre chaque requête.", 1, "");
+	       		msg.sendTaggedMessage(player, "Merci d'attendre 1 minute entre chaque requête.", 1, "");
 	       	}
     		event.setCancelled(true);
     		return;
@@ -345,13 +368,13 @@ public class Main_PlayerListener extends PlayerListener {
     	int sneaking_tick = (Integer) plugin.getPlayerConfig(player, "sneaking_tick", "int");
     	if(sneaking_tick == 1) {
 		    if((plugin.timetamps-sneaking_lasttime) > 120) {
-		    	plugin.Main_MessageControl.sendTaggedMessage(player, "Le mode sneaking vous cache des monstres qui sont loin de votre position.", 1, "[INFO-MINEWORLD]");
+		    	msg.sendTaggedMessage(player, "Le mode sneaking vous cache des monstres qui sont loin de votre position.", 1, "[INFO-MINEWORLD]");
 		    	plugin.setPlayerConfig(player, "time_sneaking_chunk", plugin.timetamps);
 		    	plugin.setPlayerConfig(player, "sneaking_tick", 0);
 		    }
     	}else{
     	    if((plugin.timetamps-sneaking_lasttime) > 120) {
-    	    	plugin.Main_MessageControl.sendTaggedMessage(player, "Le mode sneaking corrige le problème des joueurs / items invisibles.", 1, "[INFO-MINEWORLD]");
+    	    	msg.sendTaggedMessage(player, "Le mode sneaking corrige le problème des joueurs / items invisibles.", 1, "[INFO-MINEWORLD]");
     	    	plugin.setPlayerConfig(player, "time_sneaking_chunk", plugin.timetamps);
     	    	plugin.setPlayerConfig(player, "sneaking_tick", 1);
     	    }
@@ -384,10 +407,10 @@ public class Main_PlayerListener extends PlayerListener {
     	}
     	
     	String version = (String) plugin.getServerConfig("informations.version", "string");
-   	 	String[] anTxt = plugin.Main_MessageControl.createstrings(2);
+   	 	String[] anTxt = msg.createstrings(2);
    	 	anTxt[0] = "Bienvenue sur MineWorld 2.0, le serveur semi-roleplay post-apocalypse.";
    	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.RED + "V" + version + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.6.6";
-   	 	plugin.Main_MessageControl.sendTaggedMessage(player, anTxt, 2, "");
+   	 	msg.sendTaggedMessage(player, anTxt, 2, "");
    	 	
    	 	int lastdeconnexion = (Integer) plugin.getPlayerConfig(player, "time_lastdeconnexion", "int");
    	 	String timetxt = "";
@@ -407,8 +430,9 @@ public class Main_PlayerListener extends PlayerListener {
    	 	}else{
    	 		timetxt = "";
    	 	}
+   	 	
 		if(plugin.Main_Visiteur.whitelist.contains(player.getName().toLowerCase())) {
-			plugin.Main_MessageControl.sendTaggedMessage(player, "Votre compte est bien dans notre WhiteList.", 1, "[WHITELIST]");
+			msg.sendTaggedMessage(player, "Votre compte est bien dans notre WhiteList.", 1, "[WHITELIST]");
 			if(lastdeconnexion == 0 || (lastdeconnexion+360) < plugin.timetamps) {
 				if(event.getPlayer().isOp()) {
 					event.setJoinMessage(ChatColor.RED + event.getPlayer().getName() + ChatColor.GOLD + " a rejoint le serveur.");
@@ -420,7 +444,7 @@ public class Main_PlayerListener extends PlayerListener {
 			}
 		}else{
 			plugin.Main_Visiteur.add_visiteur(player);
-			plugin.Main_MessageControl.sendTaggedMessage(player, "Vous avez un compte visiteur.", 1, "[WHITELIST]");
+			msg.sendTaggedMessage(player, "Vous avez un compte visiteur.", 1, "[WHITELIST]");
 			event.setJoinMessage(ChatColor.DARK_GRAY + "Un visiteur a rejoint le serveur.");
 			player.setDisplayName("visiteur");
 			setSpawnTimed(player);
@@ -460,12 +484,15 @@ public class Main_PlayerListener extends PlayerListener {
     	}else{
     		event.setQuitMessage(ChatColor.DARK_GRAY + event.getPlayer().getName() + " a quitté le serveur.");
     	}
-    	if(plugin.Main_ChunkControl.player_lastchunk.containsKey(event.getPlayer())) {
-    		plugin.Main_ChunkControl.player_lastchunk.remove(event.getPlayer());
+    	if(cc.player_lastchunk.containsKey(event.getPlayer())) {
+    		cc.player_lastchunk.remove(event.getPlayer());
     	}
-    	if(plugin.Main_ChunkControl.PlayerOR.contains(event.getPlayer())) {
-    		plugin.Main_ChunkControl.PlayerOR.remove(event.getPlayer());
+    	if(cc.PlayerOR.contains(event.getPlayer())) {
+    		cc.PlayerOR.remove(event.getPlayer());
     	}
+		if(cc.error_tick.containsKey(event.getPlayer())) {
+			cc.error_tick.remove(event.getPlayer());
+		}
 		if(plugin.modo.contains(event.getPlayer().getName())) {
 			plugin.modo.remove(event.getPlayer().getName());
 		}
@@ -564,7 +591,7 @@ public class Main_PlayerListener extends PlayerListener {
     		if(!event.getTo().getWorld().getName().contains("world") || event.getTo().getWorld().getName().contains("oldworld")) {
 	        	int time_last_vdteleport = (Integer) plugin.getPlayerConfig(player, "time_last_vdteleport", "int");
 	    	    if((plugin.timetamps-time_last_vdteleport) > 20) {
-	    	    	plugin.Main_MessageControl.sendTaggedMessage(player, "Les visiteurs ne peuvent pas prendre ce téléporteur.", 1, "[DENIED]");
+	    	    	msg.sendTaggedMessage(player, "Les visiteurs ne peuvent pas prendre ce téléporteur.", 1, "[DENIED]");
 	    	    	plugin.setPlayerConfig(player, "time_last_vdteleport", plugin.timetamps);
 	    	    }
 	    	    respawn_player(player);

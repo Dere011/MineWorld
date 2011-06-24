@@ -63,6 +63,7 @@ public class Main extends JavaPlugin {
     public List<String> stop = new ArrayList<String>();
     public List<Player> world_whitelist = new ArrayList<Player>();
     public List<Player> block_player = new ArrayList<Player>();
+    public List<Player> open_chest = new ArrayList<Player>();
     
     public List<Player> spy_player = new ArrayList<Player>();
     
@@ -414,6 +415,9 @@ public class Main extends JavaPlugin {
 			    	if (Main_Visiteur.is_visiteur(p)) {
 			    		continue;
 			    	}
+					if(Main_ChunkControl.error_tick.containsKey(p)) {
+						Main_ChunkControl.error_tick.remove(p);
+					}
 					conf_player.load();
 					int ppresences = conf_player.getInt("load-player."+ p.getName() +".ppresences", 0);
 					Main_MessageControl.sendTaggedMessage(p, "Vous avez reçut "+ ChatColor.DARK_GREEN + "1 point"+ ChatColor.WHITE + " de présence.", 1, "");

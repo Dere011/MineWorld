@@ -32,7 +32,7 @@ public class Main_Visiteur {
 			public void run()
 			{
 			    	try {
-			    		if (plugin.playerInServer()) {
+			    		if (!visiteur.isEmpty()) {
 			    			visiteur_do();
 			    		}
 			        } catch (Exception e) {

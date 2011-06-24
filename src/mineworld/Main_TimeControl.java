@@ -149,6 +149,7 @@ public class Main_TimeControl {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private void do_meteo() {
 		if(meteotick > 5 && !dead_sun) {
 			meteotick = 0;
@@ -266,7 +267,7 @@ public class Main_TimeControl {
     		}
     	}
     	
-    	if(dead_sun_tick >= dead_sun_next) {
+    	if(1==2 &&dead_sun_tick >= dead_sun_next) {
     		dead_sun_tick = 0;
     		if(dead_sun) {
 	    		dead_sun_next = showRandomInteger(80000, 500000, rand);

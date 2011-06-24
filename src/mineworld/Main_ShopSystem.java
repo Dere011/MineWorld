@@ -26,11 +26,23 @@ public class Main_ShopSystem {
     	msg.sendTaggedMessage(player, "Merci de confirmer votre demande d'achat avec la commande /buy ou /cancel pour annuler.", 1, "[MN-SHOP]");
     }
     
-    private void buy(Player player, int aid) {
+    public void remove_money(Player player, int value) {
     	
     }
     
-    private void cancel(Player player) {
+    public void buy(Player player) {
+    	if(player_wait.containsKey(player)) {
+    		int aid = player_wait.get(player);
+    		if(aid > 0 && aid < 4) {
+    			if(canafford(player, 1, 20, true)) {
+    				buy_couleur(player, aid);
+    				remove_money(player, 20);
+    			}
+    		}
+    	}
+    }
+    
+    public void cancel(Player player) {
     	player_wait.remove(player);
     	msg.sendTaggedMessage(player, "Demande d'achat annuler.", 1, "[MN-SHOP]");
     }

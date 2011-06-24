@@ -26,6 +26,7 @@ public class Main_ChunkControl {
 	
     private final Main plugin;
     Thread thread_01, thread_02, thread_03;
+    
     List<Player> PlayerOR = new ArrayList<Player>();
     List<Player> ResendAll = new ArrayList<Player>();
     
@@ -34,6 +35,7 @@ public class Main_ChunkControl {
     public Map<Player, String> player_lastchunk = new HashMap<Player, String>();
     public Map<Chunk, ArrayList<Vector>> cache_antixray = new HashMap<Chunk, ArrayList<Vector>>();
     public Map<Chunk, Long> cache_antixray_lastupdate = new HashMap<Chunk, Long>();
+    public Map<Player, Integer> error_tick = new HashMap<Player, Integer>();
     
     public Main_ChunkControl(Main parent) {
         this.plugin = parent;
@@ -155,13 +157,11 @@ public class Main_ChunkControl {
 	
 	private void do_orcontrol() {
 		for (Player p : PlayerOR) {
-			if(!p.isOnline()) {
-				PlayerOR.remove(p);
-			}
-			if(plugin.Main_Visiteur.is_visiteur(p) || (!p.getWorld().getName().contains("world") || p.getWorld().getName().contains("oldworld"))) {
-				continue;
-			}
+			if(!p.isOnline()) {PlayerOR.remove(p); continue;}
+			if(plugin.Main_Visiteur.is_visiteur(p) || !p.getWorld().getName().equals("world")) {continue;}
+			
 			Boolean good = true;
+			
 			if(player_lastchunk.containsKey(p)) {
 				String pchunkid = player_lastchunk.get(p);
 				int cx = p.getWorld().getChunkAt(p.getLocation()).getX();
@@ -180,6 +180,7 @@ public class Main_ChunkControl {
 					}	
 				}
 			}
+			
 			if (good || !ResendAll.contains(p)) {
 				plugin.Main_ChunkControl.CacheOnlyChunk(p);
 				ResendAll.add(p);
@@ -360,26 +361,35 @@ public class Main_ChunkControl {
         		cache_antixray.remove(chunk);
         		cache_antixray_lastupdate.remove(chunk);
         	}
-        	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-    			public void run()
-    			{
-    				RequestChunkSend(player, chunk);
-    			}
-        	}, (long) 1500);
+        	if(error_tick.containsKey(player)) {
+        		int count = error_tick.get(player);
+        		if(count > 5) {
+        			player.kickPlayer("MW-SECURITY : Erreur de sécurité N°5001.");
+        		}else{
+        			error_tick.put(player, count+1);
+                	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+            			public void run()
+            			{
+            				RequestChunkSend(player, chunk);
+            			}
+                	}, (long) 1500);
+        		}
+        	}
         }
     }
     
 	public void CacheOnlyChunk_do(final Player p) {
 		if(player_chunkupdate.containsKey(p) && player_chunkupdate.get(p)) { 
 			return; 
+		}else{
+			player_chunkupdate.put(p, true);
+	    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+				public void run()
+				{
+					player_chunkupdate.put(p, false);
+				}
+	    	}, (long) 300);
 		}
-		player_chunkupdate.put(p, true);
-    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			public void run()
-			{
-				player_chunkupdate.put(p, false);
-			}
-    	}, (long) 300);
 		int Delayed_time = 0;
 		Chunk chunk_debut = p.getWorld().getChunkAt(p.getLocation());
 		int x_debut = chunk_debut.getX();
