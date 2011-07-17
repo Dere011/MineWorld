@@ -1,8 +1,9 @@
-package mineworld;
+ package mineworld;
 
 import net.minecraft.server.Packet20NamedEntitySpawn;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.CraftServer;
@@ -10,7 +11,7 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
-public class Main_CommandsControl {
+public class Main_CommandsControl { 
 	
 	Main plugin;
 	Main_ShopSystem shop;
@@ -92,6 +93,7 @@ public class Main_CommandsControl {
 	    				p.sendMessage(ChatColor.DARK_GRAY + "[Sauvegarde du serveur en cours]");
 	    			}
 	    		}
+	    		plugin.Main_ContribControl.sendNotificationToAll("Notification", "Sauvegarde du serveur...", Material.FLINT_AND_STEEL);
 	    		return false;
 	        }
     	}
@@ -103,50 +105,51 @@ public class Main_CommandsControl {
 				plugin.Main_MessageControl.sendTaggedMessage(player, "Commande interdite.", 2, "[DENIED]");
 				return false;
 			}
-			if (subCommand.equals("restart")) {
-				if((restartsure+30) > plugin.timetamps){
-					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" arrête le serveur.");
-					CraftServer server = (CraftServer) plugin.getServer();
-					final CommandSender cs = server.getServer().console;
-					server.dispatchCommand(cs, "stop");
-				}else{
-					restartsure = plugin.timetamps;
-					plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment redémarrer le serveur (/modo restart pour confirmer) ?", 2, "[MODO]");
-				}
-				return false;
-			}else if (subCommand.equals("spy")) {
-				if(plugin.spy_player.contains(player)) {
-					plugin.spy_player.remove(player);
-					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" désactive le mode SPY.");
-					plugin.Main_MessageControl.sendTaggedMessage(player, "Mode SPY innactif.", 2, "[MODO]");
-		    		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
-		    			if (entity instanceof Player) {
-							if(!((Player) entity).isOp()) {
-								CraftPlayer unHide = (CraftPlayer) player;
-								CraftPlayer unHideFrom = (CraftPlayer) entity;
-								unHide.getHandle().netServerHandler.sendPacket(new Packet20NamedEntitySpawn(unHideFrom.getHandle()));
+			if(plugin.Main_ContribControl.isClient(player, true)) {
+				if (subCommand.equals("restart")) {
+					if((restartsure+30) > plugin.timetamps){
+						plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" arrête le serveur.");
+						CraftServer server = (CraftServer) plugin.getServer();
+						final CommandSender cs = server.getServer().console;
+						server.dispatchCommand(cs, "stop");
+					}else{
+						restartsure = plugin.timetamps;
+						plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment redémarrer le serveur (/modo restart pour confirmer) ?", 2, "[MODO]");
+					}
+					return false;
+				}else if (subCommand.equals("spy")) {
+					if(plugin.spy_player.contains(player)) {
+						plugin.spy_player.remove(player);
+						plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" désactive le mode SPY.");
+						plugin.Main_MessageControl.sendTaggedMessage(player, "Mode SPY innactif.", 2, "[MODO]");
+			    		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
+			    			if (entity instanceof Player) {
+								if(!((Player) entity).isOp()) {
+									CraftPlayer unHide = (CraftPlayer) player;
+									CraftPlayer unHideFrom = (CraftPlayer) entity;
+									unHide.getHandle().netServerHandler.sendPacket(new Packet20NamedEntitySpawn(unHideFrom.getHandle()));
+								}
 							}
-						}
-		    		}
-				}else{
-					plugin.spy_player.add(player);
-					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" active le mode SPY.");
-					plugin.Main_MessageControl.sendTaggedMessage(player, "Mode SPY actif.", 2, "[MODO]");
+			    		}
+					}else{
+						plugin.spy_player.add(player);
+						plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" active le mode SPY.");
+						plugin.Main_MessageControl.sendTaggedMessage(player, "Mode SPY actif.", 2, "[MODO]");
+					}
+					return false;
+				}else if (subCommand.equals("maintenance")) {
+					if((maintenancesure+30) > plugin.timetamps){
+						plugin.maintenance_status = true;
+						plugin.maintenance_message = "Serveur en maintenance (défini par "+ player.getDisplayName() +").";
+						plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" défini une maintenance.");
+			    		kickall("Serveur en maintenance (défini par "+ player.getDisplayName() +").", false);
+					}else{
+						maintenancesure = plugin.timetamps;
+						plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment définir le mode maintenance (/modo maintenance pour confirmer) ?", 2, "[MODO]");
+					}
+					return false;
 				}
-				return false;
-			}else if (subCommand.equals("maintenance")) {
-				if((maintenancesure+30) > plugin.timetamps){
-					plugin.maintenance_status = true;
-					plugin.maintenance_message = "Serveur en maintenance (défini par "+ player.getDisplayName() +").";
-					plugin.sendInfo("Le modérateur "+ player.getDisplayName() +" défini une maintenance.");
-		    		kickall("Serveur en maintenance (défini par "+ player.getDisplayName() +").", false);
-				}else{
-					maintenancesure = plugin.timetamps;
-					plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment définir le mode maintenance (/modo maintenance pour confirmer) ?", 2, "[MODO]");
-				}
-				return false;
 			}
-			
 		}
         
 		if (command.getName().toLowerCase().equals("mineworld")) {
@@ -165,18 +168,22 @@ public class Main_CommandsControl {
 				plugin.setPlayerConfig(player, "last_news_rev", news_rev);
 				return true;
 			}else if (subCommand.equals("tick")) {
-				boolean tick = (Boolean) plugin.getPlayerConfig(player, "message_tick", "boolean");
-				if(!tick) {
-					plugin.setPlayerConfig(player, "message_tick", true);
-					plugin.Main_MessageControl.sendTaggedMessage(player, "Service de tick innactif.", 1, "[TICK]");
-				}else{
-					plugin.setPlayerConfig(player, "message_tick", false);
-				    plugin.Main_MessageControl.sendTaggedMessage(player, "Service de tick actif.", 1, "[TICK]");
+				if(plugin.Main_ContribControl.isClient(player, true)) {
+					boolean tick = (Boolean) plugin.getPlayerConfig(player, "message_tick", "boolean");
+					if(!tick) {
+						plugin.setPlayerConfig(player, "message_tick", true);
+						plugin.Main_MessageControl.sendTaggedMessage(player, "Service de tick innactif.", 1, "[TICK]");
+					}else{
+						plugin.setPlayerConfig(player, "message_tick", false);
+					    plugin.Main_MessageControl.sendTaggedMessage(player, "Service de tick actif.", 1, "[TICK]");
+					}
 				}
 				return true;
 			}else if (subCommand.equals("fchunk") || subCommand.equals("fc") || subCommand.equals("forcechunk")) {
-				plugin.Main_ChunkControl.CacheOnlyChunk(player);
-				plugin.Main_MessageControl.sendTaggedMessage(player, "Regénération des chunks en cours.", 1, "[CHUNKFIX]");	
+				if(plugin.Main_ContribControl.isClient(player, true)) {
+					plugin.Main_ChunkControl.CacheOnlyChunk(player);
+					plugin.Main_MessageControl.sendTaggedMessage(player, "Regénération des chunks en cours.", 1, "[CHUNKFIX]");	
+				}
 				return true;
 			}else if (subCommand.equals("news")) {
 				plugin.Main_MessageControl.sendLastNews(player);
@@ -188,16 +195,32 @@ public class Main_CommandsControl {
 				plugin.setPlayerConfig(player, "remove_me", true);
 				player.kickPlayer("Merci de votre visite sur MineWorld.");
 				return true;
-			}else if (subCommand.equals("buy")) {
-				shop.shop(player, args);
+			}else if (subCommand.equals("shop")) {
+				if(plugin.Main_ContribControl.isClient(player, true)) {
+					plugin.Main_ContribControl.sendNotification(player, "Impossible", "Service en maintenance.");
+					//shop.shop(player, args);
+				}
 				return true;
-			}else if (subCommand.equals("stats_pp")) {
-				plugin.conf_player.load();
-				int ppresences = plugin.conf_player.getInt("load-player."+ player.getName() +".ppresences", 0);
-			    plugin.Main_MessageControl.sendTaggedMessage(player, "Vous avez "+ ppresences +" points de présences.", 1, "");
+			}else if (subCommand.equals("money")) {
+				if(plugin.Main_ContribControl.isClient(player, true)) {
+					shop.getmoney(player);
+				}
+				return true;
+			}else if (subCommand.equals("storm")) {
+				if(player.isOp() &&  plugin.Main_ContribControl.isClient(player, true)) {
+					plugin.Main_TimeControl.meteo_monde_tick = 5800;
+					plugin.Main_TimeControl.meteo_monde_type = 10;
+				}
+				return true;
+			}else if (subCommand.equals("deadsun")) {
+				if(player.isOp() && plugin.Main_ContribControl.isClient(player, true)) {
+					plugin.Main_TimeControl.dead_sun_tick = 100000;
+				}
 				return true;
 			}else if (subCommand.equals("parrain")) {
-			    plugin.Main_MessageControl.sendTaggedMessage(player, "Votre code parrain est : <Service de parrain indisponible>", 1, "");
+				if(plugin.Main_ContribControl.isClient(player, true)) {
+					plugin.Main_MessageControl.sendTaggedMessage(player, "Votre code parrain est : <Service de parrain indisponible>", 1, "");
+				}
 				return true;
 			}else if (subCommand.equals("visiteur")) {
 				int visiteur = 0;
@@ -213,116 +236,4 @@ public class Main_CommandsControl {
 		}
 		return false;
     }
-    
-    /*if(player.isOp()) {
-		if (subCommand.equals("deadday")) {
-			plugin.Main_TimeControl.is_preburningday = true;
-    	} else if (subCommand.equals("goodday")) {
-    		plugin.Main_TimeControl.is_preburningday = false;
-        } else if (subCommand.equals("burn")) {
-            if(plugin.burn) {
-            	plugin.burn = false;
-            }else{
-            	plugin.burn = true;
-            }
-        } else if (subCommand.equals("ttrue")) {
-        	player.getWorld().setStorm(true);
-        	player.getWorld().setThundering(true);
-        } else if (subCommand.equals("tfalse")) {
-        	player.getWorld().setStorm(false);
-        	player.getWorld().setThundering(false);
-        } else if (subCommand.equals("setspawn")) {
-        	player.getWorld().setSpawnLocation(player.getLocation().getBlockX(), player.getLocation().getBlockY()+1, player.getLocation().getBlockZ());
-        } else if (subCommand.equals("thor")) {
-            if(plugin.thor) {
-            	plugin.thor = false;
-            }else{
-            	plugin.thor = true;
-            } 
-        } else if (subCommand.equals("wave")) {
-            if(plugin.deathwave) {
-            	plugin.deathwave = false;
-            	player.sendMessage(ChatColor.DARK_BLUE + "wave control : Disabled");
-            }else{
-            	plugin.deathwave = true;
-            	player.sendMessage(ChatColor.DARK_BLUE + "wave control : Enabled");
-            } 
-        } else if (subCommand.equals("time")) {
-            player.sendMessage(ChatColor.DARK_BLUE + " " + plugin.Main_TimeControl.meteo_monde_tick);
-        } else if (subCommand.equals("wavetarget")) {
-            if(plugin.deathwavetarget) {
-            	plugin.deathwavetarget = false;
-            	player.sendMessage(ChatColor.DARK_BLUE + "wave control : Disabled");
-            }else{
-            	plugin.deathwavetarget = true;
-            	player.sendMessage(ChatColor.DARK_BLUE + "wave control : Enabled");
-            } 
-        } else if (subCommand.equals("wavetime")) {
-            plugin.wavetimer = Integer.parseInt(args[1]);
-            player.sendMessage(ChatColor.DARK_BLUE + "wave control set : "+ plugin.wavetimer);
-        } else if (subCommand.equals("burnradius")) {
-            plugin.burnradius = Integer.parseInt(args[1]);
-            player.sendMessage(ChatColor.DARK_BLUE + "burnradius set : "+ plugin.burnradius);
-        } else if (subCommand.equals("settime")) {
-            plugin.Main_TimeControl.meteo_monde_tick = Integer.parseInt(args[1]);
-            player.sendMessage(ChatColor.DARK_BLUE + "time set : "+ plugin.Main_TimeControl.meteo_monde_tick);
-        } else if (subCommand.equals("nuke")) {
-            if(plugin.nuke) {
-            	plugin.nuke = false;
-            	player.sendMessage(ChatColor.DARK_BLUE + "Nuke : Disabled");
-            	plugin.setServerConfig("informations.nuke", false);
-            }else{
-            	plugin.nuke = true;
-            	player.sendMessage(ChatColor.DARK_BLUE + "Nuke : Enabled");
-            }
-        } else if (subCommand.equals("nuketime")) {
-            if(plugin.lastbomb.timed == false) {
-            	plugin.lastbomb.timed();
-            	player.sendMessage(ChatColor.DARK_RED + "Activation de la bombe...");
-            }else{
-            	plugin.lastbomb.timed = false;
-            	plugin.lastbomb.timed_tick = 0;
-            	player.sendMessage(ChatColor.DARK_RED + "Désactivation de la bombe...");
-            	plugin.setServerConfig("informations.nuke", false);
-            }
-        } else if (subCommand.equals("nukearme")) {
-            if(plugin.lastbomb.armed == false) {
-            	plugin.lastbomb.armed = true;
-            	player.sendMessage(ChatColor.DARK_RED + "Armage de la bombe.");
-            }else{
-            	plugin.lastbomb.armed = false;
-            	player.sendMessage(ChatColor.DARK_RED + "Désarmage de la bombe.");
-            	plugin.setServerConfig("informations.nuke", false);
-            }
-        } else if (subCommand.equals("nukeall")) {
-            if(plugin.lastbomb.msgall == false) {
-            	plugin.lastbomb.msgall = true;
-            	player.sendMessage(ChatColor.DARK_RED + "msgall on");
-            }else{
-            	plugin.lastbomb.msgall = false;
-            	player.sendMessage(ChatColor.DARK_RED + "msgall off");
-            }
-        } else if (subCommand.equals("storm")) {
-        	Main_AimBlock aiming = new Main_AimBlock(player);
-            Block block = aiming.getTargetBlock();
-        	plugin.setServerConfig("load-storm.storm_"+ args[1] +".x", block.getX());
-        	plugin.setServerConfig("load-storm.storm_"+ args[1] +".y", block.getY());
-        	plugin.setServerConfig("load-storm.storm_"+ args[1] +".z", block.getZ());
-        	plugin.setServerConfig("load-storm.storm_"+ args[1] +".world", block.getWorld().getName());
-        	player.sendMessage(ChatColor.DARK_RED + "setet storm");
-        } else if (subCommand.equals("nukeex")) {
-            plugin.lastbomb.explode();
-            plugin.setServerConfig("informations.nuke", false);
-        } else if (subCommand.equals("nukecra")) {
-        	plugin.lastbomb.createenabled = false;
-        } else if (subCommand.equals("blackhole")) {
-            if(plugin.hole == false) {
-            	plugin.hole = true;
-            	player.sendMessage(ChatColor.DARK_RED + "Activation du BlackHole");
-            }else{
-            	plugin.hole = false;
-            	player.sendMessage(ChatColor.DARK_RED + "Desactivation du BlackHole");
-            }
-        }
-	}*/
 }

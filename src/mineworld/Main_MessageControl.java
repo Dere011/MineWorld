@@ -1,9 +1,6 @@
 package mineworld;
 
-import net.minecraft.server.Packet61;
-
 import org.bukkit.ChatColor;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 public class Main_MessageControl {
@@ -60,6 +57,14 @@ public class Main_MessageControl {
 		}
     }
     
+    public void sendTaggedMessageToAll(String txt, int type, String extratag) {
+		for (Player p : plugin.getServer().getOnlinePlayers()) {
+			if(p.isOnline()) {
+				sendTaggedMessage(p, txt, type, extratag);
+			}
+		}
+    }
+    
     public void sendMessageToAll(String txt) {
 		for (Player p : plugin.getServer().getOnlinePlayers()) {
 			if(p.isOnline()) {
@@ -69,20 +74,23 @@ public class Main_MessageControl {
     }
     
     public void chatMessage(Player player, Player playerchat, String message, String extratag) {
-		boolean tick = (Boolean) plugin.getPlayerConfig(player, "message_tick", "boolean");
-		if(!tick) {
-			Packet61 packet = new Packet61(1000, player.getLocation().getBlockX(), player.getLocation().getBlockY()-5, player.getLocation().getBlockZ(), 1);
-			((CraftPlayer) player).getHandle().netServerHandler.sendPacket(packet);
-		}
-		
+    	if(plugin.Main_ContribControl.isClient(player, false)) {
+			boolean tick = (Boolean) plugin.getPlayerConfig(player, "message_tick", "boolean");
+			if(!tick) {
+				plugin.Main_ContribControl.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/beepclear.wav");
+			}
+    	}
     	Boolean is_modo = ((Boolean) plugin.modo.contains(playerchat.getName()));
     	Boolean is_correct = ((Boolean) plugin.correct.contains(playerchat.getName()));
     	Boolean is_anim = ((Boolean) plugin.anim.contains(playerchat.getName()));
     	Boolean is_admin = ((Boolean) playerchat.isOp());
-    	
     	String tag = "";
     	if(extratag == "") {
-    		tag = ChatColor.DARK_GREEN + "[MEMBRE]";
+    		if(plugin.Main_ContribControl.isClient(playerchat, false)) {
+    			tag = ChatColor.DARK_GREEN + "[MEMBRE" + ChatColor.GOLD + "+" + ChatColor.DARK_GREEN + "]";
+    		}else{
+    			tag = ChatColor.DARK_GREEN + "[MEMBRE]";
+    		}
     	}else{
     		tag = ChatColor.GOLD + extratag;
     	}
@@ -92,10 +100,22 @@ public class Main_MessageControl {
     	}else if(is_anim) {
     		tag = ChatColor.WHITE + "[ANIM]";
     	}else if(is_correct) {
-        		tag = ChatColor.DARK_PURPLE + "[CORREC]";
+        	tag = ChatColor.DARK_PURPLE + "[CORREC]";
     	}else if(is_admin) {
     		tag = ChatColor.RED + "[ADMIN]";
     		prepseudo = "" + ChatColor.GOLD;
+    	}
+    	if(plugin.Main_ContribControl.isClient(playerchat, false)) {
+	    	int color = (Integer) plugin.getPlayerConfig(playerchat, "plus.color", "int");
+	    	if(color != 0) {
+	    		if(color == 1) {
+	    			prepseudo = "" + ChatColor.BLUE;
+	    		}else if(color == 2) {
+	    			prepseudo = "" + ChatColor.GREEN;
+	    		}else if(color == 3) {
+	    			prepseudo = "" + ChatColor.YELLOW;
+	    		}
+	    	}
     	}
     	player.sendMessage(tag + " " + ChatColor.WHITE + "" + prepseudo + "" + playerchat.getName() + ChatColor.WHITE + " > " + message);
     }

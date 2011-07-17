@@ -9,11 +9,15 @@ public class BasicHumanNpc extends BasicNpc {
 
     private CHumanNpc mcEntity;
     private Location start_location;
-   
-    public BasicHumanNpc(CHumanNpc entity, String uniqueId, String name, Location location) {
+    private Boolean tueur;
+    private String skinurl;
+    
+    public BasicHumanNpc(CHumanNpc entity, String uniqueId, String name, Location location, Boolean tueur, String skinurl) {
         super(uniqueId, name);
         this.mcEntity = entity;
         this.start_location = location;
+        this.tueur = tueur;
+        this.skinurl = skinurl;
     }
 
     public HumanEntity getBukkitEntity() {
@@ -25,7 +29,6 @@ public class BasicHumanNpc extends BasicNpc {
     }
 
     public void moveTo(double x, double y, double z, float yaw, float pitch) {
-        //this.mcEntity.c(x, y, z, yaw, pitch);
         this.mcEntity.setPositionRotation(x, y, z, yaw, pitch);
     }
     
@@ -36,18 +39,14 @@ public class BasicHumanNpc extends BasicNpc {
     public Location getStartLocation() {
         return start_location;
     }
-
-    /*public void attackLivingEntity(LivingEntity ent) {
-        try {
-            this.mcEntity.animateArmSwing();
-            Field f = CraftLivingEntity.class.getDeclaredField("entity");
-            f.setAccessible(true);
-            EntityLiving lEntity = (EntityLiving) f.get(ent);
-            this.mcEntity.h(lEntity);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }*/
+    
+    public Boolean isTueur() {
+        return tueur;
+    }
+    
+    public String skinURL() {
+        return skinurl;
+    }
 
     public void animateArmSwing()
     {

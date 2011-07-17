@@ -6,11 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.server.EntityItem;
-import net.minecraft.server.Packet20NamedEntitySpawn;
-import net.minecraft.server.Packet21PickupSpawn;
 import net.minecraft.server.Packet51MapChunk;
-
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,31 +14,33 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 public class Main_ChunkControl {
 	
     private final Main plugin;
-    Thread thread_01, thread_02, thread_03;
+    Thread thread_01;
     
     List<Player> PlayerOR = new ArrayList<Player>();
     List<Player> ResendAll = new ArrayList<Player>();
     
     public Map<Player, ArrayList<Block>> player_blocs = new HashMap<Player, ArrayList<Block>>();
     public Map<Player, Boolean> player_chunkupdate = new HashMap<Player, Boolean>();
+    public Map<Player, Long> player_chunkupdate_id = new HashMap<Player, Long>();
     public Map<Player, String> player_lastchunk = new HashMap<Player, String>();
     public Map<Chunk, ArrayList<Vector>> cache_antixray = new HashMap<Chunk, ArrayList<Vector>>();
     public Map<Chunk, Long> cache_antixray_lastupdate = new HashMap<Chunk, Long>();
     public Map<Player, Integer> error_tick = new HashMap<Player, Integer>();
+    
+    private int chunkupdatetick = 0;
     
     public Main_ChunkControl(Main parent) {
         this.plugin = parent;
     }
     
     // THREAD
-    
+
 	public Runnable runThread_1(final Main plugin) {
 		if(thread_01 == null) {
 			thread_01 = new Thread(new Runnable() {
@@ -50,7 +48,7 @@ public class Main_ChunkControl {
 			{
 			    	try {
 			    		if (plugin.playerInServer()) {
-			    			anti_invisible_do();
+			    			do_orcontrol();
 			    		}
 			        } catch (Exception e) {
 			        	e.printStackTrace();
@@ -64,28 +62,7 @@ public class Main_ChunkControl {
 		return thread_01;
 	}
 	
-	public Runnable runThread_2(final Main plugin) {
-		if(thread_02 == null) {
-			thread_02 = new Thread(new Runnable() {
-			public void run()
-			{
-			    	try {
-			    		if (plugin.playerInServer()) {
-			    			do_orcontrol();
-			    		}
-			        } catch (Exception e) {
-			        	e.printStackTrace();
-			        }
-		            return;
-				}
-			});
-			thread_02.setPriority(Thread.MIN_PRIORITY);
-			thread_02.setDaemon(false);
-		}
-		return thread_02;
-	}
-	
-	public Runnable runThread_3(final Main plugin, final Player player) {
+	public Runnable runThread_2(final Main plugin, final Player player) {
 		Thread thread = new Thread(new Runnable() {
 			public void run()
 			{
@@ -101,47 +78,7 @@ public class Main_ChunkControl {
 		});
 		return thread;
 	}
-	
-	// ANTI INVISIBLE
-	
-	private void anti_invisible_tick(Player player) {
-		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
-			if (entity instanceof Player) {
-				if(!((Player) entity).isOp()) {
-					if(!plugin.is_spy((Player) entity) && !plugin.isbot(player) && plugin.Main_Visiteur.is_visiteur((Player) entity) == plugin.Main_Visiteur.is_visiteur(player)) {
-						CraftPlayer unHide = (CraftPlayer) player;
-						CraftPlayer unHideFrom = (CraftPlayer) entity;
-						unHide.getHandle().netServerHandler.sendPacket(new Packet20NamedEntitySpawn(unHideFrom.getHandle()));
-					}
-				}
-			}else if (entity instanceof EntityItem) {
-				CraftPlayer unHide = (CraftPlayer) player;
-				EntityItem unHideFrom = (EntityItem) entity;
-				unHide.getHandle().netServerHandler.sendPacket(new Packet21PickupSpawn(unHideFrom));
-			}
-		}
-	}
-	
-	public void anti_invisible_delayed(final Player p) {
-    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			public void run()
-			{
-				anti_invisible_tick(p);
-			}
-    	}, (long) 150);
-	}
-	
-	private void anti_invisible_do() {
-		for (Player p : plugin.getServer().getOnlinePlayers()) {
-			if(plugin.Main_Visiteur.is_visiteur(p)) {
-				continue;
-			}
-			if(p.isSneaking()) {
-				anti_invisible_tick(p);
-			}
-		}
-	}
-	
+
 	// ANTI XRAY
 	
 	public double get_rangebyid(int blockid) {
@@ -158,33 +95,24 @@ public class Main_ChunkControl {
 	private void do_orcontrol() {
 		for (Player p : PlayerOR) {
 			if(!p.isOnline()) {PlayerOR.remove(p); continue;}
-			if(plugin.Main_Visiteur.is_visiteur(p) || !p.getWorld().getName().equals("world")) {continue;}
-			
-			Boolean good = true;
-			
+			if(p.getWorld().getName().contains("old") || plugin.Main_Visiteur.is_visiteur(p)) {continue;}
+			Location location = p.getLocation();
+			Chunk pchunk = p.getWorld().getChunkAt(location);
+			String chunklist = "", pchunkid = "NonNonNon";
 			if(player_lastchunk.containsKey(p)) {
-				String pchunkid = player_lastchunk.get(p);
-				int cx = p.getWorld().getChunkAt(p.getLocation()).getX();
-				int cz = p.getWorld().getChunkAt(p.getLocation()).getZ();
-				int force = 5;
-				if(plugin.Main_TimeControl.dead_sun) {
-					force = 3;
-				}
+				pchunkid = player_lastchunk.get(p);
+				int cx = pchunk.getX(), cz = pchunk.getZ(), force = 5;
+				if(plugin.Main_TimeControl.dead_sun) {force = 3;}
 				for (int i = cx-force; i <= cx+force; i++) {
 					for (int o = cz-force; o <= cz+force; o++) {
-						String chunkid = i+" "+o;
-						if (chunkid.equals(pchunkid)) {
-							good = false;
-							break;
-						}
+						chunklist = chunklist + i + " " + o;
 					}	
 				}
 			}
-			
-			if (good || !ResendAll.contains(p)) {
+			if (!chunklist.contains(pchunkid) || !ResendAll.contains(p)) {
 				plugin.Main_ChunkControl.CacheOnlyChunk(p);
 				ResendAll.add(p);
-				String schunkid = p.getWorld().getChunkAt(p.getLocation()).getX()+" "+p.getWorld().getChunkAt(p.getLocation()).getZ();
+				String schunkid = pchunk.getX() + " " + pchunk.getZ();
 				player_lastchunk.put(p, schunkid);
 			}
 			ArrayList<Block> pblock = new ArrayList<Block>();
@@ -192,7 +120,7 @@ public class Main_ChunkControl {
 			if(aiming != null) {
 		        Block theblock = aiming.getTargetBlock();
 		        if(theblock != null) {
-					if(plugin.checkLocation(p.getLocation(), theblock.getLocation(), 10.0)) {
+					if(plugin.checkLocation(location, theblock.getLocation(), 10.0)) {
 						int vpx = theblock.getLocation().getBlockX();
 						int vpz = theblock.getLocation().getBlockZ();
 						int vpy = theblock.getLocation().getBlockY();
@@ -213,34 +141,36 @@ public class Main_ChunkControl {
 					}
 		        }
 			}
-			Location location = p.getLocation();
-			int px = location.getBlockX();
-			int pz = location.getBlockZ();
-			int py = location.getBlockY();
-	        for (int x = px-2; x <= px+2; x++) {
-	            for (int z = pz-2; z <= pz+2; z++) {
-	                for (int y = py-2; y <= py+2; y++) {
-	                	Block block = p.getWorld().getBlockAt(x, y, z);
-	                	int bid = block.getTypeId();
-		                if(bid != 0 && is_blocs(bid)) {
-			                if(plugin.checkLocation(p.getLocation(), block.getLocation(), get_rangebyid(bid))) {
-			                	if(player_blocs.get(p) == null || !player_blocs.get(p).contains(block)) {
-			                		p.sendBlockChange(block.getLocation(), bid, block.getData());
-			                	}
-			                	if(!pblock.contains(block)) {
-				                	pblock.add(block);
-			                	}
+			if(chunkupdatetick > 15) {
+				chunkupdatetick = 0;
+				int px = location.getBlockX();
+				int pz = location.getBlockZ();
+				int py = location.getBlockY();
+		        for (int x = px-3; x <= px+3; x++) {
+		            for (int z = pz-3; z <= pz+3; z++) {
+		                for (int y = py-3; y <= py+3; y++) {
+		                	Block block = p.getWorld().getBlockAt(x, y, z);
+		                	int bid = block.getTypeId();
+			                if(bid != 0 && is_blocs(bid)) {
+				                if(plugin.checkLocation(location, block.getLocation(), get_rangebyid(bid))) {
+				                	if(player_blocs.get(p) == null || !player_blocs.get(p).contains(block)) {
+				                		p.sendBlockChange(block.getLocation(), bid, block.getData());
+				                	}
+				                	if(!pblock.contains(block)) {
+					                	pblock.add(block);
+				                	}
+				                }
 			                }
 		                }
-	                }
-	            }
-	        }
+		            }
+		        }
+			}else{
+				chunkupdatetick++;
+			}
         	if(player_blocs.containsKey(p)) {
 		        for (Block tblock : player_blocs.get(p)) {
 		        	int thebid = tblock.getTypeId();
-		        	if(pblock.contains(tblock)) {
-		        		p.sendBlockChange(tblock.getLocation(), thebid, tblock.getData());
-		        	}else{
+		        	if(!pblock.contains(tblock)) {
 		        		if(is_blocs(thebid)) {
 		        			p.sendBlockChange(tblock.getLocation(), Material.STONE, tblock.getData());
 		        		}
@@ -280,20 +210,20 @@ public class Main_ChunkControl {
     }
     
     public Boolean ChunkGenerator(Player player, Main_ChunkCopy chunkcopy, int bid, int x, int y, int z, int hy) {
-    	if(plugin.Main_TimeControl.dead_sun) {
-	    	if(hy-5 <= y) {
+    	if(plugin.Main_TimeControl.dead_sun || plugin.Main_TimeControl.prepre_dead_sun) {
+	    	if((hy-5) <= y) {
 		    	Material bname = Material.getMaterial(bid);
 		    	if(bname == Material.LEAVES) {
 		    		chunkcopy.setRawTypeId(x, y, z, Material.FIRE.getId());
 		    		return true;
-		    	}else if(bname == Material.GRASS) {
-		    		chunkcopy.setRawTypeId(x, y, z, Material.SAND.getId());
-		    		return true;
-		    	}else if(bname == Material.DIRT) {
+		    	}else if(bname == Material.GRASS || bname == Material.DIRT || bname == Material.GLASS) {
 		    		chunkcopy.setRawTypeId(x, y, z, Material.SAND.getId());
 		    		return true;
 		    	}else if(bname == Material.LONG_GRASS) {
 		    		chunkcopy.setRawTypeId(x, y, z, Material.DEAD_BUSH.getId());
+		    		return true;
+		    	}else if(bname == Material.LOG) {
+		    		chunkcopy.setRawTypeId(x, y, z, Material.CACTUS.getId());
 		    		return true;
 		    	}else if(bname == Material.FURNACE) {
 		    		chunkcopy.setRawTypeId(x, y, z, Material.BURNING_FURNACE.getId());
@@ -308,10 +238,12 @@ public class Main_ChunkControl {
     }
     
     public void RequestChunkSend(final Player player, final Chunk chunk) {
+    	
     	CraftChunk craftchunk = (CraftChunk) chunk;
 		Block theblock = chunk.getBlock(0, 0, 0);
 		final Main_ChunkCopy chunkcopy = getChunkSnapshot(craftchunk);
 		final Location lastlocation = theblock.getLocation();
+		
 		if(!plugin.Main_TimeControl.dead_sun && (cache_antixray.containsKey(chunk) && cache_antixray.get(chunk).size() <= 0) && (cache_antixray_lastupdate.containsKey(chunk) && cache_antixray_lastupdate.get(chunk)+500 > plugin.timetamps)) {
 			for (Vector vec : cache_antixray.get(chunk)) {
 				int xx = vec.getBlockX();
@@ -331,19 +263,15 @@ public class Main_ChunkControl {
                 for (int z = 0; z <= 16; z++) {
                 	Block block = chunk.getBlock(x, 0, z);
                 	int hblocky = chunk.getWorld().getHighestBlockYAt(block.getLocation());
-	                for (int y = 0; y <= 128; y++) {
-						if(y > hblocky) {
-							break;
-						}else{
-							Block thesblock = chunk.getBlock(x, y, z);
-							int bid = thesblock.getTypeId();
-							if(bid != 0) {
-								if(is_blocs(bid)) {
-									chunkcopy.setRawTypeId(x, y, z, Material.STONE.getId());
-									blocktmp.add(new Vector(x, y, z));
-								}else{
-									ChunkGenerator(player, chunkcopy, bid, x, y, z, hblocky);
-								}
+	                for (int y = 0; y <= hblocky; y++) {
+						Block thesblock = chunk.getBlock(x, y, z);
+						int bid = thesblock.getTypeId();
+						if(bid != 0) {
+							if(is_blocs(bid)) {
+								chunkcopy.setRawTypeId(x, y, z, Material.STONE.getId());
+								blocktmp.add(new Vector(x, y, z));
+							}else{
+								ChunkGenerator(player, chunkcopy, bid, x, y, z, hblocky);
 							}
 						}
 	                }
@@ -364,7 +292,8 @@ public class Main_ChunkControl {
         	if(error_tick.containsKey(player)) {
         		int count = error_tick.get(player);
         		if(count > 5) {
-        			player.kickPlayer("MW-SECURITY : Erreur de sécurité N°5001.");
+        			player.kickPlayer("MW-SECURITY : Erreur de sécuritée N°5001.");
+        			plugin.sendError("Erreur de sécuritée N°5001, joueur "+ player.getName());
         		}else{
         			error_tick.put(player, count+1);
                 	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
@@ -394,14 +323,18 @@ public class Main_ChunkControl {
 		Chunk chunk_debut = p.getWorld().getChunkAt(p.getLocation());
 		int x_debut = chunk_debut.getX();
 		int z_debut = chunk_debut.getZ();
+		final long id = plugin.timetamps;
+		player_chunkupdate_id.put(p, id);
 		for (int i = (x_debut)-6; i <= (x_debut)+6; i++) {
 			for (int o = (z_debut)-6; o <= (z_debut)+6; o++) {
 				final Chunk chunk = p.getWorld().getChunkAt(i, o);
-				Delayed_time = Delayed_time+2;
+				Delayed_time = Delayed_time+3; // 2
 		    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 					public void run()
 					{
-						RequestChunkSend(p, chunk);
+						if(player_chunkupdate_id.get(p).equals(id)) {
+							RequestChunkSend(p, chunk);
+						}
 					}
 		    	}, (long) Delayed_time);
 			}
@@ -409,15 +342,15 @@ public class Main_ChunkControl {
 	}
     
 	public void CacheOnlyChunk(final Player p) {
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, runThread_3(plugin, p), 1);
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, runThread_2(plugin, p), 1);
 	}
 	
 	public Main_ChunkCopy getChunkSnapshot(CraftChunk thechunk) {
 	        net.minecraft.server.Chunk chunk = thechunk.getHandle();
 	        byte[] buf = new byte[32768 + 16384 + 16384 + 16384];
-	        chunk.a(buf, 0, 0, 0, 16, 128, 16, 0);
+	        chunk.getData(buf, 0, 0, 0, 16, 128, 16, 0);
 	        byte[] hmap = new byte[256];
-	        System.arraycopy(chunk.h, 0, hmap, 0, 256);
+	        System.arraycopy(chunk.heightMap, 0, hmap, 0, 256);
 	        World w = thechunk.getWorld();
 	        return new Main_ChunkCopy(thechunk.getX(), thechunk.getZ(), w.getName(), w.getFullTime(), buf, hmap);
 	}

@@ -1,7 +1,8 @@
 package npcspawner;
 
 import net.minecraft.server.*;
-import org.bukkit.entity.Player;
+
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 public class NpcNetHandler extends NetServerHandler 
 {
@@ -12,7 +13,7 @@ public class NpcNetHandler extends NetServerHandler
     }
 
     @Override
-    public Player getPlayer() {
+    public CraftPlayer getPlayer() {
          return null;
     }
 

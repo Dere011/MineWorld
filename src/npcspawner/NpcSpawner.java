@@ -59,31 +59,21 @@ public class NpcSpawner {
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public static BasicHumanNpc SpawnBasicHumanNpc(String uniqueId, String name, World world, double x, double y, double z, float yaw, float pitch) {
+	public static BasicHumanNpc SpawnBasicHumanNpc(String uniqueId, String name, World world, double x, double y, double z, float yaw, float pitch, Boolean tueur, String skinurl) {
         try {
-        	
         	if(name.length() > 20) {
         		return null;
         	}
-        	
             WorldServer ws = GetWorldServer(world);
             MinecraftServer ms = GetMinecraftServer(ws.getServer());
 
             CHumanNpc eh = new CHumanNpc(ms, ws, name, new ItemInWorldManager(ws));
             
-            //eh.c(x, y, z, yaw, pitch);
-            
             eh.setPositionRotation(x, y, z, yaw, pitch);
-
-            //int m = MathHelper.b(eh.locX / 16.0D);
             int m = MathHelper.floor(eh.locX / 16.0D);
-            
-            //int n = MathHelper.b(eh.locZ / 16.0D);
             int n = MathHelper.floor(eh.locZ / 16.0D);
             
             ws.getChunkAt(m, n).a(eh);
-            //ws.addEntity(eh);
-            
             ws.entityList.add(eh);
 
             Class params[] = new Class[1];
@@ -95,22 +85,18 @@ public class NpcSpawner {
             margs[0] = eh;
             method.invoke(ws, margs);
 
-            return new BasicHumanNpc(eh, uniqueId, name, new Location(world, x, y, z, yaw, pitch));
-
+            return new BasicHumanNpc(eh, uniqueId, name, new Location(world, x, y, z, yaw, pitch), tueur, skinurl);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return null;
     }
 
     public static void RemoveBasicHumanNpc(BasicHumanNpc npc) {
         try {
-        	//npc.getMCEntity().world.e(npc.getMCEntity());
         	npc.getMCEntity().world.removeEntity(npc.getMCEntity());
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 }

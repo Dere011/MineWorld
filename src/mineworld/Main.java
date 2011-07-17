@@ -16,6 +16,7 @@ import npcspawner.BasicHumanNpc;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.block.Block;
@@ -33,6 +34,7 @@ import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.*;
 import org.bukkit.util.config.Configuration;
+import org.bukkitcontrib.BukkitContrib;
 
 public class Main extends JavaPlugin {
 
@@ -40,19 +42,17 @@ public class Main extends JavaPlugin {
     final Logger logger = Logger.getLogger("Minecraft");
     PluginDescriptionFile pdfFile;
     
-    Main_EntityListener Main_EntityListener;
-    Main_PlayerListener Main_PlayerListener;
-    Main_MoveControl Main_MoveControl;
-    Main_BlockListener Main_BlockListener;
-    Main_Visiteur Main_Visiteur;
-    Main_CommandsControl Main_CommandsControl;
-    Main_MessageControl Main_MessageControl;
-    Main_ShopSystem Main_ShopSystem;
-    
-    public static Main_Visiteur Main_Visiteur_n;
-    
     final Random rand = new Random();
     
+    public Main_EntityListener Main_EntityListener;
+    public Main_PlayerListener Main_PlayerListener;
+    public Main_MoveControl Main_MoveControl;
+    public Main_BlockListener Main_BlockListener;
+    public Main_Visiteur Main_Visiteur;
+    public Main_CommandsControl Main_CommandsControl;
+    public Main_MessageControl Main_MessageControl;
+    public Main_ShopSystem Main_ShopSystem;
+    public Main_ContribControl Main_ContribControl;
     public Main_NPC Main_NPC;
     public Main_TimeControl Main_TimeControl;
     public Main_ChunkControl Main_ChunkControl;
@@ -60,14 +60,14 @@ public class Main extends JavaPlugin {
     public List<String> modo = new ArrayList<String>();
     public List<String> correct = new ArrayList<String>();
     public List<String> anim = new ArrayList<String>();
-    public List<String> stop = new ArrayList<String>();
     public List<Player> world_whitelist = new ArrayList<Player>();
     public List<Player> block_player = new ArrayList<Player>();
-    public List<Player> open_chest = new ArrayList<Player>();
     
     public List<Player> spy_player = new ArrayList<Player>();
     
     public Map<Entity, Block> move_last = new HashMap<Entity, Block>();
+    
+    public Map<Player, String> last_region = new HashMap<Player, String>();
 
 	protected static File maindir = new File("plugins" + File.separatorChar + "MineWorld");
 	protected File NPC_configFile = new File(maindir, "npc_config.yml");
@@ -80,6 +80,7 @@ public class Main extends JavaPlugin {
 	
 	public Boolean npc_is_first_loaded = false;
 	private Boolean debug_enable = false;
+	public Boolean contrib = true;
 	
 	public int cron_tick_stats = 0;
 	public int cron_tick = 0;
@@ -112,16 +113,17 @@ public class Main extends JavaPlugin {
     	PluginDescriptionFile pdfFile = getDescription();
 
         Main_NPC = new Main_NPC(this);
+        Main_ContribControl = new Main_ContribControl(this);
         Main_TimeControl = new Main_TimeControl(this);
         Main_ChunkControl = new Main_ChunkControl(this);
+        Main_ShopSystem = new Main_ShopSystem(this);
+        Main_CommandsControl = new Main_CommandsControl(this);
+        Main_MessageControl = new Main_MessageControl(this);
         Main_EntityListener = new Main_EntityListener(this);
         Main_PlayerListener = new Main_PlayerListener(this);
         Main_MoveControl = new Main_MoveControl(this);
         Main_BlockListener = new Main_BlockListener(this);
         Main_Visiteur = new Main_Visiteur(this);
-        Main_CommandsControl = new Main_CommandsControl(this);
-        Main_MessageControl = new Main_MessageControl(this);
-        Main_ShopSystem = new Main_ShopSystem(this);
         
         pm.registerEvent(Type.PLAYER_JOIN, Main_PlayerListener, Priority.Normal, this); 
         pm.registerEvent(Type.PLAYER_QUIT, Main_PlayerListener, Priority.Normal, this); 
@@ -143,7 +145,7 @@ public class Main extends JavaPlugin {
         pm.registerEvent(Type.BLOCK_BREAK, Main_BlockListener, Priority.Normal, this); 
         pm.registerEvent(Type.BLOCK_DAMAGE, Main_BlockListener, Priority.Normal, this); 
         pm.registerEvent(Type.BLOCK_PLACE, Main_BlockListener, Priority.Normal, this);
-
+        
     	runAllThread();
     	
     	try {
@@ -155,16 +157,18 @@ public class Main extends JavaPlugin {
         logger.log(Level.INFO, pdfFile.getName() + " version " + pdfFile.getVersion() + " enabled.");
     }
     
-    public void freeze(Player player, Boolean bool) {
-    	if(bool) {
-			if(!block_player.contains(player)) {
-				block_player.add(player);
+    public void freeze(final Player player, Integer time) {
+		if(!block_player.contains(player)) {
+			block_player.add(player);
+		}
+    	player.getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+			public void run()
+			{
+				if(block_player.contains(player)) {
+					block_player.remove(player);
+				}
 			}
-    	}else{
-			if(block_player.contains(player)) {
-				block_player.remove(player);
-			}	
-    	}
+    	}, (long) time);
     }
     
 	public Runnable runThread_01() {
@@ -262,7 +266,7 @@ public class Main extends JavaPlugin {
 		return this.t_05;
 	}
     
-	int showRandomInteger(int aStart, int aEnd, Random aRandom){
+	public int showRandomInteger(int aStart, int aEnd, Random aRandom){
 	    if ( aStart > aEnd ) {
 	      throw new IllegalArgumentException("Start cannot exceed End.");
 	    }
@@ -384,6 +388,22 @@ public class Main extends JavaPlugin {
 	    	if(cron_tick_gen > 15) {
 				cron_tick_gen = 0;
 				number_creature = 0;
+		        BukkitContrib.getItemManager().setItemName(Material.SLIME_BALL, "Monnais verte");
+		        if(Main_TimeControl.meteo_monde_type == 1) {
+		        	Main_ContribControl.bool_clouds(false);
+		    	}else if(Main_TimeControl.meteo_monde_type == 2) {
+		    		Main_ContribControl.bool_clouds(true);
+		    	}
+		        BukkitContrib.getAppearanceManager().resetAllTitles();
+		        BukkitContrib.getAppearanceManager().resetAllCloaks();
+		        for (Player p : getServer().getOnlinePlayers()) {
+		    		if(ismodo(p)) {
+		    			Main_ContribControl.setPlayerTitle(p, ChatColor.GREEN.toString() + "[MODO]\n"+ p.getName());
+		    		}else if(p.isOp()) {
+		    			Main_ContribControl.setPlayerTitle(p, ChatColor.RED.toString() + "[ADMIN]\n"+ p.getName());
+		    			Main_ContribControl.setPlayerCape(p, "http://mineworld.fr/contrib/cape/admin.png");
+		    		}
+		        }
 				for (World w : getServer().getWorlds()) {
 					for (Entity e : w.getEntities()) {
 						if (e instanceof Creature) {
@@ -412,7 +432,7 @@ public class Main extends JavaPlugin {
 			if(cron_tick_stats > 220) {
 				cron_tick_stats = 0;
 				for (Player p : getServer().getOnlinePlayers()) {
-			    	if (Main_Visiteur.is_visiteur(p)) {
+			    	if (Main_Visiteur.is_visiteur(p) || !Main_ContribControl.isClient(p, false)) {
 			    		continue;
 			    	}
 					if(Main_ChunkControl.error_tick.containsKey(p)) {
@@ -421,6 +441,8 @@ public class Main extends JavaPlugin {
 					conf_player.load();
 					int ppresences = conf_player.getInt("load-player."+ p.getName() +".ppresences", 0);
 					Main_MessageControl.sendTaggedMessage(p, "Vous avez reçut "+ ChatColor.DARK_GREEN + "1 point"+ ChatColor.WHITE + " de présence.", 1, "");
+					Main_ContribControl.sendNotification(p, "MONEY Transaction", "+1 PPoint(s)");
+					Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/reward.wav");
 					ppresences++;
 					setPlayerConfig(p, "ppresences", ppresences);
 				}
@@ -436,30 +458,32 @@ public class Main extends JavaPlugin {
     		if(!isDay(world)) {
 	    		for (Entity e : world.getEntities()) {
 	    			if (e instanceof Monster) {
-						double lastdistance = 1000000.0;
-						Entity thetarget = null;
-						for (Entity ee : e.getNearbyEntities(50, 50, 50)) {
-							if (ee instanceof Player) {
-								if(((Creature) e).getTarget() == null && !Main_Visiteur.is_visiteur((Player) ee)) {
-									if(!((Player) ee).isOp() && !ee.isDead() && ((Player) ee).isOnline()) {
-										double distance = getdistance(ee, e);
-										if (distance < lastdistance) {
-											thetarget = ee;
-											lastdistance = distance;
+						if(((Creature) e).getTarget() == null) {
+							double lastdistance = 1000000.0;
+							Entity thetarget = null;
+							for (Entity ee : e.getNearbyEntities(50, 50, 50)) {
+								if (ee instanceof Player) {
+									if(!Main_Visiteur.is_visiteur((Player) ee)) {
+										if(!((Player) ee).isOp() && !ee.isDead() && ((Player) ee).isOnline()) {
+											double distance = getdistance(ee, e);
+											if (distance < lastdistance) {
+												thetarget = ee;
+												lastdistance = distance;
+											}
 										}
 									}
 								}
 							}
-						}
-						if(thetarget != null) {
-							double range = 12.0;
-							if(thetarget.getLocation().getBlock().getLightLevel() < 10) {
-								range = 5.0;
-							}
-							if (checkLocation(thetarget.getLocation(), e.getLocation(), range)) {
-								((Creature) e).setTarget((LivingEntity) thetarget);
-							}else{
-								Main_MoveControl.moveCloserToLocation(e, thetarget.getLocation());
+							if(thetarget != null) {
+								double range = 12.0;
+								if(thetarget.getLocation().getBlock().getLightLevel() < 10) {
+									range = 5.0;
+								}
+								if (checkLocation(thetarget.getLocation(), e.getLocation(), range)) {
+									((Creature) e).setTarget((LivingEntity) thetarget);
+								}else{
+									Main_MoveControl.moveCloserToLocation(e, thetarget.getLocation());
+								}
 							}
 						}
 		    		}
@@ -575,16 +599,6 @@ public class Main extends JavaPlugin {
 	    		}
 	    	}
 	    }
-    	if(!stop.isEmpty()) {
-	    	for (Player p : getServer().getOnlinePlayers()) {
-	    		if(stop.contains(p.getName())) {
-	    			Location ploc = p.getLocation();
-	    			for (int x = 0; x <= 300; x++) {
-	    				p.sendBlockChange(ploc.add(0, 10, 0), 0, (byte) 0);
-	    			}
-	    		}
-	    	}
-    	}
     }
     
     private void runAllThread() {
@@ -601,14 +615,13 @@ public class Main extends JavaPlugin {
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_Visiteur.runThread_1(this), 1, 25); 
 
     	// NPC
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_NPC.runThread(this), 1, 1);
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_NPC.runThread(this), 1, 10);
     	
     	// TIMECONTROL
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_TimeControl.runThread_meteo(this), 1, 10);
     	
     	// CHUNKCONTROL | ANTI-INVISIBLE
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_ChunkControl.runThread_1(this), 1, 50); 
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_ChunkControl.runThread_2(this), 1, 25);
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_ChunkControl.runThread_1(this), 1, 25);
     }
     
 	public Object getNPCConfig(String npcname, String name, String type) {

@@ -2,6 +2,8 @@ package mineworld;
 
 import java.util.Random;
 
+import npcspawner.BasicHumanNpc;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -15,8 +17,7 @@ public class Main_TimeControl {
     
 	private final Random rand = new Random();
     
-    Thread thread_01;
-    Thread thread_02;
+    Thread thread_01, thread_02;
     
     public int meteo_monde_tick = 0;
     public int meteo_monde_type = 3;
@@ -27,8 +28,10 @@ public class Main_TimeControl {
     private int meteotick = 0;
     
     public boolean dead_sun = false;
+    public boolean pre_dead_sun = false;
+    public boolean prepre_dead_sun = false;
     public int dead_sun_tick = 0;
-    private int dead_sun_next = showRandomInteger(80000, 500000, rand);
+    public int dead_sun_next = showRandomInteger(5000, 25000, rand);
     
     public Main_TimeControl(Main parent) {
         this.plugin = parent;
@@ -65,24 +68,22 @@ public class Main_TimeControl {
 	    return randomNumber;
 	}
 	
-	public void setTime(String world, int time) {
+	public void setTime(String world, long time) {
 		plugin.getServer().getWorld(world).setTime(time);
 	}
 	
 	public Boolean isStorm() {
-		for (World w : plugin.getServer().getWorlds()) {
-			if(w.hasStorm()) {
-				return true;
-			}
+		World w = plugin.getServer().getWorld("world");
+		if(w.hasStorm()) {
+			return true;
 		}
 		return false;
 	}
 	
 	public Boolean isThundering() {
-		for (World w : plugin.getServer().getWorlds()) {
-			if(w.isThundering()) {
-				return true;
-			}
+		World w = plugin.getServer().getWorld("world");
+		if(w.isThundering()) {
+			return true;
 		}
 		return false;
 	}
@@ -92,10 +93,12 @@ public class Main_TimeControl {
 			for (World w : plugin.getServer().getWorlds()) {
 				w.setStorm(true);
 			}
+			plugin.Main_ContribControl.bool_clouds(true);
 		}else{
 			for (World w : plugin.getServer().getWorlds()) {
 				w.setStorm(false);
 			}
+			plugin.Main_ContribControl.bool_clouds(false);
 		}
 	}
 	
@@ -104,10 +107,12 @@ public class Main_TimeControl {
 			for (World w : plugin.getServer().getWorlds()) {
 				w.setThundering(true);
 			}
+			plugin.Main_ContribControl.bool_clouds(true);
 		}else{
 			for (World w : plugin.getServer().getWorlds()) {
 				w.setThundering(false);
 			}
+			plugin.Main_ContribControl.bool_clouds(false);
 		}
 	}
 	
@@ -118,38 +123,42 @@ public class Main_TimeControl {
 		double lastdistance = 1000000000;
 		Location lastlocation = null;
 		int lasttype = 0;
-		for (int x = px-8; x <= px+8; x++) {
-            for (int z = pz-8; z <= pz+8; z++) {
-                int yblock = world.getHighestBlockYAt(x, z);
-                Block block = world.getBlockAt(new Location(world, x, yblock, z));
+		for (int x = px-16; x <= px+16; x++) {
+            for (int z = pz-16; z <= pz+16; z++) {
+                Block block = world.getBlockAt(new Location(world, x, (world.getHighestBlockYAt(x, z)-1), z));
                 int bid = block.getTypeId();
-		        if(plugin.checkLocation(location, block.getLocation(), 10.0)) {
-	                if(bid == Material.IRON_BLOCK.getId()) {
-		                double distance = plugin.getdistance(location, block.getLocation());
-		                if(lastdistance > distance) {
-		                	lastdistance = distance;
-		                	lastlocation = block.getLocation();
-		                	lasttype = 1;
-		                }
-	                }else if(bid == Material.DISPENSER.getId()) {
-		                double distance = plugin.getdistance(location, block.getLocation());
-		                if((lastdistance > distance && lasttype > 1) || (lastdistance+5 > distance && lasttype == 1)) {
-		                	lastdistance = distance;
-		                	lastlocation = block.getLocation();
-		                	lasttype = 2;
-		                }
+                if(bid == 42) {
+	                double distance = plugin.getdistance(location, block.getLocation());
+	                if(lastdistance > distance) {
+	                	lastdistance = distance;
+	                	lastlocation = block.getLocation();
+	                	lasttype = 1;
 	                }
-		        }
+                }else if(bid == 23 || bid == 61 || bid == 62 || bid == 33 || bid == 29) {
+	                double distance = plugin.getdistance(location, block.getLocation());
+	                if((lastdistance > distance && lasttype > 1) || ((lastdistance+5) > distance && lasttype == 1)) {
+	                	lastdistance = distance;
+	                	lastlocation = block.getLocation();
+	                	lasttype = 2;
+	                }
+                }
             }
         }
 		if(lastlocation != null) {
-			world.strikeLightning(new Location(world, lastlocation.getBlockX(), lastlocation.getBlockY(), lastlocation.getBlockZ()));
+			Location llocation = new Location(world, lastlocation.getX(), lastlocation.getY()+1, lastlocation.getZ());
+			world.strikeLightning(llocation);
+			int sound_id = showRandomInteger(1, 9, rand);
+			plugin.Main_ContribControl.sendSoundEffectToAllToLocation(lastlocation, "http://mineworld.fr/contrib/sound/zap"+sound_id+".wav");
+			int storm_id = showRandomInteger(1, 4, rand);
+			plugin.Main_ContribControl.sendSoundEffectToAllToLocation(lastlocation, "http://mineworld.fr/contrib/sound/thunder_close0"+storm_id+".wav");
 		}else{
-			world.strikeLightning(new Location(world, location.getBlockX(), world.getHighestBlockYAt(location), location.getBlockZ()));
+			Location slocation = new Location(world, location.getX(), world.getHighestBlockYAt(location), location.getZ());
+			int storm_id = showRandomInteger(1, 4, rand);
+			plugin.Main_ContribControl.sendSoundEffectToAllToLocation(slocation, "http://mineworld.fr/contrib/sound/thunder_close0"+storm_id+".wav");
+			world.strikeLightning(slocation);
 		}
 	}
 	
-	@SuppressWarnings("unused")
 	private void do_meteo() {
 		if(meteotick > 5 && !dead_sun) {
 			meteotick = 0;
@@ -176,13 +185,10 @@ public class Main_TimeControl {
 						meteo_monde_storm = showRandomInteger(1, 10, rand);
 					}
 					if (meteo_monde_storm > 1) {
-						for (Player p : plugin.getServer().getOnlinePlayers()) {
-			    			World pworld = p.getWorld();
-				    		if(showRandomInteger(1, 100, rand) < 20) {
-					    		Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(100, 200, rand), 128, p.getLocation().getBlockZ()-showRandomInteger(100, 200, rand));
-					    		pworld.strikeLightningEffect(new Location(loc.getWorld(), loc.getBlockX(), 120, loc.getBlockZ()));
-					    	}
-						}
+			    		if(showRandomInteger(1, 100, rand) < 10) {
+				    		int song_id = showRandomInteger(1, 3, rand);
+		    				plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/thunder_distant"+song_id+".wav");
+				    	}
 					}
 					if(isStorm()) {
 						setStorm(false);
@@ -190,13 +196,10 @@ public class Main_TimeControl {
 					}
 				}else if(meteo_monde_tick < 100) {
 					if (meteo_monde_storm > 1) {
-						for (Player p : plugin.getServer().getOnlinePlayers()) {
-			    			World pworld = p.getWorld();
-				    		if(showRandomInteger(1, 100, rand) < 20) {
-					    		Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(100, 200, rand), 128, p.getLocation().getBlockZ()-showRandomInteger(100, 200, rand));
-					    		pworld.strikeLightningEffect(new Location(loc.getWorld(), loc.getBlockX(), 120, loc.getBlockZ()));
-					    	}
-						}
+			    		if(showRandomInteger(1, 100, rand) < 10) {
+				    		int song_id = showRandomInteger(1, 3, rand);
+		    				plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/thunder_distant"+song_id+".wav");
+			    		}
 					}
 				}else if(meteo_monde_tick > 100 && meteo_monde_tick < 150) {
 					if (meteo_monde_storm > 1) {
@@ -214,34 +217,38 @@ public class Main_TimeControl {
 		    	setThundering(false);
 			}
 		}
-		
 		meteo_monde_tick++;
 		meteotick++;
 		
     	if(storm_tick_n >= storm_next_tick) {
 	    	storm_tick_n = 0;
-	    	storm_next_tick = showRandomInteger(5, 25, rand);
+	    	storm_next_tick = showRandomInteger(5, 15, rand);
 	    	if(meteo_monde_storm > 1) {
 	    		for (Player p : plugin.getServer().getOnlinePlayers()) {
 	    			if(plugin.Main_Visiteur.is_visiteur(p)) {
 	    				continue;
 	    			}
-	    			if(isStorm() && isThundering()) {
+	    			if(isStorm()) {
 	    				World pworld = p.getWorld();
-		    			if(pworld.getHighestBlockYAt(p.getLocation())-10 < p.getLocation().getBlockY()) {
+		    			if((pworld.getHighestBlockYAt(p.getLocation())-20) < p.getLocation().getBlockY()) {
 			    			if(showRandomInteger(1, 2, rand) == 2) {
-			    				if(showRandomInteger(1, 100, rand) < 80) {
+			    				if(showRandomInteger(1, 100, rand) < 60) {
 					    			if(showRandomInteger(1, 2, rand) == 1) {
 					    				Location loc = new Location(pworld, p.getLocation().getBlockX()+showRandomInteger(1, 50, rand), 0, p.getLocation().getBlockZ()+showRandomInteger(1, 50, rand));
-					    				pworld.strikeLightningEffect(new Location(loc.getWorld(), loc.getBlockX(), p.getWorld().getHighestBlockYAt(loc), loc.getBlockZ()));
+					    				strike_eclaire(loc);
 					    			}else{
 					    				Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 50, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 50, rand));
-					    				pworld.strikeLightningEffect(new Location(loc.getWorld(), loc.getBlockX(), p.getWorld().getHighestBlockYAt(loc), loc.getBlockZ()));
+					    				strike_eclaire(loc);
 					    			}
 			    				}else{
 			    					Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 5, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 5, rand));
 			    					strike_eclaire(loc);
 			    				}
+			    			}else{
+			    				int song_id = showRandomInteger(2, 6, rand);
+			    				plugin.Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/stereo_gust_0"+song_id+".wav");
+			    				int song2_id = showRandomInteger(1, 3, rand);
+			    				plugin.Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/thunder_distant"+song2_id+".wav");
 			    			}
 		    			}
 	    			}
@@ -267,28 +274,49 @@ public class Main_TimeControl {
     		}
     	}
     	
-    	if(1==2 &&dead_sun_tick >= dead_sun_next) {
+    	if(dead_sun_tick >= dead_sun_next) {
     		dead_sun_tick = 0;
+   			long time = plugin.getServer().getWorld("world").getTime();
+			time = time - time % 24000;
     		if(dead_sun) {
-	    		dead_sun_next = showRandomInteger(80000, 500000, rand);
+	    		dead_sun_next = showRandomInteger(5000, 25000, rand);
 	    		dead_sun = false;
+	    		plugin.Main_ContribControl.setSunURLtoAll("http://mineworld.fr/contrib/sun/normalsun.png");
     			plugin.Main_ChunkControl.ResendAll.clear();
     			plugin.Main_ChunkControl.player_chunkupdate.clear();
-	    		setTime("world", 15000);
+    			plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/sewerair.wav");
+    			plugin.Main_ContribControl.sendNotificationToAll("Information", "Le soleil est parti!", Material.WATER);
+	    		setTime("world", time + 37700);
     		}else{
-    			dead_sun_next = 5000;
+    			dead_sun_next = 500;
     			dead_sun = true;
-    			plugin.Main_ChunkControl.ResendAll.clear();
-    			plugin.Main_ChunkControl.player_chunkupdate.clear();
-				plugin.Main_MessageControl.sendMessageToAll(ChatColor.RED + "Attention, le soleil brulant arrive !");
-    			setTime("world", 0);
+    			pre_dead_sun = false;
+    			prepre_dead_sun = false;
+				plugin.Main_MessageControl.sendTaggedMessageToAll(ChatColor.RED + "Attention, le soleil brulant est là !", 1, "[DEAD SUN]");
+				plugin.Main_ContribControl.sendNotificationToAll("Attention", "Le soleil brulant est là!", Material.FIRE);
+				int music_id = showRandomInteger(1, 4, rand);
+				plugin.Main_ContribControl.sendSoundToAll("http://mineworld.fr/contrib/sound/deadsun_"+music_id+".ogg");
+				setTime("world", time + 24000);
 				if(isStorm()) {
 					setStorm(false);
 			    	setThundering(false);
 				}
     		}
-    	}else{
-    		dead_sun_tick++;
+    	}else if(dead_sun_tick >= (dead_sun_next-5) && (!dead_sun && !prepre_dead_sun)) {	
+    		pre_dead_sun = false;
+    		prepre_dead_sun = true;
+			plugin.Main_ChunkControl.ResendAll.clear();
+			plugin.Main_ChunkControl.player_chunkupdate.clear();
+			plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/multibeep.wav");
+			plugin.Main_ContribControl.setSunURLtoAll("http://mineworld.fr/contrib/sun/deadsunsun.png");
+    	}else if((dead_sun_tick >= (dead_sun_next-100) && dead_sun_tick < (dead_sun_next-5)) && (!dead_sun && !pre_dead_sun)) {	
+			for (BasicHumanNpc entry : plugin.Main_NPC.HumanNPCList.GetNPCS()) {
+				if(entry.getBukkitEntity().getWorld().getName() == "world") {
+					plugin.Main_ContribControl.sendSoundEffectToAllToLocation(entry.getBukkitEntity().getLocation(), "http://mineworld.fr/contrib/sound/ohno.ogg");
+				}
+			}
+    		pre_dead_sun = true;
     	}
+    	dead_sun_tick++;
 	}
 }

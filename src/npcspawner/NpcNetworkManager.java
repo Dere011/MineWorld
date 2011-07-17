@@ -27,7 +27,7 @@ public class NpcNetworkManager extends NetworkManager {
     }
 
     @Override
-    public void a(Packet paramPacket) {
+    public void queue(Packet paramPacket) {
     }
  
     @Override
