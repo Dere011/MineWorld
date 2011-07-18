@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 public class Main_TimeControl {
 	
@@ -159,104 +160,105 @@ public class Main_TimeControl {
 		}
 	}
 	
-	private void do_meteo() {
-		if(meteotick > 5 && !dead_sun) {
-			meteotick = 0;
-			if(meteo_monde_type == 2) {
-				if(meteo_monde_tick > 800) {
-					meteo_monde_tick = 0;
-					meteo_monde_type = 1;
-			    	setStorm(false);
-			    	setThundering(false);
-				}else{
-					if(!isStorm()) {
-				    	setStorm(true);
-				    	setThundering(true);
-					}
-				}
-			}else if(meteo_monde_type == 1) {
-				if(meteo_monde_tick > 6000) {
-					meteo_monde_tick = 0;
-					meteo_monde_type = 2;
-			    	setStorm(true);
-			    	setThundering(true);
-				}else if(meteo_monde_tick > 5800) {
-					if (meteo_monde_storm == 0) {
-						meteo_monde_storm = showRandomInteger(1, 10, rand);
-					}
-					if (meteo_monde_storm > 1) {
-			    		if(showRandomInteger(1, 100, rand) < 10) {
-				    		int song_id = showRandomInteger(1, 3, rand);
-		    				plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/thunder_distant"+song_id+".wav");
-				    	}
-					}
-					if(isStorm()) {
-						setStorm(false);
-				    	setThundering(false);
-					}
-				}else if(meteo_monde_tick < 100) {
-					if (meteo_monde_storm > 1) {
-			    		if(showRandomInteger(1, 100, rand) < 10) {
-				    		int song_id = showRandomInteger(1, 3, rand);
-		    				plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/thunder_distant"+song_id+".wav");
-			    		}
-					}
-				}else if(meteo_monde_tick > 100 && meteo_monde_tick < 150) {
-					if (meteo_monde_storm > 1) {
-						meteo_monde_storm = 0;
-					}
-				}else{
-					if(isStorm()) {
-						setStorm(false);
-				    	setThundering(false);
-					}
-				}
+	private void cycle_storm() {
+		if(storm_uid != cycle_uid) {
+			cycle_start = plugin.timetamps;
+			cycle_end = (plugin.timetamps+showRandomInteger((60*1), (60*10), rand));
+			storm_force = showRandomInteger(1, 10, rand);
+			storm_uid = cycle_uid;
+			if(storm_force > 5) {
+				storm_wind = true;
 			}else{
-				meteo_monde_type = 1;
-				setStorm(false);
-		    	setThundering(false);
+				storm_wind = false;
 			}
 		}
-		meteo_monde_tick++;
-		meteotick++;
-		
-    	if(storm_tick_n >= storm_next_tick) {
-	    	storm_tick_n = 0;
-	    	storm_next_tick = showRandomInteger(5, 15, rand);
-	    	if(meteo_monde_storm > 1) {
+		if(plugin.timetamps < (cycle_start+30)) {
+			if(showRandomInteger(1, 100, rand) < 5+(storm_force*5)) {
+				plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/thunder_distant"+ showRandomInteger(1, 3, rand) +".wav");
+	    	}
+		}else if(plugin.timetamps > (cycle_start+30) && plugin.timetamps < (cycle_end-30)) {
+			if(!isStorm()) {
+		    	setStorm(true);
+		    	setThundering(true);
+			}
+	    	if(plugin.timetamps >= storm_next_tick) {
+		    	storm_next_tick = showRandomInteger(1, (15-storm_force), rand);
 	    		for (Player p : plugin.getServer().getOnlinePlayers()) {
 	    			if(plugin.Main_Visiteur.is_visiteur(p)) {
 	    				continue;
 	    			}
-	    			if(isStorm()) {
-	    				World pworld = p.getWorld();
-		    			if((pworld.getHighestBlockYAt(p.getLocation())-20) < p.getLocation().getBlockY()) {
-			    			if(showRandomInteger(1, 2, rand) == 2) {
-			    				if(showRandomInteger(1, 100, rand) < 60) {
-					    			if(showRandomInteger(1, 2, rand) == 1) {
-					    				Location loc = new Location(pworld, p.getLocation().getBlockX()+showRandomInteger(1, 50, rand), 0, p.getLocation().getBlockZ()+showRandomInteger(1, 50, rand));
-					    				strike_eclaire(loc);
-					    			}else{
-					    				Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 50, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 50, rand));
-					    				strike_eclaire(loc);
-					    			}
-			    				}else{
-			    					Location loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 5, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 5, rand));
-			    					strike_eclaire(loc);
-			    				}
-			    			}else{
-			    				int song_id = showRandomInteger(2, 6, rand);
-			    				plugin.Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/stereo_gust_0"+song_id+".wav");
-			    				int song2_id = showRandomInteger(1, 3, rand);
-			    				plugin.Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/thunder_distant"+song2_id+".wav");
-			    			}
+    				World pworld = p.getWorld();
+	    			if((pworld.getHighestBlockYAt(p.getLocation())-15) < p.getLocation().getBlockY()) {
+		    			if(showRandomInteger(1, 2, rand) == 2) {
+		    				Location loc;
+		    				if(showRandomInteger(1, 100, rand) < (40+(storm_force*5))) {
+		    					int dirrand = showRandomInteger(1, 4, rand);
+				    			if(dirrand == 1) {
+				    				loc = new Location(pworld, p.getLocation().getBlockX()+showRandomInteger(1, 50, rand), 0, p.getLocation().getBlockZ()+showRandomInteger(1, 50, rand));
+				    			}else if(dirrand == 2) {
+				    				loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 50, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 50, rand));
+				    			}else if(dirrand == 3) {
+				    				loc = new Location(pworld, p.getLocation().getBlockX()+showRandomInteger(1, 50, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 50, rand));
+				    			}else if(dirrand == 4) {
+				    				loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 50, rand), 0, p.getLocation().getBlockZ()+showRandomInteger(1, 50, rand));
+				    			}
+		    				}else{
+		    					loc = new Location(pworld, p.getLocation().getBlockX()-showRandomInteger(1, 5, rand), 0, p.getLocation().getBlockZ()-showRandomInteger(1, 5, rand));
+		    				}
+	    					strike_eclaire(loc, storm_force);
+		    			}else{
+		    				if(storm_wind && showRandomInteger(1, (6+(storm_force-5)), rand) > 5) {
+		    					if((pworld.getHighestBlockYAt(p.getLocation())-5) < p.getLocation().getBlockY()) {
+		    						p.setVelocity(new Vector(showRandomInteger(1, (50*storm_force)), 0, showRandomInteger(1, (50*storm_force))));
+		    					}
+		    					plugin.Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/stereo_gust_0"+ showRandomInteger(2, 6, rand) +".wav");
+		    				}
+		    				plugin.Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/thunder_distant"+ showRandomInteger(1, 3, rand) +".wav");
 		    			}
 	    			}
 	    		}
 	    	}
-    	}else{
-    		storm_tick_n++;
-    	}
+		}else{
+			if(showRandomInteger(1, 100, rand) < 5+(storm_force*5)) {
+				plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/thunder_distant"+ showRandomInteger(1, 3, rand) +".wav");
+	    	}
+		}
+	}
+	
+	private void do_meteo() {
+		
+		if(in_cycle) {
+			if(plugin.timetamps > cycle_end) {
+				in_cycle = false;
+				next_cycle = (plugin.timetamps+showRandomInteger((60*5), (60*60), rand));
+				cycle_uid = 0;
+			}
+			switch (cycle_id) { 
+				case 1:
+					cycle_storm();
+				case 2:	
+					cycle_rain();
+				case 3:
+					cycle_fog();
+				case 4:
+					cycle_deadsun();
+			}
+		}else{
+			if(plugin.timetamps > next_cycle) {
+				int current_gen_id = showRandomInteger(1, 7, rand);
+				if(current_gen_id < 4) {
+					in_cycle = true;
+					cycle_uid = plugin.timetamps;
+					cycle_id = current_gen_id;
+				}else{
+					if(last_deadsun+((60*60)*2) < plugin.timetamps) {
+						in_cycle = true;
+						cycle_uid = plugin.timetamps;
+						cycle_id = current_gen_id;
+					}
+				}
+			}
+		}
     	
     	if(dead_sun) {
     		for (Player p : plugin.getServer().getOnlinePlayers()) {
