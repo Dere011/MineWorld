@@ -85,6 +85,17 @@ public class Main_ContribControl {
     	}
     }
     
+    public void h_clouds(int h) {
+    	if(plugin.contrib) {
+    		for (Player p : plugin.getServer().getOnlinePlayers()) {
+    			if(p.isOnline()) {
+    				ContribPlayer contribplayer = ContribCraftPlayer.getContribPlayer(p);
+    				BukkitContrib.getSkyManager().setCloudHeight(contribplayer, h);
+    			}
+    		}
+    	}
+    }
+    
     public void setSunURLtoAll(String url) {
     	if(plugin.contrib) {
     		for (Player p : plugin.getServer().getOnlinePlayers()) {

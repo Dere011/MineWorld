@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -168,9 +169,12 @@ public class Main_TimeControl {
 			storm_uid = cycle_uid;
 			if(storm_force > 5) {
 				storm_wind = true;
+				wind_direction = new Location(null, showRandomInteger(-10000, 10000, rand), 0, showRandomInteger(-10000, 10000, rand));
 			}else{
 				storm_wind = false;
 			}
+			plugin.Main_ContribControl.bool_clouds(true);
+			plugin.Main_ContribControl.h_clouds(storm_force*5);
 		}
 		if(plugin.timetamps < (cycle_start+30)) {
 			if(showRandomInteger(1, 100, rand) < 5+(storm_force*5)) {
@@ -209,7 +213,7 @@ public class Main_TimeControl {
 		    			}else{
 		    				if(storm_wind && showRandomInteger(1, (6+(storm_force-5)), rand) > 5) {
 		    					if((pworld.getHighestBlockYAt(p.getLocation())-5) < p.getLocation().getBlockY()) {
-		    						p.setVelocity(new Vector(showRandomInteger(1, (50*storm_force)), 0, showRandomInteger(1, (50*storm_force))));
+		    						attireEntity(p, wind_direction);
 		    					}
 		    					plugin.Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/stereo_gust_0"+ showRandomInteger(2, 6, rand) +".wav");
 		    				}
@@ -225,6 +229,42 @@ public class Main_TimeControl {
 		}
 	}
 	
+	private void cycle_rain() {
+		if(rain_uid != cycle_uid) {
+			cycle_start = plugin.timetamps;
+			cycle_end = (plugin.timetamps+showRandomInteger((60*1), (60*10), rand));
+			rain_force = showRandomInteger(1, 10, rand);
+			rain_uid = cycle_uid;
+			if(rain_force > 5) {
+				rain_wind = true;
+				wind_direction = new Location(null, showRandomInteger(-10000, 10000, rand), 0, showRandomInteger(-10000, 10000, rand));
+			}else{
+				rain_wind = false;
+			}
+			plugin.Main_ContribControl.bool_clouds(true);
+			plugin.Main_ContribControl.h_clouds(rain_force*3);
+			plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/rur5b_cricket_loopl.wav");
+		}
+		if(plugin.timetamps > (cycle_start+10)) {
+			if(!isStorm() || isThundering()) {
+		    	setStorm(true);
+		    	setThundering(false);
+			}
+			if(showRandomInteger(1, 100, rand) < 5+(rain_force*5)) {
+	    		for (Player p : plugin.getServer().getOnlinePlayers()) {
+	    			if(plugin.Main_Visiteur.is_visiteur(p)) {
+	    				continue;
+	    			}
+	    			World pworld = p.getWorld();
+					if((pworld.getHighestBlockYAt(p.getLocation())-5) < p.getLocation().getBlockY()) {
+						attireEntity(p, wind_direction);
+					}
+					plugin.Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/stereo_gust_0"+ showRandomInteger(2, 6, rand) +".wav");
+	    		}
+	    	}
+		}
+	}
+	
 	private void do_meteo() {
 		
 		if(in_cycle) {
@@ -232,12 +272,18 @@ public class Main_TimeControl {
 				in_cycle = false;
 				next_cycle = (plugin.timetamps+showRandomInteger((60*5), (60*60), rand));
 				cycle_uid = 0;
+				plugin.Main_ContribControl.bool_clouds(false);
+				plugin.Main_ContribControl.h_clouds(10);
+			    setStorm(false);
+			    setThundering(false);
 			}
 			switch (cycle_id) { 
 				case 1:
 					cycle_storm();
+					cycle_wind();
 				case 2:	
 					cycle_rain();
+					cycle_wind();
 				case 3:
 					cycle_fog();
 				case 4:
@@ -256,6 +302,11 @@ public class Main_TimeControl {
 						cycle_uid = plugin.timetamps;
 						cycle_id = current_gen_id;
 					}
+				}
+			}else{
+				if(isStorm() || isThundering()) {
+				    setStorm(false);
+				    setThundering(false);
 				}
 			}
 		}
