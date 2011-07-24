@@ -16,7 +16,6 @@ import npcspawner.BasicHumanNpc;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.block.Block;
@@ -157,7 +156,7 @@ public class Main extends JavaPlugin {
         logger.log(Level.INFO, pdfFile.getName() + " version " + pdfFile.getVersion() + " enabled.");
     }
     
-    public void freeze(final Player player, Integer time) {
+    public void freeze(final Player player, Long time) {
 		if(!block_player.contains(player)) {
 			block_player.add(player);
 		}
@@ -388,7 +387,6 @@ public class Main extends JavaPlugin {
 	    	if(cron_tick_gen > 15) {
 				cron_tick_gen = 0;
 				number_creature = 0;
-		        BukkitContrib.getItemManager().setItemName(Material.SLIME_BALL, "Monnais verte");
 		        if(Main_TimeControl.meteo_monde_type == 1) {
 		        	Main_ContribControl.bool_clouds(false);
 		    	}else if(Main_TimeControl.meteo_monde_type == 2) {

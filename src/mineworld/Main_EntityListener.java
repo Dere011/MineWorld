@@ -1,5 +1,7 @@
 package mineworld;
 
+import java.util.Random;
+
 import org.bukkit.ChatColor;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -21,6 +23,7 @@ public class Main_EntityListener extends EntityListener {
     private final Main_NPC mnpc;
     private final Configuration conf_npc;
     private final Configuration conf_player;
+	private final Random rand = new Random();
 
     public Main_EntityListener(Main parent) {
     	this.plugin = parent;
@@ -29,9 +32,22 @@ public class Main_EntityListener extends EntityListener {
         this.conf_player = parent.conf_player; 
     }
     
+	private static int showRandomInteger(int aStart, int aEnd, Random aRandom){
+	    if ( aStart > aEnd ) {
+	      throw new IllegalArgumentException("Start cannot exceed End.");
+	    }
+	    long range = (long)aEnd - (long)aStart + 1;
+	    long fraction = (long)(range * aRandom.nextDouble());
+	    int randomNumber =  (int)(fraction + aStart);
+	    return randomNumber;
+	}
+    
     public void onEntityDeath(EntityDeathEvent event) {
 		if(plugin.move_last.containsKey(event.getEntity())) {
 			plugin.move_last.remove(event.getEntity());
+		}
+		if (event.getEntity() instanceof Player) {
+			plugin.Main_ContribControl.sendSoundEffectToAllToLocation(event.getEntity().getLocation(), "http://mineworld.fr/contrib/sound/DeathScream0"+showRandomInteger(1, 9, rand)+".wav");
 		}
     }
     

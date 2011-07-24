@@ -6,6 +6,7 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkitcontrib.BukkitContrib;
+import org.bukkitcontrib.event.input.RenderDistance;
 import org.bukkitcontrib.player.ContribCraftPlayer;
 import org.bukkitcontrib.player.ContribPlayer;
 
@@ -71,6 +72,17 @@ public class Main_ContribControl {
     	if(plugin.contrib) {
     		ContribPlayer contribplayer = ContribCraftPlayer.getContribPlayer(player);
 			BukkitContrib.getSoundManager().playCustomSoundEffect(plugin, contribplayer, url, false, location, 30, 60);
+    	}
+    }
+    
+    public void set_fog(RenderDistance render) {
+    	if(plugin.contrib) {
+    		for (Player p : plugin.getServer().getOnlinePlayers()) {
+    			if(p.isOnline()) {
+    				ContribPlayer contribplayer = ContribCraftPlayer.getContribPlayer(p);
+    				contribplayer.setRenderDistance(render);
+    			}
+    		}
     	}
     }
 
