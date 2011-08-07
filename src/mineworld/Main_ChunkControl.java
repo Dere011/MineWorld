@@ -102,7 +102,7 @@ public class Main_ChunkControl {
 			if(player_lastchunk.containsKey(p)) {
 				pchunkid = player_lastchunk.get(p);
 				int cx = pchunk.getX(), cz = pchunk.getZ(), force = 5;
-				if(plugin.Main_TimeControl.dead_sun) {force = 3;}
+				if(plugin.Main_TimeControl.dead_sun || plugin.Main_TimeControl.prehorde || plugin.Main_TimeControl.horde) {force = 2;}
 				for (int i = cx-force; i <= cx+force; i++) {
 					for (int o = cz-force; o <= cz+force; o++) {
 						chunklist = chunklist + i + " " + o;
@@ -216,7 +216,10 @@ public class Main_ChunkControl {
 		    	if(bname == Material.LEAVES) {
 		    		chunkcopy.setRawTypeId(x, y, z, Material.FIRE.getId());
 		    		return true;
-		    	}else if(bname == Material.GRASS || bname == Material.DIRT || bname == Material.GLASS) {
+		    	}else if(bname == Material.WATER || bname == Material.STATIONARY_WATER || bname == Material.GLASS) {
+		    		chunkcopy.setRawTypeId(x, y, z, Material.AIR.getId());
+		    		return true;
+		    	}else if(bname == Material.GRASS || bname == Material.DIRT) {
 		    		chunkcopy.setRawTypeId(x, y, z, Material.SAND.getId());
 		    		return true;
 		    	}else if(bname == Material.LONG_GRASS) {
@@ -234,17 +237,31 @@ public class Main_ChunkControl {
 		    	}
 	    	}
     	}
+    	if(plugin.Main_TimeControl.horde) {
+	    	if((hy-20) <= y) {
+		    	Material bname = Material.getMaterial(bid);
+		    	if(bname == Material.SAND || bname == Material.GLASS) {
+		    		chunkcopy.setRawTypeIdAndData(x, y, z, Material.DIRT.getId(), 0);
+		    		return true;
+		    	}else if(bname == Material.TORCH || bname == Material.GLOWSTONE) {
+		    		chunkcopy.setRawTypeIdAndData(x, y, z, Material.WEB.getId(), 0);
+		    		return true;
+		    	}else if(bname == Material.LAVA || bname == Material.STATIONARY_LAVA) {
+		    		chunkcopy.setRawTypeIdAndData(x, y, z, Material.WATER.getId(), 0);
+		    		return true;
+		    	}
+	    	}
+    	}
     	return false;
     }
     
     public void RequestChunkSend(final Player player, final Chunk chunk) {
-    	
     	CraftChunk craftchunk = (CraftChunk) chunk;
 		Block theblock = chunk.getBlock(0, 0, 0);
 		final Main_ChunkCopy chunkcopy = getChunkSnapshot(craftchunk);
 		final Location lastlocation = theblock.getLocation();
 		
-		if(!plugin.Main_TimeControl.dead_sun && (cache_antixray.containsKey(chunk) && cache_antixray.get(chunk).size() <= 0) && (cache_antixray_lastupdate.containsKey(chunk) && cache_antixray_lastupdate.get(chunk)+500 > plugin.timetamps)) {
+		if((!plugin.Main_TimeControl.dead_sun && !plugin.Main_TimeControl.horde && !plugin.Main_TimeControl.prehorde) && (cache_antixray.containsKey(chunk) && cache_antixray.get(chunk).size() <= 0) && (cache_antixray_lastupdate.containsKey(chunk) && cache_antixray_lastupdate.get(chunk)+500 > plugin.timetamps)) {
 			for (Vector vec : cache_antixray.get(chunk)) {
 				int xx = vec.getBlockX();
 				int yy = vec.getBlockY();
@@ -277,7 +294,7 @@ public class Main_ChunkControl {
 	                }
 	            }
 	        }
-	        if(!plugin.Main_TimeControl.dead_sun && !blocktmp.isEmpty()) {
+	        if((!plugin.Main_TimeControl.dead_sun && !plugin.Main_TimeControl.horde && !plugin.Main_TimeControl.prehorde) && !blocktmp.isEmpty()) {
 	        	cache_antixray.put(chunk, blocktmp);
 	        	cache_antixray_lastupdate.put(chunk, plugin.timetamps);
 	        }

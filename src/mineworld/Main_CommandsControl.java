@@ -206,15 +206,10 @@ public class Main_CommandsControl {
 					shop.getmoney(player);
 				}
 				return true;
-			}else if (subCommand.equals("storm")) {
-				if(player.isOp() &&  plugin.Main_ContribControl.isClient(player, true)) {
-					plugin.Main_TimeControl.meteo_monde_tick = 5800;
-					plugin.Main_TimeControl.meteo_monde_type = 10;
-				}
-				return true;
-			}else if (subCommand.equals("deadsun")) {
-				if(player.isOp() && plugin.Main_ContribControl.isClient(player, true)) {
-					plugin.Main_TimeControl.dead_sun_tick = 100000;
+			}else if (subCommand.equals("moneyhorde")) {
+				if(plugin.Main_ContribControl.isClient(player, true)) {
+					plugin.Main_TimeControl.hordedone();
+					
 				}
 				return true;
 			}else if (subCommand.equals("parrain")) {

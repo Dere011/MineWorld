@@ -217,6 +217,17 @@ public class Main_MoveControl {
     
     public void moveCloserToLocation(Entity entity, Location loc) {
     	Location newloc = getTransformCloserToLocation(entity, entity.getLocation(), loc);
+    	//TEST
+    	Material mat = entity.getLocation().getBlock().getType();
+    	if((mat == Material.IRON_DOOR || mat == Material.IRON_DOOR_BLOCK) || (mat == Material.WOOD_DOOR || mat == Material.WOODEN_DOOR)) {
+    		if(plugin.move_last.get(entity) != null) {
+    			Location locforfaces = getFaceLocationFromMe(entity, plugin.move_last.get(entity).getLocation());
+    	    	Location modifiedlocs = new Location(plugin.move_last.get(entity).getLocation().getWorld(),plugin.move_last.get(entity).getLocation().getX(),plugin.move_last.get(entity).getLocation().getY(),plugin.move_last.get(entity).getLocation().getZ(),locforfaces.getYaw(),locforfaces.getPitch());
+    			moveEntity(entity, modifiedlocs);
+    			return;
+    		}
+    	}
+    	//TEST
 		if(plugin.move_last.containsKey(entity)) {
 			plugin.move_last.remove(entity);
 		}

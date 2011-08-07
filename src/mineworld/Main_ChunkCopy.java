@@ -1,5 +1,7 @@
 package mineworld;
 
+import net.minecraft.server.NibbleArray;
+
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.block.Biome;
 
@@ -9,6 +11,7 @@ public class Main_ChunkCopy implements ChunkSnapshot {
     private final byte[] buf;
     private final byte[] hmap;
     private final long capture_fulltime;
+	private NibbleArray e;
 
     private static final int BLOCKDATA_OFF = 32768;
     private static final int BLOCKLIGHT_OFF = BLOCKDATA_OFF + 16384;
@@ -21,6 +24,7 @@ public class Main_ChunkCopy implements ChunkSnapshot {
         this.capture_fulltime = wtime;
         this.buf = buf;
         this.hmap = hmap;
+        this.e = new NibbleArray(buf.length);
     }
 
     public int getX() {
@@ -45,6 +49,13 @@ public class Main_ChunkCopy implements ChunkSnapshot {
         return true;
     }
     
+    public boolean a(int i, int j, int k, int l, int i1) {
+	    byte b0 = (byte) l;
+	    buf[i << 11 | k << 7 | j] = (byte) (b0 & 255);
+	    this.e.a(i, j, k, i1);
+	    return true;
+    }
+    
     public boolean setRawTypeId(int i, int j, int k, int l) {
         if (i >= -32000000 && k >= -32000000 && i < 32000000 && k <= 32000000) {
             if (j < 0) {
@@ -53,6 +64,20 @@ public class Main_ChunkCopy implements ChunkSnapshot {
                 return false;
             } else {
                 return this.a(i & 15, j, k & 15, l);
+            }
+        } else {
+            return false;
+        }
+    }
+    
+    public boolean setRawTypeIdAndData(int i, int j, int k, int l, int i1) {
+        if (i >= -32000000 && k >= -32000000 && i < 32000000 && k <= 32000000) {
+            if (j < 0) {
+                return false;
+            } else if (j >= 128) {
+                return false;
+            } else {
+                return this.a(i & 15, j, k & 15, l, i1);
             }
         } else {
             return false;

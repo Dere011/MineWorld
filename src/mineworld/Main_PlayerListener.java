@@ -15,11 +15,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerPreLoginEvent.Result;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.bukkitcontrib.BukkitContrib;
-import org.bukkitcontrib.event.input.RenderDistance;
-import org.bukkitcontrib.player.ContribCraftPlayer;
-import org.bukkitcontrib.player.ContribPlayer;
-
+import org.getspout.spoutapi.event.input.RenderDistance;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -159,7 +155,7 @@ public class Main_PlayerListener extends PlayerListener {
     }
     
     public void start_teleportation_tohome(final Player player, Boolean fast) {
-		if(tc.pre_dead_sun || tc.dead_sun) {
+		if(tc.pre_dead_sun || tc.dead_sun || tc.horde || tc.prehorde) {
     		ctc.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/beeperror.wav");
     		msg.sendTaggedMessage(player, "Teleportation impossible, un évenement inconnu perturbe la téléportation.", 1, "");
     	}else{
@@ -223,7 +219,6 @@ public class Main_PlayerListener extends PlayerListener {
 				return;
     		}
     	}
-    	
     	if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
     		Block block = event.getClickedBlock();
     		if(block.getType() == Material.STONE_BUTTON || block.getType() == Material.LEVER) {
@@ -233,7 +228,6 @@ public class Main_PlayerListener extends PlayerListener {
     			ctc.sendSoundEffectToAllToLocation(block.getLocation(), "http://mineworld.fr/contrib/sound/open_chest.wav");
     		}
     	}
-    	
 		if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			if (event.getPlayer().getItemInHand().getTypeId() == 324 || event.getPlayer().getItemInHand().getTypeId() == 330)
     	    {
@@ -273,10 +267,6 @@ public class Main_PlayerListener extends PlayerListener {
 	    		event.getPlayer().sendMessage("Heure (Long) : "+ event.getPlayer().getWorld().getTime());
 	    	}
 		}
-		/*if(event.getItem() == null)  { return; }
-  		if(event.getItem().getType() == Material.SHEARS && (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR)) {
-			ctc.sendSoundEffectToAllToLocation(event.getPlayer().getLocation(), "http://mineworld.fr/contrib/sound/sf_neon_03.ogg");
-		}*/
     }
     
     public void Main_onPlayerJoin_do(PlayerJoinEvent event) {
@@ -297,25 +287,31 @@ public class Main_PlayerListener extends PlayerListener {
     		event.setCancelled(true);
     	}
     	
-    	// TESTE
     	WorldGuardPlugin worldGuard = getWorldGuard();
     	com.sk89q.worldedit.Vector pt = toVector(p.getLocation());
     	RegionManager regionManager = worldGuard.getRegionManager(p.getWorld());
     	ApplicableRegionSet set = regionManager.getApplicableRegions(pt);
     	for (ProtectedRegion pregion : set) {
+    		if(pregion.getId().contains("stargate") || pregion.getId().contains("client")) {
+    			if(!plugin.Main_ContribControl.isClient(p, true)) {
+    				Location spawnpoint = getSpawnLocation();
+	        		if(spawnpoint != null) {
+	        			p.teleport(spawnpoint);
+	        		}
+    			}
+    		}
     		if(pregion.getId().contains("spawn_protection")) {
     			if(plugin.last_region.get(p) == null || !plugin.last_region.get(p).contains("spawn_protection")) {
-    				plugin.Main_ContribControl.sendPlayerSoundEffectToLocation(p, new Location(p.getWorld(), 191, 54, 86), "http://mineworld.fr/contrib/sound/dafa.ogg");
+    				plugin.Main_ContribControl.sendPlayerSoundEffectToLocation(p, new Location(p.getWorld(), 185, 56, 94), "http://mineworld.fr/contrib/sound/dafa.ogg");
     				plugin.last_region.put(p, "spawn_protection");
     			}
     		}else if(pregion.getId().contains("maisondere")) {
-    			if(plugin.last_region.get(p) == null || !plugin.last_region.get(p).contains("maison_dere")) {
-    				plugin.Main_ContribControl.sendPlayerSoundEffectToLocation(p, new Location(p.getWorld(), -631, 72, -545), "http://mineworld.fr/contrib/sound/portal_still_alive.wav");
-    				plugin.last_region.put(p, "maison_dere");
-    			}
+				if(plugin.last_region.get(p) == null || !plugin.last_region.get(p).contains("maison_dere")) {
+					plugin.Main_ContribControl.sendPlayerSoundEffectToLocation(p, new Location(p.getWorld(), -631, 72, -545), "http://mineworld.fr/contrib/sound/portal_still_alive.wav");
+					plugin.last_region.put(p, "maison_dere");
+				}
     		}
     	}
-    	// TESTE
     	
     	if (plugin.Main_Visiteur.is_visiteur(p)) {
 			String WorldName = p.getWorld().getName();
@@ -369,7 +365,7 @@ public class Main_PlayerListener extends PlayerListener {
     	Player player = event.getPlayer();
     	if (event.getMessage().contains("/spawn") && !event.getMessage().contains("/spawnmob")) {
         	int time_lastspawn = (Integer) plugin.getPlayerConfig(player, "time_lastspawn", "int");
-        	if((plugin.timetamps-time_lastspawn) > 360) {
+        	if((time_lastspawn+360) < plugin.timetamps) {
         		Location spawnpoint = getSpawnLocation();
         		if(spawnpoint != null) {
         			msg.sendTaggedMessage(player, "Téléportation vers la zone de spawn dans 10 secondes.", 1, "[SPAWN]");
@@ -382,7 +378,7 @@ public class Main_PlayerListener extends PlayerListener {
         		}
         	}else{
         		ctc.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/beeperror.wav");
-        		msg.sendTaggedMessage(player, "Merci d'attendre "+ ChatColor.BLUE +"360 secondes"+ ChatColor.WHITE +" entre chaque requête de spawn.", 1, "[SPAWN]");
+        		msg.sendTaggedMessage(player, "Merci d'attendre "+ ChatColor.BLUE +"5 minutes"+ ChatColor.WHITE +" entre chaque requête de spawn.", 1, "[SPAWN]");
         	}
     		event.setCancelled(true);
     		return;
@@ -407,6 +403,12 @@ public class Main_PlayerListener extends PlayerListener {
     		event.setCancelled(true);
     		return;
     	}
+    	if (event.getMessage().equals("/suicid") || event.getMessage().equals("/suicide")) {
+    		player.getInventory().clear();
+    		player.damage(100);
+    		event.setCancelled(true);
+    		return;
+    	}
     	if (event.getMessage().contains("/md")) {
     		if(!player.isOp()) {
     			player.kickPlayer("Erreur securité 5003.");
@@ -419,7 +421,7 @@ public class Main_PlayerListener extends PlayerListener {
     			int time_customaction = (Integer) plugin.getPlayerConfig(player, "time_customaction", "int");
             	if((plugin.timetamps-time_customaction) > 10) {
             		plugin.Main_ContribControl.sendSoundEffectToAllToLocation(player.getLocation(), "http://mineworld.fr/contrib/sound/boomer_dive_01.wav");
-            		plugin.setPlayerConfig(player, "time_lastspawn", plugin.timetamps);
+            		plugin.setPlayerConfig(player, "time_customaction", plugin.timetamps);
             	}else{
             		msg.sendTaggedMessage(player, "Merci d'attendre 10 secondes entre chaque action personnalisé.", 1, "");
             	}
@@ -432,7 +434,7 @@ public class Main_PlayerListener extends PlayerListener {
     			int time_customaction = (Integer) plugin.getPlayerConfig(player, "time_customaction", "int");
             	if((plugin.timetamps-time_customaction) > 10) {
             		plugin.Main_ContribControl.sendSoundEffectToAllToLocation(player.getLocation(), "http://mineworld.fr/contrib/sound/No"+showRandomInteger(1, 12, rand)+".wav");
-            		plugin.setPlayerConfig(player, "time_lastspawn", plugin.timetamps);
+            		plugin.setPlayerConfig(player, "time_customaction", plugin.timetamps);
             	}else{
             		msg.sendTaggedMessage(player, "Merci d'attendre 10 secondes entre chaque action personnalisé.", 1, "");
             	}
@@ -445,7 +447,7 @@ public class Main_PlayerListener extends PlayerListener {
     			int time_customaction = (Integer) plugin.getPlayerConfig(player, "time_customaction", "int");
             	if((plugin.timetamps-time_customaction) > 10) {
             		plugin.Main_ContribControl.sendSoundEffectToAllToLocation(player.getLocation(), "http://mineworld.fr/contrib/sound/Laughter"+showRandomInteger(1, 6, rand)+".wav");
-            		plugin.setPlayerConfig(player, "time_lastspawn", plugin.timetamps);
+            		plugin.setPlayerConfig(player, "time_customaction", plugin.timetamps);
             	}else{
             		msg.sendTaggedMessage(player, "Merci d'attendre 10 secondes entre chaque action personnalisé.", 1, "");
             	}
@@ -453,7 +455,6 @@ public class Main_PlayerListener extends PlayerListener {
     		event.setCancelled(true);
     		return;
     	}
-    	
     	if (event.getMessage().equals("/list")) {
        		if(plugin.Main_ContribControl.isClient(player, true)) {
        			String list = "";
@@ -468,6 +469,8 @@ public class Main_PlayerListener extends PlayerListener {
        					list = list + ChatColor.GREEN + p.getName() + ChatColor.WHITE +", ";
        				}else if(plugin.Main_Visiteur.is_visiteur(p)) {
        					visiteur++;
+       				}else if(plugin.Main_ContribControl.isClient(p, false)) {
+       					list = list + ChatColor.GOLD + p.getName() + ", ";
        				}else{
        					list = list + p.getName() + ", ";
        				}
@@ -479,43 +482,9 @@ public class Main_PlayerListener extends PlayerListener {
     		event.setCancelled(true);
     		return;
     	}
-    	if (event.getMessage().contains("/sun")) {
-    		if(player.isOp()) {
-	    		String url = event.getMessage().replace("/sun ", "");
-	    		plugin.Main_ContribControl.setSunURLtoAll(url);
-    		}
-    		event.setCancelled(true);
-    		return;
-    	}
-    	if (event.getMessage().contains("/skin")) {
-    		if(player.isOp()) {
-	    		String url = event.getMessage().replace("/skin ", "");
-	    		plugin.Main_ContribControl.setPlayerSkin(player, url);
-    		}
-    		event.setCancelled(true);
-    		return;
-    	}
-    	
-    	if (event.getMessage().contains("/music")) {
-    		if(player.isOp()) {
-	    		String url = event.getMessage().replace("/music ", "");
-	    		plugin.Main_ContribControl.sendSoundEffectToAllToLocation(player.getLocation(), url);
-    		}
-    		event.setCancelled(true);
-    		return;
-    	}
-    	if (event.getMessage().contains("/allmusic")) {
-    		if(player.isOp()) {
-	    		String url = event.getMessage().replace("/allmusic ", "");
-	    		plugin.Main_ContribControl.sendSoundToAll(url);
-    		}
-    		event.setCancelled(true);
-    		return;
-    	}
     	if (event.getMessage().equals("/stopmusic")) {
     		if(plugin.Main_ContribControl.isClient(player, true)) {
-    			ContribPlayer contribplayer = ContribCraftPlayer.getContribPlayer(player);
-    			BukkitContrib.getSoundManager().stopMusic(contribplayer);
+    			plugin.Main_ContribControl.stopSound(player);
     		}
     		event.setCancelled(true);
     		return;
@@ -608,13 +577,19 @@ public class Main_PlayerListener extends PlayerListener {
 		}else{
 			ctc.setPlayerSunURL(player, "http://mineworld.fr/contrib/sun/sun.png");
 		}
-		ctc.setPlayerMoonURL(player, "http://mineworld.fr/contrib/sun/moon.png");
+		if(plugin.mobcycle == 1) {
+			ctc.setPlayerMoonURL(player, "http://mineworld.fr/contrib/sun/moon.png");
+		}else{
+			ctc.setPlayerMoonURL(player, "http://mineworld.fr/contrib/sun/deadmoon.png");
+		}
 		if(!back) {
 	   	 	ctc.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/gnomeftw.wav");
 	   	 	ctc.sendNotification(player, "Notification", "Bienvenue sur MineWorld!");
 		}
-		plugin.Main_ContribControl.set_fog(RenderDistance.NORMAL);
-    }
+		if(!plugin.Main_TimeControl.in_cycle) {
+			plugin.Main_ContribControl.set_fog(RenderDistance.FAR);
+		}
+	}
 
     public void onPlayerJoin(PlayerJoinEvent event) {
     	final Player player = event.getPlayer();
@@ -626,7 +601,7 @@ public class Main_PlayerListener extends PlayerListener {
     	
     	String version = (String) plugin.getServerConfig("informations.version", "string");
    	 	String[] anTxt = msg.createstrings(2);
-   	 	anTxt[0] = "Bienvenue sur MineWorld 2.0, le serveur semi-roleplay post-apocalypse.";
+   	 	anTxt[0] = "Bienvenue sur MineWorld 2.0, le semi-roleplay post-apocalypse.";
    	 	anTxt[1] = "Version : MineWorld DEV "+ ChatColor.RED + "V" + version + ChatColor.WHITE +" / Minecraft "+ ChatColor.GOLD + "V1.7.3";
    	 	msg.sendTaggedMessage(player, anTxt, 2, "");
    	 	
@@ -651,25 +626,22 @@ public class Main_PlayerListener extends PlayerListener {
    	 	
    	 	Boolean back = false;
 		if(plugin.Main_Visiteur.whitelist.contains(player.getName().toLowerCase())) {
-			if(player.getName().contains("MWSTAFF")) {
-				event.setJoinMessage("Un visiteur a rejoint le serveur.");
-			}else{
-				msg.sendTaggedMessage(player, "Votre compte est bien dans notre WhiteList.", 1, "[WHITELIST]");
-				if(lastdeconnexion == 0 || (lastdeconnexion+360) < plugin.timetamps) {
-					if(player.isOp()) {
-						event.setJoinMessage(ChatColor.RED + player.getName() + ChatColor.GOLD + " a rejoint le serveur.");
-					}else{
-						event.setJoinMessage(ChatColor.GOLD + player.getName() + " a rejoint le serveur.");
-					}
+			msg.sendTaggedMessage(player, "Votre compte est bien dans notre WhiteList.", 1, "[WHITELIST]");
+			if(lastdeconnexion == 0 || (lastdeconnexion+360) < plugin.timetamps) {
+				if(player.isOp()) {
+					event.setJoinMessage(ChatColor.RED + player.getName() + ChatColor.GOLD + " a rejoint le serveur.");
 				}else{
-					back = true;
-					event.setJoinMessage(ChatColor.DARK_GRAY + player.getName() + " est de retour ("+ timetxt +").");
+					event.setJoinMessage(ChatColor.GOLD + player.getName() + " a rejoint le serveur.");
 				}
-			}
+			}else{
+				back = true;
+				event.setJoinMessage(ChatColor.DARK_GRAY + player.getName() + " est de retour ("+ timetxt +").");
+			}	
 		}else{
 			plugin.Main_Visiteur.add_visiteur(player);
 			msg.sendTaggedMessage(player, "Vous avez un compte visiteur.", 1, "[WHITELIST]");
 			event.setJoinMessage(ChatColor.DARK_GRAY + "Un visiteur a rejoint le serveur.");
+			plugin.Main_MessageControl.sendVisiteurMsg(player);
 			player.setDisplayName("visiteur");
 			setSpawnTimed(player);
 			player.setHealth(200);
@@ -714,16 +686,12 @@ public class Main_PlayerListener extends PlayerListener {
     }
     
     public void onPlayerQuit(PlayerQuitEvent event) {
-		if(event.getPlayer().getName().contains("MWSTAFF")) {
-			event.setQuitMessage("Un visiteur a rejoint le serveur.");
-		}else{
-	    	if (plugin.Main_Visiteur.is_visiteur(event.getPlayer())) {
-	    		event.setQuitMessage(ChatColor.DARK_GRAY + "Un visiteur a quitté le serveur.");
-	    		plugin.Main_Visiteur.remove_visiteur(event.getPlayer());
-	    	}else{
-	    		event.setQuitMessage(ChatColor.DARK_GRAY + event.getPlayer().getName() + " a quitté le serveur.");
-	    	}
-		}
+    	if (plugin.Main_Visiteur.is_visiteur(event.getPlayer())) {
+    		event.setQuitMessage(ChatColor.DARK_GRAY + "Un visiteur a quitté le serveur.");
+    		plugin.Main_Visiteur.remove_visiteur(event.getPlayer());
+    	}else{
+    		event.setQuitMessage(ChatColor.DARK_GRAY + event.getPlayer().getName() + " s'est deconnecté du serveur.");
+    	}
     	if(cc.player_lastchunk.containsKey(event.getPlayer())) {
     		cc.player_lastchunk.remove(event.getPlayer());
     	}
@@ -741,6 +709,9 @@ public class Main_PlayerListener extends PlayerListener {
 		}
 		if(plugin.anim.contains(event.getPlayer().getName())) {
 			plugin.anim.remove(event.getPlayer().getName());
+		}
+		if(plugin.last_region.containsKey(event.getPlayer())) {
+			plugin.last_region.remove(event.getPlayer());
 		}
 		plugin.setPlayerConfig(event.getPlayer(), "time_lastdeconnexion", plugin.timetamps);
     }
@@ -841,31 +812,6 @@ public class Main_PlayerListener extends PlayerListener {
     	
 		plugin.Main_ChunkControl.ResendAll.remove(player);
 		plugin.Main_ChunkControl.player_chunkupdate.remove(player);
-    	
-    	// ANCIEN MONDES
-    	if(event.getTo().getWorld() != null) {
-	    	String lastworld = (String) plugin.getPlayerConfig(player, "last_world", "string");
-			plugin.setPlayerConfig(player, "last_world", event.getTo().getWorld().getName());
-			if(lastworld != null && !lastworld.isEmpty()) {
-		    	if(!lastworld.contains(event.getTo().getWorld().getName())) {
-		    		if(event.getTo().getWorld().getName().contains("oldworld")) {
-		    			player.sendMessage("Terre, premier monde MineWorld 1.0.");
-		    			plugin.Main_ContribControl.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/scare_wind_reverse.ogg");
-		    			mvspawn(player);
-		    		}
-		    		if(event.getTo().getWorld().getName().contains("oldaerelon")) {
-		    			player.sendMessage("Aerelon, deuxième monde MineWorld 1.0.");
-		    			plugin.Main_ContribControl.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/scare_wind_reverse.ogg");
-		    			mvspawn(player);
-		    		}
-		    		if(event.getTo().getWorld().getName().contains("olddeathworld")) {
-		       			player.sendMessage("DeathWorld, troisième monde MineWorld 1.0.");
-		       			plugin.Main_ContribControl.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/scare_wind_reverse.ogg");
-		    			mvspawn(player);
-		    		}
-		    	}
-			}
-    	}
     }
     
     public void onPlayerPickupItem(PlayerPickupItemEvent event) {
@@ -874,7 +820,7 @@ public class Main_PlayerListener extends PlayerListener {
     		return;
     	}
     	String worldname = event.getPlayer().getWorld().getName();
-    	if(!event.getPlayer().isOp() && (plugin.is_spy(event.getPlayer()) || worldname.contains("olddeathworld") || worldname.contains("oldworld") || worldname.contains("oldaerelon"))) {
+    	if(!event.getPlayer().isOp() && (plugin.is_spy(event.getPlayer()) || worldname.contains("old"))) {
     		event.setCancelled(true);
     		return;
     	}

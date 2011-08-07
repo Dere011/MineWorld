@@ -24,16 +24,19 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Creature;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.*;
 import org.bukkit.util.config.Configuration;
-import org.bukkitcontrib.BukkitContrib;
+import org.getspout.spoutapi.SpoutManager;
 
 public class Main extends JavaPlugin {
 
@@ -55,6 +58,7 @@ public class Main extends JavaPlugin {
     public Main_NPC Main_NPC;
     public Main_TimeControl Main_TimeControl;
     public Main_ChunkControl Main_ChunkControl;
+    public Main_ChunkListener Main_ChunkListener;
     
     public List<String> modo = new ArrayList<String>();
     public List<String> correct = new ArrayList<String>();
@@ -103,6 +107,7 @@ public class Main extends JavaPlugin {
     public static Entity zombie;
     public static Entity slime;
     public static Entity spider;
+    public static int mobcycle = 0;
     
     public Boolean maintenance_status = false;
     public String maintenance_message = "Notre serveur est actuellement en maintenance.";
@@ -123,6 +128,7 @@ public class Main extends JavaPlugin {
         Main_MoveControl = new Main_MoveControl(this);
         Main_BlockListener = new Main_BlockListener(this);
         Main_Visiteur = new Main_Visiteur(this);
+        Main_ChunkListener = new Main_ChunkListener(this);
         
         pm.registerEvent(Type.PLAYER_JOIN, Main_PlayerListener, Priority.Normal, this); 
         pm.registerEvent(Type.PLAYER_QUIT, Main_PlayerListener, Priority.Normal, this); 
@@ -144,6 +150,8 @@ public class Main extends JavaPlugin {
         pm.registerEvent(Type.BLOCK_BREAK, Main_BlockListener, Priority.Normal, this); 
         pm.registerEvent(Type.BLOCK_DAMAGE, Main_BlockListener, Priority.Normal, this); 
         pm.registerEvent(Type.BLOCK_PLACE, Main_BlockListener, Priority.Normal, this);
+        
+        pm.registerEvent(Type.CHUNK_UNLOAD, Main_ChunkListener, Priority.Normal, this);
         
     	runAllThread();
     	
@@ -392,8 +400,8 @@ public class Main extends JavaPlugin {
 		    	}else if(Main_TimeControl.meteo_monde_type == 2) {
 		    		Main_ContribControl.bool_clouds(true);
 		    	}
-		        BukkitContrib.getAppearanceManager().resetAllTitles();
-		        BukkitContrib.getAppearanceManager().resetAllCloaks();
+		        SpoutManager.getAppearanceManager().resetAllTitles();
+		        SpoutManager.getAppearanceManager().resetAllCloaks();
 		        for (Player p : getServer().getOnlinePlayers()) {
 		    		if(ismodo(p)) {
 		    			Main_ContribControl.setPlayerTitle(p, ChatColor.GREEN.toString() + "[MODO]\n"+ p.getName());
@@ -456,7 +464,57 @@ public class Main extends JavaPlugin {
     		if(!isDay(world)) {
 	    		for (Entity e : world.getEntities()) {
 	    			if (e instanceof Monster) {
-						if(((Creature) e).getTarget() == null) {
+	    				if (e instanceof Zombie) {
+	    					Integer random = showRandomInteger(1, 40, rand);
+		    				if(random == 5) {
+		    					for (Entity entity : e.getNearbyEntities(24, 24, 24)) {
+		    		    			if (entity instanceof Player && !isbot((Player) entity)) {
+		    		    				Main_ContribControl.sendPlayerSoundEffectToLocation((Player) entity, e.getLocation(), "http://mineworld.fr/contrib/sound/breathing"+showRandomInteger(1, 9, rand)+".wav");
+		    		    			}
+		    					}
+		    		    	}else if(random == 10) {
+			    					for (Entity entity : e.getNearbyEntities(24, 24, 24)) {
+			    		    			if (entity instanceof Player && !isbot((Player) entity)) {
+			    		    				Main_ContribControl.sendPlayerSoundEffectToLocation((Player) entity, e.getLocation(), "http://mineworld.fr/contrib/sound/shout0"+showRandomInteger(1, 8, rand)+".wav");
+			    		    			}
+			    					}
+		    		    	}else if(random == 15) {
+		    					for (Entity entity : e.getNearbyEntities(24, 24, 24)) {
+		    						double distance = getdistance(entity, e);
+		    		    			if (entity instanceof Player && distance > 8 && !isbot((Player) entity)) {
+		    		    				Main_ContribControl.sendPlayerSoundEffectToLocation((Player) entity, e.getLocation(), "http://mineworld.fr/contrib/sound/hunter_attackmix_0"+showRandomInteger(1, 3, rand)+".wav");
+		    		    			}
+		    					}
+		    		    	}
+	    				}else if(e instanceof Creeper){
+	    					Integer random = showRandomInteger(1, 40, rand);
+		    				if(random == 5 && ((Creature) e).getTarget() == null) {
+		    					for (Entity entity : e.getNearbyEntities(50, 50, 50)) {
+		    						double distance = getdistance(entity, e);
+		    		    			if (entity instanceof Player && distance > 8 && !isbot((Player) entity)) {
+		    		    				Main_ContribControl.sendPlayerSoundEffectToLocation((Player) entity, e.getLocation(), "http://mineworld.fr/contrib/sound/female_cry_"+showRandomInteger(1, 4, rand)+".wav");
+		    		    			}
+		    					}
+		    		    	}else if(random == 10 && ((Creature) e).getTarget() == null) {
+		    					for (Entity entity : e.getNearbyEntities(50, 50, 50)) {
+		    						double distance = getdistance(entity, e);
+		    		    			if (entity instanceof Player && distance > 8 && !isbot((Player) entity)) {
+		    		    				Main_ContribControl.sendPlayerSoundEffectToLocation((Player) entity, e.getLocation(), "http://mineworld.fr/contrib/sound/walking_cry_"+showRandomInteger(1, 4, rand)+".wav");
+		    		    			}
+		    					}
+		    		    	}
+	    				}else if(e instanceof Skeleton){
+	    					Integer random = showRandomInteger(1, 40, rand);
+		    				if(random == 5 && ((Creature) e).getTarget() == null) {
+		    					for (Entity entity : e.getNearbyEntities(50, 50, 50)) {
+		    						double distance = getdistance(entity, e);
+		    		    			if (entity instanceof Player && distance > 8 && !isbot((Player) entity)) {
+		    		    				Main_ContribControl.sendPlayerSoundEffectToLocation((Player) entity, e.getLocation(), "http://mineworld.fr/contrib/sound/spitter_lurk_"+showRandomInteger(1, 20, rand)+".wav");
+		    		    			}
+		    					}
+		    		    	}
+	    				}
+						if((((Creature) e).getTarget() == null && !Main_TimeControl.horde) || Main_TimeControl.horde) {
 							double lastdistance = 1000000.0;
 							Entity thetarget = null;
 							for (Entity ee : e.getNearbyEntities(50, 50, 50)) {
@@ -473,8 +531,10 @@ public class Main extends JavaPlugin {
 								}
 							}
 							if(thetarget != null) {
-								double range = 12.0;
-								if(thetarget.getLocation().getBlock().getLightLevel() < 10) {
+								double range = 10.0;
+								if(Main_TimeControl.horde) {
+									range = 1.0;
+								}else if(thetarget.getLocation().getBlock().getLightLevel() < 8) {
 									range = 5.0;
 								}
 								if (checkLocation(thetarget.getLocation(), e.getLocation(), range)) {
@@ -491,24 +551,6 @@ public class Main extends JavaPlugin {
     }
 	
     public void do_cron_04() { 
-		/*if(!modo.isEmpty()) {
-			for (String name : modo) {
-				getServer().
-			}
-		}
-		
-		if(!correct.isEmpty()) {
-			for (String name : correct) {
-				getServer().
-			}
-		}
-		
-		if(!anim.isEmpty()) {
-			for (String name : anim) {
-				getServer().
-			}
-		}*/
-		
 		if(!world_whitelist.isEmpty()) {
 			for (Player player : world_whitelist) {
 				if(!player.isOnline()) {
@@ -517,14 +559,6 @@ public class Main extends JavaPlugin {
 			}
 		}
 		
-		/*if(!move_last.isEmpty()) {
-			for (Entity entity : move_last) {
-				if(entity.isDead()) {
-					move_last.remove(entity);
-				}
-			}
-		}*/
-		
 		if(!Main_ChunkControl.PlayerOR.isEmpty()) {
 			for (Player player : Main_ChunkControl.PlayerOR) {
 				if(!player.isOnline()) {
@@ -532,30 +566,6 @@ public class Main extends JavaPlugin {
 				}
 			}
 		}
-		
-		/*if(!Main_ChunkControl.player_blocs.isEmpty()) {
-			for (Player player : Main_ChunkControl.player_blocs) {
-				if(!player.isOnline()) {
-					Main_ChunkControl.player_blocs.remove(player);
-				}
-			}
-		}
-		
-		if(!Main_ChunkControl.player_chunkupdate.isEmpty()) {
-			for (Player player : Main_ChunkControl.player_chunkupdate) {
-				if(!player.isOnline()) {
-					Main_ChunkControl.player_chunkupdate.remove(player);
-				}
-			}
-		}
-		
-		if(!Main_ChunkControl.player_lastchunk.isEmpty()) {
-			for (Player player : Main_ChunkControl.player_lastchunk) {
-				if(!player.isOnline()) {
-					Main_ChunkControl.player_lastchunk.remove(player);
-				}
-			}
-		}*/
 		
 		if(!Main_Visiteur.visiteur.isEmpty()) {
 			for (Player player : Main_Visiteur.visiteur) {
@@ -603,7 +613,7 @@ public class Main extends JavaPlugin {
     	// Main
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_01(), 1, 10); 
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_02(), 1, 100); 
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_03(), 1, 10); 
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_03(), 1, 20); 
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_04(), 1, 5000);
     	
     	// Main - UltraDO

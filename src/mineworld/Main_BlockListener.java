@@ -88,9 +88,15 @@ public class Main_BlockListener extends BlockListener {
     	if(plugin.Main_TimeControl.dead_sun && (event.getBlock().getType() == Material.LONG_GRASS || event.getBlock().getType() == Material.DEAD_BUSH)) {
     		if(plugin.Main_ContribControl.isClient(event.getPlayer(), false)) {
 	    		int random = showRandomInteger(1, 30, rand);
-	    		if(random == 10 && (event.getBlock().getLightLevel() >= 14 && event.getPlayer().getLocation().getBlock().getLightLevel() >= 14)) {
+	    		if(random == 10 && (event.getBlock().getLightLevel() >= 13 && event.getPlayer().getLocation().getBlock().getLightLevel() >= 13)) {
 	    			int randomint = showRandomInteger(1, 5, rand);
-	    			ItemStack item = new ItemStack(Material.DEAD_BUSH);
+	    			int randomblock = showRandomInteger(1, 5, rand);
+	    			ItemStack item;
+	    			if(randomblock == 1) {
+	    				item = new ItemStack(Material.CLAY);
+	    			}else{
+	    				item = new ItemStack(Material.DEAD_BUSH);
+	    			}
 	    			item.setAmount(randomint);
 	    			event.getPlayer().getWorld().dropItemNaturally(event.getBlock().getLocation(), item);
 	    			plugin.Main_ContribControl.sendNotification(event.getPlayer(), "Notification", "Vous avez trouvé "+randomint+" herbes.");

@@ -1,10 +1,15 @@
 package mineworld;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Creature;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Slime;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -24,6 +29,8 @@ public class Main_EntityListener extends EntityListener {
     private final Configuration conf_npc;
     private final Configuration conf_player;
 	private final Random rand = new Random();
+	private Map<Entity, String> damagerList = new HashMap<Entity, String>();
+	public int mort = 0;
 
     public Main_EntityListener(Main parent) {
     	this.plugin = parent;
@@ -48,10 +55,49 @@ public class Main_EntityListener extends EntityListener {
 		}
 		if (event.getEntity() instanceof Player) {
 			plugin.Main_ContribControl.sendSoundEffectToAllToLocation(event.getEntity().getLocation(), "http://mineworld.fr/contrib/sound/DeathScream0"+showRandomInteger(1, 9, rand)+".wav");
+			if(plugin.Main_TimeControl.horde) {
+				plugin.Main_ContribControl.sendSoundToAll("http://mineworld.fr/contrib/sound/zombiechoir_0"+showRandomInteger(1, 7, rand)+".wav");
+				mort++;
+			}
 		}
+		if(event.getEntity() instanceof Slime) {
+			event.getDrops().clear();
+		}
+		if(damagerList == null || !damagerList.containsKey(event.getEntity())) return;
+		if(damagerList.get(event.getEntity()).contains("NONONO") && showRandomInteger(1, 7, rand) != 7) {
+			event.getDrops().clear();
+		}
+		damagerList.remove(event.getEntity());
     }
     
     public void onEntityDamage(EntityDamageEvent event) {
+    	if (event.getEntity() instanceof Creature) {
+	    	switch(event.getCause()) {
+		    	case DROWNING:
+		    		damagerList.put(event.getEntity(), "NONONO");
+		    		break;
+		    	case FALL:
+		    		damagerList.put(event.getEntity(), "NONONO");
+		    		break;
+		    	case SUFFOCATION:
+		    		damagerList.put(event.getEntity(), "NONONO");
+		    		break;
+		    	case FIRE:
+		    		damagerList.put(event.getEntity(), "NONONO");
+		    		break;
+		    	case FIRE_TICK:
+		    		damagerList.put(event.getEntity(), "NONONO");
+		    		break;
+		    	default:
+		    		if(damagerList.get(event.getEntity()) != null) {
+		    			damagerList.remove(event.getEntity());
+		    		}
+	    	}
+	    	if (event.getEntity() instanceof Slime) {
+	    		damagerList.put(event.getEntity(), "NONONO");
+	    	}
+    	}
+    	
 	    if (event instanceof EntityDamageByEntityEvent) {
 	    	EntityDamageByEntityEvent dmgByEntity = (EntityDamageByEntityEvent) event;
         	if (dmgByEntity instanceof Player) {
