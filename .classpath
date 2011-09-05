@@ -7,5 +7,7 @@
 	<classpathentry kind="lib" path="C:/Users/Shelkz/Desktop/LIB_BUKKIT/WorldEdit.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Shelkz/Desktop/LIB_BUKKIT/spoutapi-dev-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Shelkz/Desktop/LIB_BUKKIT/BigBrother.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Shelkz/Desktop/LIB_BUKKIT/MobDisguise.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Shelkz/Desktop/mise à jour/NPC.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

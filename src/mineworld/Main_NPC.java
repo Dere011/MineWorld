@@ -343,46 +343,61 @@ public class Main_NPC {
 
     public void ReloadAllNpcs() {
     	try {
-    		Configuration conf = plugin.conf_npc;
-    		if(plugin.NPC_configFile.exists()){
-        		conf.load();
-				List<String> npclist = conf.getKeys("load-npcs");
-				if(!npclist.isEmpty()) {
-					ConfigurationNode node = conf.getNode("load-npcs");
-					for(String npc : npclist){
-						String id = node.getString(npc + ".id");
-						String name = node.getString(npc + ".name");
-						boolean is_enabled = node.getBoolean(npc + ".enabled", false);
-						String itemlist = node.getString(npc + ".itemlist");
-						String w = node.getString(npc + ".loc.world");
-						Double x = node.getDouble(npc + ".loc.x", 0);
-						Double y = node.getDouble(npc + ".loc.y", 0);
-						Double z = node.getDouble(npc + ".loc.z", 0);
-						float yaw = node.getInt(npc + ".loc.yaw", 0);
-						float pitch = node.getInt(npc + ".loc.pitch", 0);
-						final String skinurl = node.getString(npc + ".skin");
-						Boolean tueur = node.getBoolean(npc + ".tueur", false);
-						if(HumanNPCList.get(id) == null && is_enabled) {
-							World world = plugin.getServer().getWorld(w);
-							final BasicHumanNpc hnpc = NpcSpawner.SpawnBasicHumanNpc(id, name, world, x, y, z, yaw, pitch, tueur, skinurl);
-							HumanNPCList.put(id, hnpc);
-				            if(itemlist != null) {
-					            ArrayList<Integer> items = GetItem(itemlist);
-					            addItems(hnpc, items);
-				            }
-				            if(skinurl != null) {
-				            	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-									public void run()
-									{
-										plugin.Main_ContribControl.setPlayerSkin(hnpc.getBukkitEntity(), skinurl);
-									}
-				            	}, (long) 30);
-				            }
+    		if(!plugin.Main_TimeControl.horde) {
+	    		Configuration conf = plugin.conf_npc;
+	    		if(plugin.NPC_configFile.exists()){
+	        		conf.load();
+					List<String> npclist = conf.getKeys("load-npcs");
+					if(!npclist.isEmpty()) {
+						ConfigurationNode node = conf.getNode("load-npcs");
+						for(String npc : npclist){
+							String id = node.getString(npc + ".id");
+							String name = node.getString(npc + ".name");
+							boolean is_enabled = node.getBoolean(npc + ".enabled", false);
+							String itemlist = node.getString(npc + ".itemlist");
+							String w = node.getString(npc + ".loc.world");
+							Double x = node.getDouble(npc + ".loc.x", 0);
+							Double y = node.getDouble(npc + ".loc.y", 0);
+							Double z = node.getDouble(npc + ".loc.z", 0);
+							float yaw = node.getInt(npc + ".loc.yaw", 0);
+							float pitch = node.getInt(npc + ".loc.pitch", 0);
+							final String skinurl = node.getString(npc + ".skin");
+							Boolean tueur = node.getBoolean(npc + ".tueur", false);
+							if(HumanNPCList.get(id) == null && is_enabled) {
+								World world = plugin.getServer().getWorld(w);
+								final BasicHumanNpc hnpc = NpcSpawner.SpawnBasicHumanNpc(id, name, world, x, y, z, yaw, pitch, tueur, skinurl);
+								HumanNPCList.put(id, hnpc);
+					            if(itemlist != null) {
+						            ArrayList<Integer> items = GetItem(itemlist);
+						            addItems(hnpc, items);
+					            }
+					            if(skinurl != null) {
+					            	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+										public void run()
+										{
+											plugin.Main_ContribControl.setPlayerSkin(hnpc.getBukkitEntity(), skinurl);
+										}
+					            	}, (long) 30);
+					            }
+							}
 						}
+						System.out.println();
 					}
-					System.out.println();
 				}
-			}
+	    		/*NPCList npclist = CitizensManager.getList();
+	    		int i = 0;
+	    		for(final Entry<Integer, HumanNPC> npc : npclist.entrySet()){
+	    			i++;
+	    			if(npc != null) {
+		            	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+							public void run()
+							{
+								plugin.Main_ContribControl.setPlayerSkin(npc.getValue().getPlayer(), "http://mineworld.fr/contrib/skin/"+npc.getValue().getName().toLowerCase()+".png");
+							}
+		            	}, (long) 30);
+	    			}
+	    		}*/
+    		}
         } catch (Exception e) {
             plugin.sendError(e.getMessage() + e.getStackTrace().toString());
             e.printStackTrace();

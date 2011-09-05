@@ -14,7 +14,6 @@ import net.minecraft.server.Packet29DestroyEntity;
 import npcspawner.BasicHumanNpc;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -65,7 +64,9 @@ public class Main extends JavaPlugin {
     public List<String> anim = new ArrayList<String>();
     public List<Player> world_whitelist = new ArrayList<Player>();
     public List<Player> block_player = new ArrayList<Player>();
-    
+    public List<Player> alco_player = new ArrayList<Player>();
+    public List<Player> can_horde = new ArrayList<Player>();
+    public Map<Player, Integer> last_move = new HashMap<Player, Integer>();
     public List<Player> spy_player = new ArrayList<Player>();
     
     public Map<Entity, Block> move_last = new HashMap<Entity, Block>();
@@ -76,10 +77,12 @@ public class Main extends JavaPlugin {
 	protected File NPC_configFile = new File(maindir, "npc_config.yml");
 	protected File Player_configFile = new File(maindir, "player_config.yml");
 	protected File Server_configFile = new File(maindir, "server_config.yml");
+	protected File ITEM_configFile = new File(maindir, "item_config.yml");
 	
 	Configuration conf_player = new Configuration(Player_configFile);
 	Configuration conf_npc = new Configuration(NPC_configFile);
 	Configuration conf_server = new Configuration(Server_configFile);
+	Configuration conf_items = new Configuration(ITEM_configFile);
 	
 	public Boolean npc_is_first_loaded = false;
 	private Boolean debug_enable = false;
@@ -90,8 +93,7 @@ public class Main extends JavaPlugin {
 	public int cron_tick_gen = 0;
 	public int number_creature = 0;
 	public int cron_tick_heal = 0;
-	
-	public int spy_tick_effect = 0;
+	public int cron_tick_extra = 0;
 
 	public long timetamps = 0;
 	
@@ -154,7 +156,7 @@ public class Main extends JavaPlugin {
         pm.registerEvent(Type.CHUNK_UNLOAD, Main_ChunkListener, Priority.Normal, this);
         
     	runAllThread();
-    	
+
     	try {
 			Main_Visiteur.charge_whitelist();
 		} catch (IOException e) {
@@ -356,14 +358,16 @@ public class Main extends JavaPlugin {
     
     public void do_cron_01() {
     	if(playerInServer()) {
-			if(cron_tick_heal > 15) {
+			/*if(cron_tick_heal > 15) {
 				Boolean isgood = true;
+				Boolean onlyvisitor = true;
 				cron_tick_heal = 0;
 				for (Player p : getServer().getOnlinePlayers()) {
 			    	if (Main_Visiteur.is_visiteur(p)) {
 			    		continue;
 			    	}
-					if(p.isSleeping()) {
+			    	onlyvisitor = false;
+					if(p.) {
 						if(p.getHealth() < 10) {
 							p.setHealth(p.getHealth()+1);
 						}
@@ -373,13 +377,14 @@ public class Main extends JavaPlugin {
 						}
 					}
 				}
-				if(isgood) {
+				if(isgood && !onlyvisitor) {
+					Main_MessageControl.sendTaggedMessageToAll("Après une longue nuit, voici le lever du jour...", 1, "[SUN]");
 					getServer().getWorld("world").setFullTime(23100);
 				}
 			}else{
 				cron_tick_heal++;
 			}
-			lastplayerleft = 0;
+			lastplayerleft = 0;*/
     	}else{
 			if(lastplayerleft > 500) {
 				lastplayerleft = 0;
@@ -392,6 +397,26 @@ public class Main extends JavaPlugin {
     
     public void do_cron_02() {
     	if(playerInServer()) {
+    		if(cron_tick_extra > 1) {
+    			cron_tick_extra = 0;
+    			for (Player p : getServer().getOnlinePlayers()) {
+    				SpoutManager.getPlayer(p).setWalkingMultiplier(1);
+    				if(!Main_TimeControl.horde) {
+			    		if(alco_player.contains(p) && Main_PlayerListener.is_alco(p)) {
+			    			Main_ContribControl.setPlayerTitle(p, ChatColor.DARK_AQUA.toString() + p.getName());
+			    			Main_ContribControl.sp.getPlayer(p).setGravityMultiplier(0.3);
+			    			Main_ContribControl.sp.getPlayer(p).setJumpingMultiplier(1.1);
+			    		}else if(alco_player.contains(p) && !Main_PlayerListener.is_alco(p)) {
+			    			Main_ContribControl.setPlayerTitle(p, p.getName());
+			    			Main_ContribControl.sp.getPlayer(p).setGravityMultiplier(1);
+			    			Main_ContribControl.sp.getPlayer(p).setJumpingMultiplier(1);
+			    			alco_player.remove(p);
+			    		}
+    				}
+    			}
+    		}else{
+    			cron_tick_extra++;
+    		}
 	    	if(cron_tick_gen > 15) {
 				cron_tick_gen = 0;
 				number_creature = 0;
@@ -402,13 +427,15 @@ public class Main extends JavaPlugin {
 		    	}
 		        SpoutManager.getAppearanceManager().resetAllTitles();
 		        SpoutManager.getAppearanceManager().resetAllCloaks();
-		        for (Player p : getServer().getOnlinePlayers()) {
-		    		if(ismodo(p)) {
-		    			Main_ContribControl.setPlayerTitle(p, ChatColor.GREEN.toString() + "[MODO]\n"+ p.getName());
-		    		}else if(p.isOp()) {
-		    			Main_ContribControl.setPlayerTitle(p, ChatColor.RED.toString() + "[ADMIN]\n"+ p.getName());
-		    			Main_ContribControl.setPlayerCape(p, "http://mineworld.fr/contrib/cape/admin.png");
-		    		}
+		        if(!Main_TimeControl.horde) {
+			        for (Player p : getServer().getOnlinePlayers()) {
+			    		if(ismodo(p)) {
+			    			Main_ContribControl.setPlayerTitle(p, ChatColor.GREEN.toString() + "[MODO]\n"+ p.getName());
+			    		}else if(p.isOp()) {
+			    			Main_ContribControl.setPlayerTitle(p, ChatColor.RED.toString() + "[ADMIN]\n"+ p.getName());
+			    			Main_ContribControl.setPlayerCape(p, "http://mineworld.fr/contrib/cape/admin.png");
+			    		}
+			        }
 		        }
 				for (World w : getServer().getWorlds()) {
 					for (Entity e : w.getEntities()) {
@@ -461,11 +488,14 @@ public class Main extends JavaPlugin {
     public void do_cron_03() {
     	if(playerInServer()) {
 			World world = getServer().getWorld("world");
-    		if(!isDay(world)) {
+    		if(!isDay(world) || Main_TimeControl.horde) {
 	    		for (Entity e : world.getEntities()) {
 	    			if (e instanceof Monster) {
 	    				if (e instanceof Zombie) {
 	    					Integer random = showRandomInteger(1, 40, rand);
+	    					if(Main_TimeControl.horde) {
+	    						random = showRandomInteger(1, 15, rand);
+	    					}
 		    				if(random == 5) {
 		    					for (Entity entity : e.getNearbyEntities(24, 24, 24)) {
 		    		    			if (entity instanceof Player && !isbot((Player) entity)) {
@@ -488,6 +518,9 @@ public class Main extends JavaPlugin {
 		    		    	}
 	    				}else if(e instanceof Creeper){
 	    					Integer random = showRandomInteger(1, 40, rand);
+	    					if(Main_TimeControl.horde) {
+	    						random = showRandomInteger(1, 15, rand);
+	    					}
 		    				if(random == 5 && ((Creature) e).getTarget() == null) {
 		    					for (Entity entity : e.getNearbyEntities(50, 50, 50)) {
 		    						double distance = getdistance(entity, e);
@@ -505,6 +538,9 @@ public class Main extends JavaPlugin {
 		    		    	}
 	    				}else if(e instanceof Skeleton){
 	    					Integer random = showRandomInteger(1, 40, rand);
+	    					if(Main_TimeControl.horde) {
+	    						random = showRandomInteger(1, 15, rand);
+	    					}
 		    				if(random == 5 && ((Creature) e).getTarget() == null) {
 		    					for (Entity entity : e.getNearbyEntities(50, 50, 50)) {
 		    						double distance = getdistance(entity, e);
@@ -533,7 +569,7 @@ public class Main extends JavaPlugin {
 							if(thetarget != null) {
 								double range = 10.0;
 								if(Main_TimeControl.horde) {
-									range = 1.0;
+									range = 1.3;
 								}else if(thetarget.getLocation().getBlock().getLightLevel() < 8) {
 									range = 5.0;
 								}
@@ -586,12 +622,6 @@ public class Main extends JavaPlugin {
     public void do_cron_05() { 
     	timetamps();
     	if(!spy_player.isEmpty()) {
-    		Boolean tick = false;
-    		if(spy_tick_effect > 150) {
-    			spy_tick_effect = 0;
-    			tick = true;
-    		}
-    		spy_tick_effect++;
 	    	for (Player player : spy_player) {
 	    		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
 	    			if (entity instanceof Player) {
@@ -601,9 +631,6 @@ public class Main extends JavaPlugin {
 							unHide.getHandle().netServerHandler.sendPacket(new Packet29DestroyEntity(unHideFrom.getEntityId()));
 						}
 					}
-	    		}
-	    		if(tick) {
-	    			player.playEffect(player.getLocation(), Effect.EXTINGUISH, 1);
 	    		}
 	    	}
 	    }

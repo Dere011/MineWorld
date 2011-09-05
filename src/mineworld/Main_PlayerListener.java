@@ -1,12 +1,16 @@
 package mineworld;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Random;
+
+import me.desmin88.mobdisguise.api.MobDisguiseAPI;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace; 
 import org.bukkit.entity.Player;
@@ -15,7 +19,11 @@ import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerPreLoginEvent.Result;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.getspout.spoutapi.event.input.RenderDistance;
+import org.bukkit.util.config.Configuration;
+import org.bukkit.util.config.ConfigurationNode;
+import org.getspout.spoutapi.SpoutManager;
+import org.getspout.spoutapi.player.RenderDistance;
+
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -103,6 +111,22 @@ public class Main_PlayerListener extends PlayerListener {
     		mnpc.ReloadAllNpcs();
     		plugin.npc_is_first_loaded = true;
 			plugin.removeallitems();
+    		Configuration conf = plugin.conf_items;
+    		if(plugin.ITEM_configFile.exists()){
+        		conf.load();
+				List<String> itemlist = conf.getKeys("load-items");
+				if(!itemlist.isEmpty()) {
+					ConfigurationNode node = conf.getNode("load-items");
+					for(String item : itemlist){
+						int id = node.getInt(item + ".id", 0);
+						String name = node.getString(item + ".name");
+						String url = node.getString(item + ".url");
+				    	SpoutManager.getItemManager().setCustomItemBlock(1, id, (short) 0);
+				    	SpoutManager.getItemManager().setItemTexture(id, null, url);
+				    	SpoutManager.getItemManager().setItemName(id, name);
+					}
+				}
+    		}
     	}
     }
     
@@ -131,6 +155,15 @@ public class Main_PlayerListener extends PlayerListener {
     		return null;
     	}
     	Location location = new Location(plugin.getServer().getWorld(world), x, y, z);
+    	return location;
+    }
+    
+    public Location getHordeSpawn() {
+    	int x = 99;
+    	int y = 58;
+    	int z = 32;
+    	World world = plugin.getServer().getWorld("horde");
+    	Location location = new Location(world, x, y, z);
     	return location;
     }
     
@@ -191,8 +224,7 @@ public class Main_PlayerListener extends PlayerListener {
     		event.setCancelled(true);
     		return;
     	}
-    	String worldname = player.getWorld().getName();
-    	
+    	/*String worldname = player.getWorld().getName();
     	if(!event.getPlayer().isOp() && worldname.contains("old")) {
 	    	if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
 	    		Block block = event.getClickedBlock();
@@ -201,9 +233,17 @@ public class Main_PlayerListener extends PlayerListener {
 			    	return;
 	    		}
 	    	}
+    	}*/
+    	if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
+    		Block block = event.getClickedBlock();
+    		if(block.getType() == Material.STONE_BUTTON || block.getType() == Material.LEVER) {
+		    	player.getWorld().playEffect(block.getLocation(), Effect.CLICK2, 1);
+    		}
+    		if(block.getType() == Material.CHEST && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+    			ctc.sendSoundEffectToAllToLocation(block.getLocation(), "http://mineworld.fr/contrib/sound/open_chest.wav");
+    		}
     	}
-    	
-    	if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+		if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
     		Block block = event.getClickedBlock();
 		    if((block.getType() == Material.BED || block.getType() == Material.BED_BLOCK) && player.getInventory().contains(Material.COMPASS)) {
 	    		int lasthome_set = (Integer) plugin.getPlayerConfig(player, "time_lasthomeset", "int");
@@ -218,17 +258,6 @@ public class Main_PlayerListener extends PlayerListener {
 				event.setCancelled(true);
 				return;
     		}
-    	}
-    	if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
-    		Block block = event.getClickedBlock();
-    		if(block.getType() == Material.STONE_BUTTON || block.getType() == Material.LEVER) {
-		    	player.getWorld().playEffect(block.getLocation(), Effect.CLICK2, 1);
-    		}
-    		if(block.getType() == Material.CHEST && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-    			ctc.sendSoundEffectToAllToLocation(block.getLocation(), "http://mineworld.fr/contrib/sound/open_chest.wav");
-    		}
-    	}
-		if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			if (event.getPlayer().getItemInHand().getTypeId() == 324 || event.getPlayer().getItemInHand().getTypeId() == 330)
     	    {
     		    if (event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.NORTH).getType() == Material.CACTUS)
@@ -261,12 +290,42 @@ public class Main_PlayerListener extends PlayerListener {
 	    	if(handid == 347) {
 	    		Location loc = event.getClickedBlock().getLocation();
 	    		event.getPlayer().sendMessage("Votre montre affiche les informations suivante :");
-	    		Block block = event.getClickedBlock().getWorld().getBlockAt(loc.getBlockX(), loc.getBlockY()+1, loc.getBlockZ());
-	    		event.getPlayer().sendMessage("Taux de lumière : "+ block.getLightLevel());
-	    		event.getPlayer().sendMessage("Type d'environnement (Biome) : "+ block.getBiome().name());
+	    		Block blocksee = event.getClickedBlock().getWorld().getBlockAt(loc.getBlockX(), loc.getBlockY()+1, loc.getBlockZ());
+	    		event.getPlayer().sendMessage("Taux de lumière : "+ blocksee.getLightLevel());
+	    		event.getPlayer().sendMessage("Type d'environnement (Biome) : "+ blocksee.getBiome().name());
 	    		event.getPlayer().sendMessage("Heure (Long) : "+ event.getPlayer().getWorld().getTime());
 	    	}
 		}
+		if(plugin.Main_ContribControl.isClient(event.getPlayer(), false)) {
+			int handid = plugin.Main_ContribControl.sp.getPlayer(event.getPlayer()).getItemInHand().getDurability();
+	    	if(handid == 13371) {
+	    		plugin.Main_ContribControl.sp.getPlayer(event.getPlayer()).getInventory().remove(event.getPlayer().getInventory().getItemInHand());
+	    	    plugin.Main_ContribControl.sendSoundEffectToAllToLocation(event.getPlayer().getLocation(), "http://mineworld.fr/contrib/sound/attach_cola_bottles_01.wav");
+	    	    plugin.setPlayerConfig(event.getPlayer(), "time_last_alco", plugin.timetamps);
+	    	    plugin.alco_player.add(event.getPlayer());
+	    	    plugin.Main_MessageControl.sendTaggedMessage(event.getPlayer(), "Vous venez de boire une bière brune.", 1, "");
+	    	    event.setCancelled(true);
+	    	}
+		}
+    }
+    
+    public boolean is_alco(Player p) {
+    	if(plugin.Main_ContribControl.isClient(p, false)) {
+	    	int last_alco = (Integer) plugin.getPlayerConfig(p, "time_last_alco", "int");
+		    if(last_alco > (plugin.timetamps-60*5)) {
+		    	return true;
+		    }
+    	}
+	    return false;
+    }
+    
+    public void remove_alco(Player p) {
+    	if(plugin.Main_ContribControl.isClient(p, false)) {
+    		plugin.setPlayerConfig(p, "time_last_alco", 0);
+    		if(plugin.alco_player.contains(p)){
+    			plugin.alco_player.remove(p);
+    		}
+    	}
     }
     
     public void Main_onPlayerJoin_do(PlayerJoinEvent event) {
@@ -281,49 +340,77 @@ public class Main_PlayerListener extends PlayerListener {
 		}
     }
     
+    public ApplicableRegionSet getregion(Player player) {
+    	WorldGuardPlugin worldGuard = getWorldGuard();
+    	com.sk89q.worldedit.Vector pt = toVector(player.getLocation());
+    	RegionManager regionManager = worldGuard.getRegionManager(player.getWorld());
+    	return regionManager.getApplicableRegions(pt);
+    }
+    
     public void onPlayerMove(PlayerMoveEvent event) {
     	Player p = event.getPlayer();
     	if(plugin.block_player.contains(p)) {
     		event.setCancelled(true);
     	}
-    	
-    	WorldGuardPlugin worldGuard = getWorldGuard();
-    	com.sk89q.worldedit.Vector pt = toVector(p.getLocation());
-    	RegionManager regionManager = worldGuard.getRegionManager(p.getWorld());
-    	ApplicableRegionSet set = regionManager.getApplicableRegions(pt);
-    	for (ProtectedRegion pregion : set) {
-    		if(pregion.getId().contains("stargate") || pregion.getId().contains("client")) {
-    			if(!plugin.Main_ContribControl.isClient(p, true)) {
-    				Location spawnpoint = getSpawnLocation();
-	        		if(spawnpoint != null) {
+    	if(!plugin.last_move.containsKey(p) || (plugin.last_move.get(p)+5) < plugin.timetamps) {
+    		plugin.last_move.put(p, (int) plugin.timetamps);
+	    	ApplicableRegionSet set = getregion(p);
+	    	for (ProtectedRegion pregion : set) {
+	    		String id = pregion.getId();
+	    		if(id.equals("stargate") || id.equals("client")) {
+	    			if(!plugin.Main_ContribControl.isClient(p, true)) {
+	    				Location spawnpoint = getSpawnLocation();
+		        		if(spawnpoint != null && !p.isOp()) {
+		        			p.teleport(spawnpoint);
+		        		}
+	    			}
+	    		}else if(!plugin.Main_TimeControl.horde && (id.contains("horde_spawn") || p.getWorld().getName().contains("horde"))) {
+					Location spawnpoint = getSpawnLocation();
+	        		if(spawnpoint != null && !p.isOp()) {
 	        			p.teleport(spawnpoint);
 	        		}
-    			}
-    		}
-    		if(pregion.getId().contains("spawn_protection")) {
-    			if(plugin.last_region.get(p) == null || !plugin.last_region.get(p).contains("spawn_protection")) {
-    				plugin.Main_ContribControl.sendPlayerSoundEffectToLocation(p, new Location(p.getWorld(), 185, 56, 94), "http://mineworld.fr/contrib/sound/dafa.ogg");
-    				plugin.last_region.put(p, "spawn_protection");
-    			}
-    		}else if(pregion.getId().contains("maisondere")) {
-				if(plugin.last_region.get(p) == null || !plugin.last_region.get(p).contains("maison_dere")) {
-					plugin.Main_ContribControl.sendPlayerSoundEffectToLocation(p, new Location(p.getWorld(), -631, 72, -545), "http://mineworld.fr/contrib/sound/portal_still_alive.wav");
-					plugin.last_region.put(p, "maison_dere");
-				}
-    		}
-    	}
-    	
-    	if (plugin.Main_Visiteur.is_visiteur(p)) {
-			String WorldName = p.getWorld().getName();
-    		if(!WorldName.contains("world") || WorldName.contains("oldworld")) {
-	        	int time_last_vdteleport = (Integer) plugin.getPlayerConfig(p, "time_last_vdteleport", "int");
-	    	    if((plugin.timetamps-time_last_vdteleport) > 20) {
-	    	    	msg.sendTaggedMessage(p, "Les visiteurs ne peuvent pas prendre ce téléporteur.", 1, "[DENIED]");
-	    	    	plugin.setPlayerConfig(p, "time_last_vdteleport", plugin.timetamps);
-	    	    }
-	    	    respawn_player(p);
-    		}
-    		return;
+	    		}else if(!plugin.Main_TimeControl.horde && id.contains("spawn_protection")) {
+	    			if(plugin.last_region.get(p) == null || !plugin.last_region.get(p).contains("spawn_protection")) {
+	    				plugin.Main_ContribControl.sendPlayerSoundEffectToLocation(p, new Location(p.getWorld(), 185, 56, 94), "http://mineworld.fr/contrib/sound/dafa.ogg");
+	    				plugin.last_region.put(p, "spawn_protection");
+	    			}
+	    		}else if(!plugin.Main_TimeControl.horde && id.contains("maisondere")) {
+					if(plugin.last_region.get(p) == null || !plugin.last_region.get(p).contains("maison_dere")) {
+						plugin.Main_ContribControl.sendPlayerSoundEffectToLocation(p, new Location(p.getWorld(), -631, 72, -545), "http://mineworld.fr/contrib/sound/ichwill.ogg");
+						plugin.last_region.put(p, "maison_dere");
+					}
+	    		}
+	    		Configuration conf = plugin.conf_server;
+	    		if(plugin.Server_configFile.exists()){
+	        		conf.load();
+					List<String> npclist = conf.getKeys("load-music");
+					if(!npclist.isEmpty()) {
+						ConfigurationNode node = conf.getNode("load-music");
+						for(String npc : npclist){
+							String name = node.getString(npc + ".id");
+							String url = node.getString(npc + ".url");
+							if(id.contains(name)) {
+								if(plugin.last_region.get(p) == null || !plugin.last_region.get(p).contains(name)) {
+									plugin.Main_ContribControl.sendPlayerSoundEffectToLocation(p, p.getLocation(), url);
+									plugin.last_region.put(p, name);
+								}
+							}
+						}
+					}
+	    		}
+	    	}
+	       	if (plugin.Main_Visiteur.is_visiteur(p)) {
+				String WorldName = p.getWorld().getName();
+	    		if(!WorldName.contains("world") || WorldName.contains("oldworld")) {
+		        	int time_last_vdteleport = (Integer) plugin.getPlayerConfig(p, "time_last_vdteleport", "int");
+		    	    if((plugin.timetamps-time_last_vdteleport) > 20) {
+		    	    	msg.sendTaggedMessage(p, "Les visiteurs ne peuvent pas prendre ce téléporteur.", 1, "[DENIED]");
+		    	    	plugin.setPlayerConfig(p, "time_last_vdteleport", plugin.timetamps);
+		    	    }
+		    	    respawn_player(p);
+	    		}
+	    		return;
+	    	}
     	}
     }
     
@@ -331,8 +418,9 @@ public class Main_PlayerListener extends PlayerListener {
     	Player p = event.getPlayer();
     	boolean muted = (Boolean) plugin.getPlayerConfig(p, "is_muted", "boolean");
     	if (!muted) {
-    		if(plugin.is_spy(p)) {
-    			msg.sendTaggedMessage(p, "Désolé, le mode SPY interdit l'utilisation du chat.", 1, "[DENIED]");
+      		plugin.sendInfo("[CHAT] "+p.getName()+" > "+ event.getMessage());
+    		if(plugin.Main_TimeControl.horde) {
+    			msg.sendTaggedMessage(p, "Seul les hordes de zombies vous entendent...", 1, "[DENIED]");
 	    		event.setCancelled(true);
 	    		return;
     		}
@@ -347,23 +435,56 @@ public class Main_PlayerListener extends PlayerListener {
 					return;
 				}else{
 					msg.sendTaggedMessage(p, "Impossible, il n'y a que vous en visiteur sur le serveur.", 1, "[DENIED]");
+					msg.sendTaggedMessage(p, "Seul les visiteurs peuvent voir vos messages.", 1, "[DENIED]");
 					event.setCancelled(true);
 					return;
 				}
 	    	}else{
-	    		msg.chatMessageToAllNonVisiteur(p, event.getMessage());
+	    		String message = event.getMessage();
+	    		if(plugin.Main_PlayerListener.is_alco(p)) {
+		    		int alcol = plugin.showRandomInteger(1, 5, rand);
+		    		if(alcol == 1) {
+		    			message = ChatColor.DARK_AQUA + message + "...Abrggggggg";
+		    		}else if(alcol == 2) {
+		    			message = ChatColor.DARK_AQUA + message + "...argfggee";
+		    		}else if(alcol == 3) {
+		    			message = ChatColor.DARK_AQUA +"Brueegge..."+ message;
+		    			plugin.Main_ContribControl.sendSoundEffectToAllToLocation(p.getLocation(), "http://mineworld.fr/contrib/sound/boomer_dive_01.wav");
+		    		}else if(alcol == 4) {
+		    			message = ChatColor.DARK_AQUA +"... Propos incohérent ...";
+		    			plugin.Main_ContribControl.sendSoundEffectToAllToLocation(p.getLocation(), "http://mineworld.fr/contrib/sound/boomer_dive_01.wav");
+		    		}else if(alcol == 5) {
+		    			message = ChatColor.DARK_AQUA + message + "... Abrggggggg";
+		    		}
+		    	}
+	    		msg.chatMessageToAllNonVisiteur(p, message);
 	    		event.setCancelled(true);
 	    		return;
 	    	}
+
     	}else{
     		event.setCancelled(true);
     		return;
     	}
     }
     
+    public boolean is_spawnhorde(Player player) {
+		ApplicableRegionSet set = getregion(player);
+    	for (ProtectedRegion pregion : set) {
+    		if(pregion.getId().contains("horde_spawn")) {
+        			return true;
+    		}
+    	}
+    	return false;
+    }
+    
     public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
     	Player player = event.getPlayer();
     	if (event.getMessage().contains("/spawn") && !event.getMessage().contains("/spawnmob")) {
+    		if(is_spawnhorde(player)) {
+    			event.setCancelled(true);
+    			return;
+    		}
         	int time_lastspawn = (Integer) plugin.getPlayerConfig(player, "time_lastspawn", "int");
         	if((time_lastspawn+360) < plugin.timetamps) {
         		Location spawnpoint = getSpawnLocation();
@@ -404,6 +525,10 @@ public class Main_PlayerListener extends PlayerListener {
     		return;
     	}
     	if (event.getMessage().equals("/suicid") || event.getMessage().equals("/suicide")) {
+    		if(is_spawnhorde(player)) {
+    			event.setCancelled(true);
+    			return;
+    		}
     		player.getInventory().clear();
     		player.damage(100);
     		event.setCancelled(true);
@@ -414,6 +539,40 @@ public class Main_PlayerListener extends PlayerListener {
     			player.kickPlayer("Erreur securité 5003.");
 	    		event.setCancelled(true);
 	    		return;
+    		}
+    	}
+    	if (event.getMessage().contains("/gives")) {
+    		if(!player.isOp()) {
+    			player.kickPlayer("Erreur securité 5003.");
+	    		event.setCancelled(true);
+	    		return;
+    		}else{
+    			ItemStack item = plugin.Main_ContribControl.sp.getItemManager().getCustomItemStack(Integer.parseInt(event.getMessage().replace("/gives ", "")), 1);
+    			player.getInventory().addItem(item);
+    		}
+    	}
+       	if (event.getMessage().contains("/reloadgives")) {
+    		if(!player.isOp()) {
+    			player.kickPlayer("Erreur securité 5003.");
+	    		event.setCancelled(true);
+	    		return;
+    		}else{
+        		Configuration conf = plugin.conf_items;
+		    	if(plugin.ITEM_configFile.exists()){
+		    		conf.load();
+					List<String> itemlist = conf.getKeys("load-items");
+					if(!itemlist.isEmpty()) {
+						ConfigurationNode node = conf.getNode("load-items");
+						for(String item : itemlist){
+							int id = node.getInt(item + ".id", 0);
+							String name = node.getString(item + ".name");
+							String url = node.getString(item + ".url");
+					    	SpoutManager.getItemManager().setCustomItemBlock(1, id, (short) 0);
+					    	SpoutManager.getItemManager().setItemTexture(id, null, url);
+					    	SpoutManager.getItemManager().setItemName(id, name);
+						}
+					}
+				}
     		}
     	}
     	if (event.getMessage().equals("/aro")) {
@@ -455,14 +614,11 @@ public class Main_PlayerListener extends PlayerListener {
     		event.setCancelled(true);
     		return;
     	}
-    	if (event.getMessage().equals("/list")) {
+    	if (event.getMessage().equals("/list") || event.getMessage().equals("/online")) {
        		if(plugin.Main_ContribControl.isClient(player, true)) {
        			String list = "";
        			Integer visiteur = 0;
        			for (Player p : plugin.getServer().getOnlinePlayers()) {
-       				if(p.getName().contains("MWSTAFF")) {
-       					continue;
-       				}
        				if(p.isOp()) {
        					list = list + ChatColor.RED + p.getName() + ChatColor.WHITE +", ";
        				}else if(plugin.ismodo(p)) {
@@ -495,7 +651,11 @@ public class Main_PlayerListener extends PlayerListener {
     		return;
     	}
     	if (event.getMessage().contains("/home")) {
-    		if(plugin.Main_ContribControl.isClient(player, true)) {
+    		if(is_spawnhorde(player)) {
+    			event.setCancelled(true);
+    			return;
+    		}
+    		if(plugin.Main_ContribControl.isClient(player, false)) {
 	    		int lasthome = (Integer) plugin.getPlayerConfig(player, "time_lasthome", "int");
 		       	if((plugin.timetamps-lasthome) > 60) {
 		       		start_teleportation_tohome(player, true);
@@ -577,10 +737,10 @@ public class Main_PlayerListener extends PlayerListener {
 		}else{
 			ctc.setPlayerSunURL(player, "http://mineworld.fr/contrib/sun/sun.png");
 		}
-		if(plugin.mobcycle == 1) {
-			ctc.setPlayerMoonURL(player, "http://mineworld.fr/contrib/sun/moon.png");
-		}else{
+		if(plugin.mobcycle == 3) {
 			ctc.setPlayerMoonURL(player, "http://mineworld.fr/contrib/sun/deadmoon.png");
+		}else{
+			ctc.setPlayerMoonURL(player, "http://mineworld.fr/contrib/sun/moon.png");
 		}
 		if(!back) {
 	   	 	ctc.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/gnomeftw.wav");
@@ -588,6 +748,16 @@ public class Main_PlayerListener extends PlayerListener {
 		}
 		if(!plugin.Main_TimeControl.in_cycle) {
 			plugin.Main_ContribControl.set_fog(RenderDistance.FAR);
+		}
+		Boolean noclient = (Boolean) plugin.getPlayerConfig(player, "noclient", "boolean");
+		if(noclient && plugin.Main_ContribControl.isClient(player, false)) {
+			player.kickPlayer("Désolé, votre compte est interdit de client.");
+		}
+		if (!player.isOp() && MobDisguiseAPI.isDisguised(player)) {
+			MobDisguiseAPI.undisguisePlayerAsPlayer(player, "zombie");
+		}
+		if(is_alco(player) && !plugin.alco_player.contains(player)) {
+			plugin.alco_player.add(player);
 		}
 	}
 
@@ -606,22 +776,20 @@ public class Main_PlayerListener extends PlayerListener {
    	 	msg.sendTaggedMessage(player, anTxt, 2, "");
    	 	
    	 	int lastdeconnexion = (Integer) plugin.getPlayerConfig(player, "time_lastdeconnexion", "int");
-   	 	String timetxt = "";
+   	 	String timetxt = "Moins d'une heure";
    	 	int time = (int) (plugin.timetamps-lastdeconnexion);
-   	 	if(time < 60) {
+   	 	if(time <= 60) {
    	 		timetxt = time+" secondes";
-   	 	}else if(time < 120) {
+   	 	}else if(time <= 120) {
    	 		timetxt = "1 minute";
-   	 	}else if(time < 180) {
+   	 	}else if(time <= 180) {
    	 		timetxt = "2 minutes";
-   	 	}else if(time < 240) {
+   	 	}else if(time <= 240) {
    	 		timetxt = "3 minutes";	
-   	 	}else if(time < 300) {
+   	 	}else if(time <= 300) {
    	 		timetxt = "4 minutes";
-   	 	}else if(time < 360) {
+   	 	}else if(time <= 360) {
    	 		timetxt = "5 minutes";
-   	 	}else{
-   	 		timetxt = "";
    	 	}
    	 	
    	 	Boolean back = false;
@@ -660,10 +828,7 @@ public class Main_PlayerListener extends PlayerListener {
 			}
     	}, (long) 30);
 		
-    	// Main
     	Main_onPlayerJoin_do(event);
-
-        // NPC
     	NPC_onPlayerJoin_do(event);
     	
     	int firsttime = (Integer) plugin.getPlayerConfig(player, "time_firsttime", "int");
@@ -679,10 +844,17 @@ public class Main_PlayerListener extends PlayerListener {
 				for (Player p : plugin.getServer().getOnlinePlayers()) {
 					if(player == p) {
 						plugin.Main_ChunkControl.PlayerOR.add(player);
+						plugin.Main_ChunkControl.ResendAll.add(player);
 					}
 				}
 			}
     	}, (long) 50);
+    	
+	   	if(plugin.Main_TimeControl.horde) {
+	   		if(time > (60*10)) {
+	   			respawn_player(player);
+	   		}
+	   	}
     }
     
     public void onPlayerQuit(PlayerQuitEvent event) {
@@ -713,38 +885,85 @@ public class Main_PlayerListener extends PlayerListener {
 		if(plugin.last_region.containsKey(event.getPlayer())) {
 			plugin.last_region.remove(event.getPlayer());
 		}
+		if(plugin.Main_TimeControl.player_horde.contains(event.getPlayer())) {
+			plugin.Main_TimeControl.player_horde.remove(event.getPlayer());
+		}
+		if(plugin.alco_player.contains(event.getPlayer())) {
+			plugin.alco_player.remove(event.getPlayer());
+		}
+		if(plugin.spy_player.contains(event.getPlayer())) {
+			plugin.spy_player.remove(event.getPlayer());
+		}
 		plugin.setPlayerConfig(event.getPlayer(), "time_lastdeconnexion", plugin.timetamps);
     }
     
     public void respawn_player(Player p) {
     	final Player player = p;
-    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			public void run()
-			{
-				for (Player p : plugin.getServer().getOnlinePlayers()) {
-					if(player == p) {
-						Location spawnpoint = getSpawnLocation();
-		        		if(spawnpoint != null) {
-		        			player.teleport(spawnpoint);
-		        		}
-					}
-				}
-			}
-    	}, (long) 30);
-    	
-    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			public void run()
-			{
-				for (Player p : plugin.getServer().getOnlinePlayers()) {
-					if(player == p) {
-						Location spawnpoint = getSpawnLocation();
-		        		if(spawnpoint != null) {
-		        			player.teleport(spawnpoint);
-		        		}
-					}
-				}
-			}
-    	}, (long) 60);
+    	if(plugin.Main_TimeControl.horde) {
+    		plugin.Main_MessageControl.sendTaggedMessage(p, "Bienvenue au Bunker, une horde est en cours.", 1, "[HORDE]");
+    		plugin.Main_MessageControl.sendTaggedMessage(p, "Vous pouvez sortir ou attendre la fin de l'apocalyspe.", 1, "[HORDE]");
+        	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+    			public void run()
+    			{
+    				for (Player p : plugin.getServer().getOnlinePlayers()) {
+    					if(player == p) {
+    						Location spawnpoint = getHordeSpawn();
+    		        		if(spawnpoint != null) {
+    		        			player.teleport(spawnpoint);
+    		        			if(plugin.can_horde.contains(player)) {
+    		        				plugin.can_horde.remove(player);
+    		        				MobDisguiseAPI.disguisePlayer(p, "zombie");
+    		        			}
+    		        		}
+    					}
+    				}
+    			}
+        	}, (long) 30);
+        	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+    			public void run()
+    			{
+    				for (Player p : plugin.getServer().getOnlinePlayers()) {
+    					if(player == p) {
+    						Location spawnpoint = getHordeSpawn();
+    		        		if(spawnpoint != null) {
+    		        			player.teleport(spawnpoint);
+    		        			if(plugin.can_horde.contains(player)) {
+    		        				plugin.can_horde.remove(player);
+    		        				MobDisguiseAPI.disguisePlayer(p, "zombie");
+    		        			}
+    		        		}
+    					}
+    				}
+    			}
+        	}, (long) 60);
+    	}else{
+        	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+    			public void run()
+    			{
+    				for (Player p : plugin.getServer().getOnlinePlayers()) {
+    					if(player == p) {
+    						Location spawnpoint = getSpawnLocation();
+    		        		if(spawnpoint != null) {
+    		        			player.teleport(spawnpoint);
+    		        		}
+    					}
+    				}
+    			}
+        	}, (long) 30);
+        	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+    			public void run()
+    			{
+    				for (Player p : plugin.getServer().getOnlinePlayers()) {
+    					if(player == p) {
+    						Location spawnpoint = getSpawnLocation();
+    		        		if(spawnpoint != null) {
+    		        			player.teleport(spawnpoint);
+    		        		}
+    					}
+    				}
+    			}
+        	}, (long) 60);
+    	}
     }
     
     public void respawn_player_deleyed(Player p) {
@@ -782,6 +1001,7 @@ public class Main_PlayerListener extends PlayerListener {
     
     public void onPlayerRespawn(PlayerRespawnEvent event) {
     	respawn_player(event.getPlayer());
+    	remove_alco(event.getPlayer());
     }
     
     public void mvspawn(final Player player) {
@@ -795,8 +1015,6 @@ public class Main_PlayerListener extends PlayerListener {
 
     public void onPlayerTeleport (PlayerTeleportEvent event) {
     	final Player player = event.getPlayer();
-    	
-    	// ANTI VISITEUR
     	if (plugin.Main_Visiteur.is_visiteur(player)) {
     		if(!event.getTo().getWorld().getName().contains("world") || event.getTo().getWorld().getName().contains("oldworld")) {
 	        	int time_last_vdteleport = (Integer) plugin.getPlayerConfig(player, "time_last_vdteleport", "int");
@@ -809,13 +1027,17 @@ public class Main_PlayerListener extends PlayerListener {
 	    		return;
     		}
     	}
-    	
-		plugin.Main_ChunkControl.ResendAll.remove(player);
-		plugin.Main_ChunkControl.player_chunkupdate.remove(player);
+		//plugin.Main_ChunkControl.ResendAll.remove(player);
+		//plugin.Main_ChunkControl.player_chunkupdate.remove(player);
     }
     
     public void onPlayerPickupItem(PlayerPickupItemEvent event) {
     	if (plugin.Main_Visiteur.is_visiteur(event.getPlayer())) {
+    		event.setCancelled(true);
+    		return;
+    	}
+		int handid = event.getItem().getItemStack().getDurability();
+    	if(handid > 13370 && !plugin.Main_ContribControl.isClient(event.getPlayer(), false)) {
     		event.setCancelled(true);
     		return;
     	}

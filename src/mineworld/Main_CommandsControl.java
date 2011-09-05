@@ -3,6 +3,7 @@
 import net.minecraft.server.Packet20NamedEntitySpawn;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -33,6 +34,20 @@ public class Main_CommandsControl {
 			}
     	}
 	}
+	
+	public Location getPlayerHomeLocation(String name) {
+    	String config = "load-player."+ name +".home.";
+    	plugin.conf_player.load();
+    	int x = plugin.conf_player.getInt(config+ "x", 0);
+    	int y = plugin.conf_player.getInt(config+ "y", 0);
+    	int z = plugin.conf_player.getInt(config+ "z", 0);
+    	String world = plugin.conf_player.getString(config + "world");
+    	if(world == null) {
+    		return null;
+    	}
+    	Location location = new Location(plugin.getServer().getWorld(world), x, y, z);
+    	return location;
+    }
     
     public Boolean Main_onCommand_do(CommandSender sender, Command command, String commandLabel, String[] args) {
     	String subCommand = args[0].toLowerCase();
@@ -117,6 +132,18 @@ public class Main_CommandsControl {
 						plugin.Main_MessageControl.sendTaggedMessage(player, "Voulez-vous vraiment redémarrer le serveur (/modo restart pour confirmer) ?", 2, "[MODO]");
 					}
 					return false;
+				}else if (subCommand.equals("home")) {
+						if(args[1] != null && !args[1].isEmpty()){
+							Location home = getPlayerHomeLocation(args[1]);
+							if(home == null) {
+								plugin.Main_MessageControl.sendTaggedMessage(player, "Le joueur ne possède pas de home / Nom du joueur invalide.", 2, "[MODO]");
+							}else{
+								player.teleport(home);
+							}
+						}else{
+							plugin.Main_MessageControl.sendTaggedMessage(player, "Commande invalide", 2, "[MODO]");
+						}
+						return false;
 				}else if (subCommand.equals("spy")) {
 					if(plugin.spy_player.contains(player)) {
 						plugin.spy_player.remove(player);
@@ -195,12 +222,11 @@ public class Main_CommandsControl {
 				plugin.setPlayerConfig(player, "remove_me", true);
 				player.kickPlayer("Merci de votre visite sur MineWorld.");
 				return true;
-			}else if (subCommand.equals("shop")) {
+			/*}else if (subCommand.equals("shop")) {
 				if(plugin.Main_ContribControl.isClient(player, true)) {
-					plugin.Main_ContribControl.sendNotification(player, "Impossible", "Service en maintenance.");
-					//shop.shop(player, args);
+					shop.shop(player, args);
 				}
-				return true;
+				return true;*/
 			}else if (subCommand.equals("money")) {
 				if(plugin.Main_ContribControl.isClient(player, true)) {
 					shop.getmoney(player);
@@ -212,11 +238,6 @@ public class Main_CommandsControl {
 					
 				}
 				return true;
-			}else if (subCommand.equals("parrain")) {
-				if(plugin.Main_ContribControl.isClient(player, true)) {
-					plugin.Main_MessageControl.sendTaggedMessage(player, "Votre code parrain est : <Service de parrain indisponible>", 1, "");
-				}
-				return true;
 			}else if (subCommand.equals("visiteur")) {
 				int visiteur = 0;
 				for (Entity ent : player.getNearbyEntities(24, 24, 24)) {
@@ -226,7 +247,7 @@ public class Main_CommandsControl {
 						}
 					}
 				}
-				plugin.Main_MessageControl.sendTaggedMessage(player, "Il y a "+visiteur+" visiteurs autour de vous...", 1, "");
+				plugin.Main_MessageControl.sendTaggedMessage(player, "Il y a "+visiteur+" visiteurs autour de vous.", 1, "");
 			}
 		}
 		return false;

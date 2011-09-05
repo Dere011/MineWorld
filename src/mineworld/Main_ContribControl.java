@@ -6,12 +6,14 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.getspout.spoutapi.SpoutManager;
-import org.getspout.spoutapi.event.input.RenderDistance;
+import org.getspout.spoutapi.gui.Color;
+import org.getspout.spoutapi.player.RenderDistance;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
 public class Main_ContribControl {
 
 	Main plugin;
+	SpoutManager sp;
 	
     public Main_ContribControl(Main parent) {
     	plugin = parent;
@@ -41,6 +43,20 @@ public class Main_ContribControl {
     	}
     }
     
+    public void sendPlayerSoundEffect(Player player, String url) {
+    	if(plugin.contrib) {
+    		SpoutPlayer contribplayer = SpoutManager.getPlayer(player);
+    		SpoutManager.getSoundManager().playCustomSoundEffect(plugin, contribplayer, url, false, player.getLocation(), 25, 60);
+    	}
+    }
+    
+    public void sendPlayerSoundEffectToLocation(Player player, Location location, String url) {
+    	if(plugin.contrib) {
+    		SpoutPlayer contribplayer = SpoutManager.getPlayer(player);
+    		SpoutManager.getSoundManager().playCustomSoundEffect(plugin, contribplayer, url, false, location, 25, 60);
+    	}
+    }
+    
     public void sendNotification(Player player, String title, String text) {
     	if(plugin.contrib) {
     		SpoutPlayer contribplayer = SpoutManager.getPlayer(player);
@@ -65,24 +81,10 @@ public class Main_ContribControl {
     	}
     }
     
-    public void sendPlayerSoundEffect(Player player, String url) {
-    	if(plugin.contrib) {
-    		SpoutPlayer contribplayer = SpoutManager.getPlayer(player);
-    		SpoutManager.getSoundManager().playCustomSoundEffect(plugin, contribplayer, url, false, player.getLocation(), 25, 60);
-    	}
-    }
-    
-    public void sendPlayerSoundEffectToLocation(Player player, Location location, String url) {
-    	if(plugin.contrib) {
-    		SpoutPlayer contribplayer = SpoutManager.getPlayer(player);
-    		SpoutManager.getSoundManager().playCustomSoundEffect(plugin, contribplayer, url, false, location, 25, 60);
-    	}
-    }
-    
     public void stopSound(Player player) {
     	if(plugin.contrib) {
-    		SpoutPlayer contribplayer = SpoutManager.getPlayer(player);
-    		SpoutManager.getSoundManager().stopMusic(contribplayer);
+    		//SpoutPlayer contribplayer = SpoutManager.getPlayer(player);
+    		//SpoutManager.getSoundManager().stopMusic(contribplayer);
     	}
     }
     
@@ -149,10 +151,27 @@ public class Main_ContribControl {
     	}
     }
     
+    public void setSkyColortoAll(Color color) {
+    	if(plugin.contrib) {
+    		for (Player p : plugin.getServer().getOnlinePlayers()) {
+    			if(p.isOnline()) {
+    				setPlayerSkyColor(p, color);
+    			}
+    		}
+    	}
+    }
+    
     public void setPlayerSunURL(Player player, String url) {
     	if(plugin.contrib) {
     		SpoutPlayer contribplayer = SpoutManager.getPlayer(player);
 			SpoutManager.getSkyManager().setSunTextureUrl(contribplayer, url);
+    	}
+    }
+    
+    public void setPlayerSkyColor(Player player, Color color) {
+    	if(plugin.contrib) {
+    		SpoutPlayer contribplayer = SpoutManager.getPlayer(player);
+    		SpoutManager.getSkyManager().setSkyColor(contribplayer, color);
     	}
     }
     
