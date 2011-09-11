@@ -37,10 +37,9 @@ public class Main_ChunkControl {
         SpoutManager.getPacketManager().addListener(51, new PacketListener() {
 			@Override
             public boolean checkPacket(Player player, MCPacket packet) {
-                @SuppressWarnings("deprecation")
 				byte[] byteData = ((Packet51MapChunk) packet.getPacket()).rawData;
+            	Boolean no = true;
                 if(byteData != null && byteData.length == 80*1024) {
-                	Boolean no = true;
                 	if(!plugin.Main_ContribControl.isClient(player, false)) { no = false; }
                 	if(no || (plugin.Main_TimeControl.prehorde || plugin.Main_TimeControl.horde)) {
 	                    for(int i = 0; i < 128*16*16; i++) {
@@ -67,8 +66,6 @@ public class Main_ChunkControl {
             }
         });    
     }
-    
-    // THREAD
 
 	public Runnable runThread_1(final Main plugin) {
 		if(thread_01 == null) {
@@ -250,9 +247,7 @@ public class Main_ChunkControl {
 		final Main_ChunkCopy chunkcopy = getChunkSnapshot(craftchunk);
 		final Location lastlocation = theblock.getLocation();
     	Boolean no = true;
-    	if(plugin.Main_ContribControl.isClient(player, false)) {
-    		no = false;
-    	}
+    	if(plugin.Main_ContribControl.isClient(player, false)) {no = false;}
         for (int x = 0; x <= 16; x++) {
             for (int z = 0; z <= 16; z++) {
             	Block block = chunk.getBlock(x, 0, z);

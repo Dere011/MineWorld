@@ -10,6 +10,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.getspout.spoutapi.SpoutManager;
 import org.getspout.spoutapi.gui.Color;
+import org.getspout.spoutapi.gui.GenericPopup;
 import org.getspout.spoutapi.player.RenderDistance;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
@@ -20,6 +21,39 @@ public class Main_ContribControl {
 	
     public Main_ContribControl(Main parent) {
     	plugin = parent;
+    }
+    
+    public void send_error(Player player, String message) {
+    	if(plugin.contrib) {
+    		
+    		int mw = sp.getPlayer(player).getMainScreen().getWidth();
+    		int mh = sp.getPlayer(player).getMainScreen().getHeight();
+    		
+    		GenericPopup popup = new GenericPopup();
+    		popup.setWidth(mw/2);
+    		popup.setHeight(mh/2);
+    		int margew = ((mw/2)/2);
+    		int margeh = ((mh/2)/2);
+    		popup.setX(margew);
+    		popup.setY(margeh);
+    		
+    		popup.attachWidget(new GenericButton("Test").setAlignX(Align.FIRST).setX(70).setY(102).setHeight(35).setWidth(100));
+    		popup.attachWidget(new GenericTextField().setX(70).setY(142).setHeight(35).setWidth(100));
+    		popup.attachWidget(new GenericSlider().setX(70).setY(242).setHeight(35).setWidth(100));
+    		popup.attachWidget(((GenericLabel) new GenericLabel("Some\nLonger Text\nis").setHexColor(0xFFFFFF).setAlignY(Align.FIRST)).setAlignX(Align.FIRST).setX(0).setY(0).setHeight(427).setWidth(240));
+    		popup.attachWidget(((GenericLabel) new GenericLabel("Some\nLonger Text\nis").setHexColor(0xFFFFFF).setAlignY(Align.FIRST)).setAlignX(Align.SECOND).setX(0).setY(0).setHeight(427).setWidth(240));
+    		popup.attachWidget(((GenericLabel) new GenericLabel("Some\nLonger Text\nis").setHexColor(0xFFFFFF).setAlignY(Align.FIRST)).setAlignX(Align.THIRD).setX(0).setY(0).setHeight(427).setWidth(240));
+    		popup.attachWidget(((GenericLabel) new GenericLabel("Some\nLonger Text\nis").setHexColor(0xFFFFFF).setAlignY(Align.SECOND)).setAlignX(Align.FIRST).setX(0).setY(0).setHeight(427).setWidth(240));
+    		popup.attachWidget(((GenericLabel) new GenericLabel("Some\nLonger Text\nis").setHexColor(0xFFFFFF).setAlignY(Align.SECOND)).setAlignX(Align.SECOND).setX(0).setY(0).setHeight(427).setWidth(240));
+    		popup.attachWidget(((GenericLabel) new GenericLabel("Some\nLonger Text\nis").setHexColor(0xFFFFFF).setAlignY(Align.SECOND)).setAlignX(Align.THIRD).setX(0).setY(0).setHeight(427).setWidth(240));
+    		popup.attachWidget(((GenericLabel) new GenericLabel("Some\nLonger Text\nis").setHexColor(0xFFFFFF).setAlignY(Align.THIRD)).setAlignX(Align.FIRST).setX(0).setY(0).setHeight(427).setWidth(240));
+    		popup.attachWidget(((GenericLabel) new GenericLabel("Some\nLonger Text\nis").setHexColor(0xFFFFFF).setAlignY(Align.THIRD)).setAlignX(Align.SECOND).setX(0).setY(0).setHeight(427).setWidth(240));
+    		popup.attachWidget(((GenericLabel) new GenericLabel("Some\nLonger Text\nis").setHexColor(0xFFFFFF).setAlignY(Align.THIRD)).setAlignX(Align.THIRD).setX(0).setY(0).setHeight(427).setWidth(240));
+
+    		popup.attachWidget(new GenericLabel("Bottom right of middle").setHexColor(0xFFFFFF).setX(130).setY(230).setHeight(427).setWidth(240));
+    		((SpoutPlayer) player).getMainScreen().attachPopupScreen(popup);
+    		
+    	}
     }
     
     public Serializable getBlockData(Block block, String key) {

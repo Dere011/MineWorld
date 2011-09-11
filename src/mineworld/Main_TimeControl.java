@@ -413,7 +413,7 @@ public class Main_TimeControl {
 				setTime("world", time + 37700);
 			}
 			if(showRandomInteger(1, 100, rand) < 40) {
-				int randthe = showRandomInteger(1, 5, rand);
+				int randthe = showRandomInteger(1, 6, rand);
 				if(randthe == 1) {
 					plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/dist_explosion_0"+ showRandomInteger(1, 4, rand) +".wav", 50);
 				}else if(randthe == 2) {

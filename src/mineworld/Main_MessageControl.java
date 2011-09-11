@@ -73,20 +73,14 @@ public class Main_MessageControl {
 		}
     }
     
-    public void chatMessage(Player player, Player playerchat, String message, String extratag) {
-    	if(plugin.Main_ContribControl.isClient(player, false)) {
-			boolean tick = (Boolean) plugin.getPlayerConfig(player, "message_tick", "boolean");
-			if(!tick) {
-				plugin.Main_ContribControl.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/beepclear.wav");
-			}
-    	}
-    	Boolean is_modo = ((Boolean) plugin.modo.contains(playerchat.getName()));
-    	Boolean is_correct = ((Boolean) plugin.correct.contains(playerchat.getName()));
-    	Boolean is_anim = ((Boolean) plugin.anim.contains(playerchat.getName()));
-    	Boolean is_admin = ((Boolean) playerchat.isOp());
+    public String format_message(Player player, String message, String extratag) {
+    	Boolean is_modo = ((Boolean) plugin.modo.contains(player.getName()));
+    	Boolean is_correct = ((Boolean) plugin.correct.contains(player.getName()));
+    	Boolean is_anim = ((Boolean) plugin.anim.contains(player.getName()));
+    	Boolean is_admin = ((Boolean) player.isOp());
     	String tag = "";
     	if(extratag == "") {
-    		if(plugin.Main_ContribControl.isClient(playerchat, false)) {
+    		if(plugin.Main_ContribControl.isClient(player, false)) {
     			tag = ChatColor.DARK_GREEN + "[MEMBRE" + ChatColor.GOLD + "+" + ChatColor.DARK_GREEN + "]";
     		}else{
     			tag = ChatColor.DARK_GREEN + "[MEMBRE]";
@@ -105,8 +99,8 @@ public class Main_MessageControl {
     		tag = ChatColor.RED + "[ADMIN]";
     		prepseudo = "" + ChatColor.GOLD;
     	}
-    	if(plugin.Main_ContribControl.isClient(playerchat, false)) {
-	    	int color = (Integer) plugin.getPlayerConfig(playerchat, "plus.color", "int");
+    	if(plugin.Main_ContribControl.isClient(player, false)) {
+	    	int color = (Integer) plugin.getPlayerConfig(player, "plus.color", "int");
 	    	if(color != 0) {
 	    		if(color == 1) {
 	    			prepseudo = "" + ChatColor.BLUE;
@@ -117,37 +111,51 @@ public class Main_MessageControl {
 	    		}
 	    	}
     	}
-    	player.sendMessage(tag + " " + ChatColor.WHITE + "" + prepseudo + "" + playerchat.getName() + ChatColor.WHITE + " > " + message);
+    	return tag + " " + ChatColor.WHITE + "" + prepseudo + "" + player.getName() + ChatColor.WHITE + " > " + message;
+    }
+    
+    public void chatMessage(Player player, Player playerchat, String message) {
+    	if(plugin.Main_ContribControl.isClient(player, false)) {
+			boolean tick = (Boolean) plugin.getPlayerConfig(player, "message_tick", "boolean");
+			if(!tick) {
+				plugin.Main_ContribControl.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/beepclear.wav");
+			}
+    	}
+    	player.sendMessage(message);
     }
 
     public void chatMessageToAll(Player player, String txt) {
+    	txt = format_message(player, txt, "");
 		for (Player p : plugin.getServer().getOnlinePlayers()) {
 			if(p.isOnline()) {
-				chatMessage(p, player, txt, "");
+				chatMessage(p, player, txt);
 			}
 		}
     }
     
     public void chatMessageToAllVisiteur(Player player, String txt) {
+    	txt = format_message(player, txt, "[VISITEUR]");
 		for (Player p : plugin.getServer().getOnlinePlayers()) {
 			if(p.isOnline() && (plugin.correct.contains(p.getName()) || plugin.anim.contains(p.getName()) || plugin.modo.contains(p.getName()) || p.isOp() || plugin.iv_chat.contains(p) || plugin.Main_Visiteur.is_visiteur(p))) {
-				chatMessage(p, player, txt, "[VISITEUR]");
+				chatMessage(p, player, txt);
 			}
 		}
     }
     
     public void chatMessageToAllFreeBuild(Player player, String txt) {
+    	txt = format_message(player, txt, "[FREEBUILD]");
 		for (Player p : plugin.getServer().getOnlinePlayers()) {
 			if(p.isOnline() && (p.isOp() || plugin.Main_PlayerListener.is_freebuild(p))) {
-				chatMessage(p, player, txt, "[FREEBUILD]");
+				chatMessage(p, player, txt);
 			}
 		}
     }  
     
     public void chatMessageToAllNonVisiteur(Player player, String txt) {
+    	txt = format_message(player, txt, "");
 		for (Player p : plugin.getServer().getOnlinePlayers()) {
 			if(p.isOnline() && !plugin.Main_Visiteur.is_visiteur(p)) {
-				chatMessage(p, player, txt, "");
+				chatMessage(p, player, txt);
 			}
 		}
     }

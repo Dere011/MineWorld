@@ -6,16 +6,13 @@ import java.util.Random;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Slime;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.inventory.ItemStack;
 import me.desmin88.mobdisguise.api.*;
 import me.taylorkelly.bigbrother.datablock.Chat;
 
@@ -23,99 +20,90 @@ public class Main_EntityListener extends EntityListener {
 
 	private final Main plugin;
 	private final Random rand = new Random();
+	private Map<Entity, String> damagernodrop = new HashMap<Entity, String>();
 	private Map<Entity, String> damagerList = new HashMap<Entity, String>();
-	public int mort = 0;
 
     public Main_EntityListener(Main parent) {
     	this.plugin = parent;
     }
-    
-	private static int showRandomInteger(int aStart, int aEnd, Random aRandom){
-	    if ( aStart > aEnd ) {
-	      throw new IllegalArgumentException("Start cannot exceed End.");
-	    }
-	    long range = (long)aEnd - (long)aStart + 1;
-	    long fraction = (long)(range * aRandom.nextDouble());
-	    int randomNumber =  (int)(fraction + aStart);
-	    return randomNumber;
-	}
     
     public void onEntityDeath(EntityDeathEvent event) {
 		if(plugin.move_last.containsKey(event.getEntity())) {
 			plugin.move_last.remove(event.getEntity());
 		}
 		if (event.getEntity() instanceof Player) {
-			plugin.Main_ContribControl.sendSoundEffectToAllToLocation(event.getEntity().getLocation(), "http://mineworld.fr/contrib/sound/DeathScream0"+showRandomInteger(1, 9, rand)+".wav");
+			if(damagerList != null && damagerList.containsKey(event.getEntity())) {
+				String type = damagerList.get(event.getEntity());
+				String name = ((Player) event.getEntity()).getName();
+				if(type == "DROWNING") {
+					plugin.MC.sendMessageToAll(name + "vient de se noyer.");
+				}else if(type == "FALL") {
+					plugin.MC.sendMessageToAll(name + "vient de s'écraser au sol.");
+				}else if(type == "SUFFOCATION") {
+					plugin.MC.sendMessageToAll(name + "s'est étouffé.");
+				}else if(type == "FIRE" || type == "FIRE_TICK") {
+					plugin.MC.sendMessageToAll(name + "a pris feu.");
+				}
+			}
+			plugin.CC.sendSoundEffectToAllToLocation(event.getEntity().getLocation(), "http://mineworld.fr/contrib/sound/DeathScream0"+ plugin.D.showRandomInteger(1, 9, rand)+".wav");
 			if(MobDisguiseAPI.isDisguised((Player) event.getEntity())) {
 				MobDisguiseAPI.undisguisePlayerAsPlayer((Player) event.getEntity(), "zombie");
 			}
-			if(plugin.Main_PlayerListener.is_alco((Player) event.getEntity())) {
-				plugin.Main_PlayerListener.remove_alco((Player) event.getEntity());
+			if(plugin.PL.is_alco((Player) event.getEntity())) {
+				plugin.PL.remove_alco((Player) event.getEntity());
 			}
-			if(plugin.Main_TimeControl.horde) {
-				mort++;
-				plugin.Main_ContribControl.sendSoundToAll("http://mineworld.fr/contrib/sound/zombiechoir_0"+showRandomInteger(1, 7, rand)+".wav");
-				if(plugin.Main_TimeControl.is_goule.contains((Player) event.getEntity())) {
-					plugin.Main_TimeControl.is_goule.add((Player) event.getEntity());
-				}
-				if(plugin.Main_TimeControl.player_horde.contains(event.getEntity())) {
-					plugin.Main_TimeControl.player_horde.remove(event.getEntity());
-					if(showRandomInteger(1, 10, rand) == 10) {
-						plugin.can_horde.add((Player) event.getEntity());
-						plugin.Main_TimeControl.is_goule.add((Player) event.getEntity());
-						plugin.Main_ContribControl.sendSoundToAll("http://mineworld.fr/contrib/sound/orch_hit_csharp_short.wav");
-						plugin.Main_MessageControl.sendTaggedMessageToAll(ChatColor.GREEN + ((Player) event.getEntity()).getName() + " est devenu une " + ChatColor.RED + " goule " + ChatColor.GREEN + " !", 1, "[HORDE]");
-						Chat bb = new Chat((Player) plugin.zombie, ((Player) event.getEntity()).getName() + " est devenu une goule.", "world");
-						bb.send();
+			if(plugin.TC.horde) {
+				plugin.H.mort++;
+				plugin.H.gouleToPlayer((Player) event.getEntity());
+				if(plugin.TC.player_horde.contains(event.getEntity())) {
+					plugin.TC.player_horde.remove(event.getEntity());
+					if(plugin.D.showRandomInteger(1, 10, rand) == 10) {
+						plugin.H.playerTogoule((Player) event.getEntity());
 					}
 				}
-				if(showRandomInteger(1, 10, rand) == 10) {
-					ItemStack cadavre = plugin.Main_ContribControl.sp.getItemManager().getCustomItemStack(13373, 1);
-					event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), cadavre);
+				if(plugin.D.showRandomInteger(1, 10, rand) == 10) {
+					plugin.I.drop(event.getEntity().getLocation(), 13374);
 				}
+				plugin.CC.sendSoundToAll("http://mineworld.fr/contrib/sound/zombiechoir_0"+plugin.D.showRandomInteger(1, 7, rand)+".wav");
 			}else{
-				if(showRandomInteger(1, 50, rand) == 10) {
-					ItemStack cadavre = plugin.Main_ContribControl.sp.getItemManager().getCustomItemStack(13372, 1);
-					event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), cadavre);
+				if(plugin.D.showRandomInteger(1, 50, rand) == 10) {
+					plugin.I.drop(event.getEntity().getLocation(), 13373);
 				}
 			}
 		}
-		if(event.getEntity() instanceof Slime) {
-			event.getDrops().clear();
-		}
 		if(damagerList == null || !damagerList.containsKey(event.getEntity())) return;
-		if(damagerList.get(event.getEntity()).contains("NONONO") && showRandomInteger(1, 5, rand) != 5) {
+		if(damagerList.get(event.getEntity()).contains("NONONO") && plugin.D.showRandomInteger(1, 5, rand) != 5) {
 			event.getDrops().clear();
 		}
 		damagerList.remove(event.getEntity());
     }
     
     public void onEntityDamage(EntityDamageEvent event) {
-    	if (event.getEntity() instanceof Creature) {
-	    	switch(event.getCause()) {
-		    	case DROWNING:
-		    		damagerList.put(event.getEntity(), "NONONO");
-		    		break;
-		    	case FALL:
-		    		damagerList.put(event.getEntity(), "NONONO");
-		    		break;
-		    	case SUFFOCATION:
-		    		damagerList.put(event.getEntity(), "NONONO");
-		    		break;
-		    	case FIRE:
-		    		damagerList.put(event.getEntity(), "NONONO");
-		    		break;
-		    	case FIRE_TICK:
-		    		damagerList.put(event.getEntity(), "NONONO");
-		    		break;
-		    	default:
-		    		if(damagerList.get(event.getEntity()) != null) {
-		    			damagerList.remove(event.getEntity());
-		    		}
-	    	}
-	    	if (event.getEntity() instanceof Slime) {
-	    		damagerList.put(event.getEntity(), "NONONO");
-	    	}
+    	switch(event.getCause()) {
+	    	case DROWNING:
+	    		damagernodrop.put(event.getEntity(), "DROWNING");
+	    		damagerList.put(event.getEntity(), "DROWNING");
+	    		break;
+	    	case FALL:
+	    		damagernodrop.put(event.getEntity(), "FALL");
+	    		damagerList.put(event.getEntity(), "FALL");
+	    		break;
+	    	case SUFFOCATION:
+	    		damagernodrop.put(event.getEntity(), "SUFFOCATION");
+	    		damagerList.put(event.getEntity(), "SUFFOCATION");
+	    		break;
+	    	case FIRE:
+	    		damagernodrop.put(event.getEntity(), "FIRE");
+	    		damagerList.put(event.getEntity(), "FIRE");
+	    		break;
+	    	case FIRE_TICK:
+	    		damagernodrop.put(event.getEntity(), "FIRE_TICK");
+	    		damagerList.put(event.getEntity(), "FIRE_TICK");
+	    		break;
+	    	default:
+	    		if(damagerList.get(event.getEntity()) != null) {
+	    			damagerList.remove(event.getEntity());
+	    		}
     	}
 	    if (event instanceof EntityDamageByEntityEvent) {
 	    	EntityDamageByEntityEvent dmgByEntity = (EntityDamageByEntityEvent) event;

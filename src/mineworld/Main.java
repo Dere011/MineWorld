@@ -60,6 +60,25 @@ public class Main extends JavaPlugin {
     public Main_TimeControl Main_TimeControl;
     public Main_ChunkControl Main_ChunkControl;
     public Main_ChunkListener Main_ChunkListener;
+    public Main_Divers Main_Divers;
+    public Main_Horde Main_Horde;
+    public Main_Items Main_Items;
+    
+    public Main_ContribControl CC;
+    public Main_TimeControl TC;
+    public Main_ChunkControl CHC;
+    public Main_ShopSystem SHS;
+    public Main_CommandsControl CMD;
+    public Main_MessageControl MC;
+    public Main_EntityListener EL;
+    public Main_PlayerListener PL;
+    public Main_MoveControl MVC;
+    public Main_BlockListener BL;
+    public Main_Visiteur V;
+    public Main_ChunkListener CL;
+    public Main_Divers D;
+    public Main_Horde H;
+    public Main_Items I;
     
     public List<String> modo = new ArrayList<String>();
     public List<String> correct = new ArrayList<String>();
@@ -116,6 +135,8 @@ public class Main extends JavaPlugin {
     public static Entity spider;
     public static int mobcycle = 0;
     
+    public static String BEEP_ERROR = "http://mineworld.fr/contrib/sound/beeperror.wav";
+    
     public Boolean maintenance_status = false;
     public String maintenance_message = "Notre serveur est actuellement en maintenance.";
     
@@ -135,6 +156,25 @@ public class Main extends JavaPlugin {
         Main_BlockListener = new Main_BlockListener(this);
         Main_Visiteur = new Main_Visiteur(this);
         Main_ChunkListener = new Main_ChunkListener(this);
+        Main_Divers = new Main_Divers(this);
+        Main_Horde = new Main_Horde(this);
+        Main_Items = new Main_Items(this);
+        
+        CC = Main_ContribControl;
+        TC = Main_TimeControl;
+        CHC = Main_ChunkControl;
+        SHS = Main_ShopSystem;
+        CMD = Main_CommandsControl;
+        MC = Main_MessageControl;
+        EL = Main_EntityListener;
+        PL = Main_PlayerListener;
+        MVC = Main_MoveControl;
+        BL = Main_BlockListener;
+        V = Main_Visiteur;
+        CL = Main_ChunkListener;
+        D = Main_Divers;
+        H = Main_Horde;
+        I = Main_Items;
         
         pm.registerEvent(Type.PLAYER_JOIN, Main_PlayerListener, Priority.Normal, this); 
         pm.registerEvent(Type.PLAYER_QUIT, Main_PlayerListener, Priority.Normal, this); 
@@ -142,7 +182,6 @@ public class Main extends JavaPlugin {
         pm.registerEvent(Type.PLAYER_TELEPORT, Main_PlayerListener, Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_PRELOGIN, Main_PlayerListener, Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_CHAT, Main_PlayerListener, Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_TOGGLE_SNEAK, Main_PlayerListener, Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_COMMAND_PREPROCESS, Main_PlayerListener, Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_PICKUP_ITEM, Main_PlayerListener, Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_MOVE, Main_PlayerListener, Priority.Normal, this);
@@ -168,20 +207,6 @@ public class Main extends JavaPlugin {
 		}
     	
         logger.log(Level.INFO, pdfFile.getName() + " version " + pdfFile.getVersion() + " enabled.");
-    }
-    
-    public void freeze(final Player player, Long time) {
-		if(!block_player.contains(player)) {
-			block_player.add(player);
-		}
-    	player.getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			public void run()
-			{
-				if(block_player.contains(player)) {
-					block_player.remove(player);
-				}
-			}
-    	}, (long) time);
     }
     
 	public Runnable runThread_01() {
@@ -634,13 +659,6 @@ public class Main extends JavaPlugin {
 				}
 			}
 		}	
-    }
-    
-    public Boolean is_spy(Player player) {
-    	if(spy_player.contains(player)) {
-    		return true;
-    	}
-    	return false;
     }
     
     public void do_cron_05() { 
