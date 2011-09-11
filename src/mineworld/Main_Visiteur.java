@@ -74,9 +74,11 @@ public class Main_Visiteur {
 			if(p.isOnline() && (!p.isOp() && !plugin.modo.contains(p.getName()))) {
 				for (Entity ent : p.getNearbyEntities(35, 35, 35)) {
 					if (ent instanceof Player) {
-						if(!plugin.is_spy((Player) ent) && !plugin.isbot((Player) ent) && is_visiteur((Player) ent) != is_visiteur(p)) {
-							CraftPlayer unHide = (CraftPlayer) p;
-							CraftPlayer unHideFrom = (CraftPlayer) ent;
+						if(!plugin.is_spy((Player) ent) && !plugin.isbot((Player) ent)) { continue; }
+						if(is_visiteur(p) && !is_visiteur((Player) ent)) { continue; }
+						if(!is_visiteur(p) && is_visiteur((Player) ent) && !plugin.iv_do.contains(p)) {
+							CraftPlayer unHide 		= (CraftPlayer) p;
+							CraftPlayer unHideFrom 	= (CraftPlayer) ent;
 							unHide.getHandle().netServerHandler.sendPacket(new Packet29DestroyEntity(unHideFrom.getEntityId()));
 						}
 					}

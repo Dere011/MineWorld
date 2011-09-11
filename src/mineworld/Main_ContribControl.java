@@ -1,7 +1,10 @@
 package mineworld;
 
+import java.io.Serializable;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -17,6 +20,20 @@ public class Main_ContribControl {
 	
     public Main_ContribControl(Main parent) {
     	plugin = parent;
+    }
+    
+    public Serializable getBlockData(Block block, String key) {
+    	if(plugin.contrib) {
+    		return SpoutManager.getChunkDataManager().getBlockData(key, block.getWorld(), block.getX(), block.getY(), block.getZ());
+    	}else{
+    		return null;
+    	}
+    }
+    
+    public void setBlockData(Block block, String key, Serializable value) {
+    	if(plugin.contrib) {
+    		SpoutManager.getChunkDataManager().setBlockData(key, block.getWorld(), block.getX(), block.getY(), block.getZ(), value);
+    	}
     }
     
     public void sendSoundToAll(String url) {

@@ -108,7 +108,7 @@ public class Main_CommandsControl {
 	    				p.sendMessage(ChatColor.DARK_GRAY + "[Sauvegarde du serveur en cours]");
 	    			}
 	    		}
-	    		plugin.Main_ContribControl.sendNotificationToAll("Notification", "Sauvegarde du serveur...", Material.FLINT_AND_STEEL);
+	    		plugin.Main_ContribControl.sendNotificationToAll("Notification", "Sauvegarde du serveur.", Material.FLINT_AND_STEEL);
 	    		return false;
 	        }
     	}
@@ -222,11 +222,11 @@ public class Main_CommandsControl {
 				plugin.setPlayerConfig(player, "remove_me", true);
 				player.kickPlayer("Merci de votre visite sur MineWorld.");
 				return true;
-			/*}else if (subCommand.equals("shop")) {
+			}else if (subCommand.equals("shop")) {
 				if(plugin.Main_ContribControl.isClient(player, true)) {
 					shop.shop(player, args);
 				}
-				return true;*/
+				return true;
 			}else if (subCommand.equals("money")) {
 				if(plugin.Main_ContribControl.isClient(player, true)) {
 					shop.getmoney(player);
@@ -234,8 +234,7 @@ public class Main_CommandsControl {
 				return true;
 			}else if (subCommand.equals("moneyhorde")) {
 				if(plugin.Main_ContribControl.isClient(player, true)) {
-					plugin.Main_TimeControl.hordedone();
-					
+					plugin.Main_TimeControl.hordedone();	
 				}
 				return true;
 			}else if (subCommand.equals("visiteur")) {

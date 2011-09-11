@@ -6,12 +6,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+import net.citizensnpcs.api.CitizensManager;
+import net.citizensnpcs.resources.npclib.HumanNPC;
+import net.citizensnpcs.resources.npclib.NPCList;
 import net.minecraft.server.Packet29DestroyEntity;
-import npcspawner.BasicHumanNpc;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -54,7 +57,6 @@ public class Main extends JavaPlugin {
     public Main_MessageControl Main_MessageControl;
     public Main_ShopSystem Main_ShopSystem;
     public Main_ContribControl Main_ContribControl;
-    public Main_NPC Main_NPC;
     public Main_TimeControl Main_TimeControl;
     public Main_ChunkControl Main_ChunkControl;
     public Main_ChunkListener Main_ChunkListener;
@@ -68,6 +70,9 @@ public class Main extends JavaPlugin {
     public List<Player> can_horde = new ArrayList<Player>();
     public Map<Player, Integer> last_move = new HashMap<Player, Integer>();
     public List<Player> spy_player = new ArrayList<Player>();
+    public List<Player> in_dark = new ArrayList<Player>();
+    public List<Player> iv_chat = new ArrayList<Player>();
+    public List<Player> iv_do = new ArrayList<Player>();
     
     public Map<Entity, Block> move_last = new HashMap<Entity, Block>();
     
@@ -84,7 +89,7 @@ public class Main extends JavaPlugin {
 	Configuration conf_server = new Configuration(Server_configFile);
 	Configuration conf_items = new Configuration(ITEM_configFile);
 	
-	public Boolean npc_is_first_loaded = false;
+	public Boolean is_first_loaded = false;
 	private Boolean debug_enable = false;
 	public Boolean contrib = true;
 	
@@ -118,7 +123,6 @@ public class Main extends JavaPlugin {
     	PluginManager pm = getServer().getPluginManager();
     	PluginDescriptionFile pdfFile = getDescription();
 
-        Main_NPC = new Main_NPC(this);
         Main_ContribControl = new Main_ContribControl(this);
         Main_TimeControl = new Main_TimeControl(this);
         Main_ChunkControl = new Main_ChunkControl(this);
@@ -296,9 +300,6 @@ public class Main extends JavaPlugin {
 	            return false;
 	        }
 	        Main_CommandsControl.Main_onCommand_do(sender, command, commandLabel, args);
-	    	if(sender instanceof Player) {
-	    		Main_NPC.NPC_onCommand_do(sender, command, commandLabel, args);
-	    	}
 	        return true;
 	    } catch (Exception e) {
 	        sender.sendMessage("[MINEWORLD] Une erreur est survenue.");
@@ -310,7 +311,6 @@ public class Main extends JavaPlugin {
     
     public void onDisable() {
         try {
-        	Main_NPC.HumanNPCList.removeAllNpc();
             logger.log(Level.INFO, "MineWorld disabled.");
         } catch (Exception e) {
             logger.log(Level.WARNING, "MineWorld : error: " + e.getMessage() + e.getStackTrace().toString());
@@ -348,7 +348,7 @@ public class Main extends JavaPlugin {
     }
     
     public boolean isbot(Player p) {
-        BasicHumanNpc npc = Main_NPC.HumanNPCList.getBasicHumanNpc(p);
+        HumanNPC npc = CitizensManager.get(p);
         if (npc != null) {
     		return true;
     	}else{
@@ -358,23 +358,21 @@ public class Main extends JavaPlugin {
     
     public void do_cron_01() {
     	if(playerInServer()) {
-			/*if(cron_tick_heal > 15) {
+			if(cron_tick_heal > 15) {
 				Boolean isgood = true;
 				Boolean onlyvisitor = true;
 				cron_tick_heal = 0;
 				for (Player p : getServer().getOnlinePlayers()) {
-			    	if (Main_Visiteur.is_visiteur(p)) {
+			    	if (Main_Visiteur.is_visiteur(p) || !p.getWorld().getName().contains("world")) {
 			    		continue;
 			    	}
 			    	onlyvisitor = false;
-					if(p.) {
+					if(p.isSleeping()) {
 						if(p.getHealth() < 10) {
 							p.setHealth(p.getHealth()+1);
 						}
 					}else{
-						if(p.getWorld().getName().contains("world")) {
-							isgood = false;
-						}
+						isgood = false;
 					}
 				}
 				if(isgood && !onlyvisitor) {
@@ -384,7 +382,7 @@ public class Main extends JavaPlugin {
 			}else{
 				cron_tick_heal++;
 			}
-			lastplayerleft = 0;*/
+			lastplayerleft = 0;
     	}else{
 			if(lastplayerleft > 500) {
 				lastplayerleft = 0;
@@ -414,6 +412,32 @@ public class Main extends JavaPlugin {
 			    		}
     				}
     			}
+    			if(!Main_TimeControl.horde) {
+    	    		NPCList npclist = CitizensManager.getList();
+    	    		int i = 0;
+    	    		for(final Entry<Integer, HumanNPC> npc : npclist.entrySet()){
+    	    			i++;
+    	    			if(npc != null) {
+    		            		getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+    							public void run()
+    							{
+    								if(zombie == null) {
+	    								if(npc.getValue().getName() == "zombie") {
+	    									zombie = npc.getValue().getPlayer();
+	    								}else if(npc.getValue().getName() == "chicken") {
+	    									chicken = npc.getValue().getPlayer();
+	    								}else if(npc.getValue().getName() == "spider") {
+	    									spider = npc.getValue().getPlayer();
+	    								}else if(npc.getValue().getName() == "slime") {
+	    									slime = npc.getValue().getPlayer();
+	    								}
+    								}
+    								Main_ContribControl.setPlayerSkin(npc.getValue().getPlayer(), "http://mineworld.fr/contrib/skin/"+npc.getValue().getName().toLowerCase()+".png");
+    							}
+    		            	}, (long) 30);
+    	    			}
+    	    		}
+        		}
     		}else{
     			cron_tick_extra++;
     		}
@@ -475,7 +499,7 @@ public class Main extends JavaPlugin {
 					int ppresences = conf_player.getInt("load-player."+ p.getName() +".ppresences", 0);
 					Main_MessageControl.sendTaggedMessage(p, "Vous avez reçut "+ ChatColor.DARK_GREEN + "1 point"+ ChatColor.WHITE + " de présence.", 1, "");
 					Main_ContribControl.sendNotification(p, "MONEY Transaction", "+1 PPoint(s)");
-					Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/reward.wav");
+					Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/money.wav");
 					ppresences++;
 					setPlayerConfig(p, "ppresences", ppresences);
 				}
@@ -494,7 +518,7 @@ public class Main extends JavaPlugin {
 	    				if (e instanceof Zombie) {
 	    					Integer random = showRandomInteger(1, 40, rand);
 	    					if(Main_TimeControl.horde) {
-	    						random = showRandomInteger(1, 15, rand);
+	    						random = showRandomInteger(1, 10, rand);
 	    					}
 		    				if(random == 5) {
 		    					for (Entity entity : e.getNearbyEntities(24, 24, 24)) {
@@ -519,7 +543,7 @@ public class Main extends JavaPlugin {
 	    				}else if(e instanceof Creeper){
 	    					Integer random = showRandomInteger(1, 40, rand);
 	    					if(Main_TimeControl.horde) {
-	    						random = showRandomInteger(1, 15, rand);
+	    						random = showRandomInteger(1, 10, rand);
 	    					}
 		    				if(random == 5 && ((Creature) e).getTarget() == null) {
 		    					for (Entity entity : e.getNearbyEntities(50, 50, 50)) {
@@ -539,7 +563,7 @@ public class Main extends JavaPlugin {
 	    				}else if(e instanceof Skeleton){
 	    					Integer random = showRandomInteger(1, 40, rand);
 	    					if(Main_TimeControl.horde) {
-	    						random = showRandomInteger(1, 15, rand);
+	    						random = showRandomInteger(1, 10, rand);
 	    					}
 		    				if(random == 5 && ((Creature) e).getTarget() == null) {
 		    					for (Entity entity : e.getNearbyEntities(50, 50, 50)) {
@@ -648,9 +672,6 @@ public class Main extends JavaPlugin {
 		
     	// Visiteur
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_Visiteur.runThread_1(this), 1, 25); 
-
-    	// NPC
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_NPC.runThread(this), 1, 10);
     	
     	// TIMECONTROL
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, Main_TimeControl.runThread_meteo(this), 1, 10);
@@ -691,7 +712,7 @@ public class Main extends JavaPlugin {
     
     public Object getServerConfig(String name, String type) {
     	conf_server.load();
-    	if(type == "int") {
+    	if(type == "int" || type == "integer") {
     		return conf_server.getInt(name, 0);
     	}else if(type == "string") {
     		return conf_server.getString(name);

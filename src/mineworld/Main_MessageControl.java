@@ -130,11 +130,19 @@ public class Main_MessageControl {
     
     public void chatMessageToAllVisiteur(Player player, String txt) {
 		for (Player p : plugin.getServer().getOnlinePlayers()) {
-			if(p.isOnline() && (plugin.correct.contains(p.getName()) || plugin.anim.contains(p.getName()) || plugin.modo.contains(p.getName()) || p.isOp() || plugin.Main_Visiteur.is_visiteur(p))) {
+			if(p.isOnline() && (plugin.correct.contains(p.getName()) || plugin.anim.contains(p.getName()) || plugin.modo.contains(p.getName()) || p.isOp() || plugin.iv_chat.contains(p) || plugin.Main_Visiteur.is_visiteur(p))) {
 				chatMessage(p, player, txt, "[VISITEUR]");
 			}
 		}
     }
+    
+    public void chatMessageToAllFreeBuild(Player player, String txt) {
+		for (Player p : plugin.getServer().getOnlinePlayers()) {
+			if(p.isOnline() && (p.isOp() || plugin.Main_PlayerListener.is_freebuild(p))) {
+				chatMessage(p, player, txt, "[FREEBUILD]");
+			}
+		}
+    }  
     
     public void chatMessageToAllNonVisiteur(Player player, String txt) {
 		for (Player p : plugin.getServer().getOnlinePlayers()) {
@@ -159,8 +167,8 @@ public class Main_MessageControl {
     public void sendVisiteurMsg(Player p) {
     	String mineworldtag = getTag(p);
 		p.sendMessage(ChatColor.GOLD + "################## "+mineworldtag+" "+ ChatColor.GOLD +"##################");
-    	p.sendMessage(ChatColor.DARK_GRAY + "Votre compte est en accès limité (Compte Visiteur).");
-    	p.sendMessage(ChatColor.DARK_GRAY + "Les visiteurs ne peuvent pas voir les membres et inversement.");
+    	p.sendMessage(ChatColor.DARK_GRAY + "Votre compte est actuellement en accès limité (Compte Visiteur).");
+    	p.sendMessage(ChatColor.DARK_GRAY + "Les visiteurs peuvent voir les membres, mais ils ne peuvent pas vous voir.");
     	p.sendMessage(ChatColor.DARK_GRAY + "Le chat du serveur est séparé pour les deux groupes.");
     	p.sendMessage(ChatColor.DARK_GRAY + "L'inscription WhiteList est disponible sur notre site.");
     	p.sendMessage(ChatColor.DARK_GRAY + "Bonne visite sur MineWorld.");

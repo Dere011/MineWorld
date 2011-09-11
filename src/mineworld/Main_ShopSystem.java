@@ -61,8 +61,8 @@ public class Main_ShopSystem {
     }
     
 	public void shop(Player player, String[] args) {
-		if(args.length > 0 && args[1].equals("color")) {
-			if(args.length > 1) {
+		if(args[1] != null && args[1].equals("color")) {
+			if(args[2] != null) {
 				if(args[2].equals("bleu")) {
 					if(canafford(player, 1, 100, true)) {
 						wait_confirm(player, 1);

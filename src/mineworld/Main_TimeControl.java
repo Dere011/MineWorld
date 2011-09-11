@@ -6,7 +6,6 @@ import java.util.Random;
 
 import me.desmin88.mobdisguise.api.MobDisguiseAPI;
 import me.taylorkelly.bigbrother.datablock.Chat;
-import npcspawner.BasicHumanNpcList;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -59,21 +58,14 @@ public class Main_TimeControl {
 	public boolean in_cycle = false;
 	private long next_cycle = 0;
 	private int cycle_id = 0;
-	//private long last_deadsun = 0;
+	
+	public boolean dead_sun = false;
 	
 	// HORDE
-	private long last_horde = 0;
+	//private long last_horde = 0;
 	private long horde_uid = 0;
 	public boolean horde = false;
 	public boolean prehorde = false;
-    
-    public boolean dead_sun = false;
-    public boolean pre_dead_sun = false;
-    public boolean prepre_dead_sun = false;
-    public int dead_sun_tick = 0;
-    public int dead_sun_next = showRandomInteger(5000, 25000, rand);
-    //private long deadsun_uid = 0;
-    //private long next_dura = 0;
     
     public Main_TimeControl(Main parent) {
         this.plugin = parent;
@@ -280,7 +272,6 @@ public class Main_TimeControl {
 			}
 			plugin.Main_ContribControl.bool_clouds(true);
 			plugin.Main_ContribControl.set_fog(RenderDistance.TINY);
-			//plugin.Main_ContribControl.h_clouds(storm_force*5);
 			Chat bb = new Chat((Player) plugin.chicken, "Un orage de force "+storm_force+" "+wind_what+" vents violent tombe sur MineWorld.", "world");
 			bb.send();
 		}
@@ -346,7 +337,6 @@ public class Main_TimeControl {
 				wind = false;
 			}
 			plugin.Main_ContribControl.bool_clouds(true);
-			//plugin.Main_ContribControl.h_clouds(rain_force*3);
 			plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/rur5b_cricket_loopl.wav");
 			Chat bb = new Chat((Player) plugin.chicken, "La pluie tombe sur MineWorld.", "world");
 			bb.send();
@@ -358,91 +348,6 @@ public class Main_TimeControl {
 			}
 		}
 	}
-	
-	/*private void cycle_deadsun() {
-		if(deadsun_uid != cycle_uid) {
-			cycle_start = plugin.timetamps;
-			cycle_end = (plugin.timetamps+showRandomInteger((60*1), (60*10), rand));
-			deadsun_uid = cycle_uid;
-		}
-		long time = plugin.getServer().getWorld("world").getTime();
-		time = time - time % 24000;
-		if(plugin.timetamps < (cycle_start+10) && (!prepre_dead_sun && !pre_dead_sun && !dead_sun)) {
-			for (BasicHumanNpc entry : plugin.Main_NPC.HumanNPCList.GetNPCS()) {
-				if(entry.getBukkitEntity().getWorld().getName() == "world") {
-					plugin.Main_ContribControl.sendSoundEffectToAllToLocation(entry.getBukkitEntity().getLocation(), "http://mineworld.fr/contrib/sound/ohno.ogg");
-				}
-			}
-			prepre_dead_sun = true;
-		}else if(plugin.timetamps >= (cycle_start+10) && plugin.timetamps < (cycle_start+15) && (!pre_dead_sun && !dead_sun)) {
-			plugin.Main_ChunkControl.ResendAll.clear();
-			plugin.Main_ChunkControl.player_chunkupdate.clear();
-			plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/multibeep.wav");
-			plugin.Main_ContribControl.setSunURLtoAll("http://mineworld.fr/contrib/sun/deadsunsun.png");
-			pre_dead_sun = true;
-		}else if((plugin.timetamps >= (cycle_start+15) && plugin.timetamps < (cycle_start+20)) && !dead_sun) {
-			dead_sun = true;
-			pre_dead_sun = false;
-			prepre_dead_sun = false;
-			plugin.Main_MessageControl.sendTaggedMessageToAll(ChatColor.RED + "Attention, le DeadSun est là !", 1, "[DEAD SUN]");
-			plugin.Main_ContribControl.sendNotificationToAll("Attention", "Le DeadSun est là!", Material.FIRE);
-			Chat bb = new Chat((Player) plugin.chicken, "Le deadsun est là :D", "world");
-			bb.send();
-			int music_id = showRandomInteger(1, 4, rand);
-			plugin.Main_ContribControl.sendSoundToAll("http://mineworld.fr/contrib/sound/deadsun_"+music_id+".ogg");
-			setTime("world", time + 24000);
-		}else if(plugin.timetamps >= (cycle_start+20) && plugin.timetamps < (cycle_end-20)) {
-			if(isStorm() || isThundering()) {
-		    	setStorm(false);
-		    	setThundering(false);
-			}
-			if(!isDay()) {
-				setTime("world", time + 24000);
-			}
-			for (Player p : plugin.getServer().getOnlinePlayers()) {
-				if(plugin.Main_Visiteur.is_visiteur(p) || p.isOp()) {
-					continue;
-				}
-				if(p.getWorld().getHighestBlockYAt(p.getLocation()) <= (p.getLocation().getBlockY()+2) && p.getLocation().getBlock().getLightLevel() >= 10) {
-					ItemStack helmet = p.getInventory().getHelmet();
-					ItemStack legg = p.getInventory().getLeggings();
-					ItemStack chest = p.getInventory().getChestplate();
-					ItemStack boot = p.getInventory().getBoots();
-					if(boot.getTypeId() == 317 && legg.getTypeId() == 316 && chest.getTypeId() == 315 && helmet.getTypeId() == 314) {
-						if(plugin.timetamps > next_dura) {
-							next_dura = plugin.timetamps+showRandomInteger(15, (60*3), rand);
-							helmet.setDurability((short) (helmet.getDurability()+1));
-							legg.setDurability((short) (helmet.getDurability()+1));
-							chest.setDurability((short) (helmet.getDurability()+1));
-							boot.setDurability((short) (helmet.getDurability()+1));
-							plugin.Main_ContribControl.sendSoundEffectToAllToLocation(p.getLocation(), "http://mineworld.fr/contrib/sound/gascan_ignite1.wav");
-						}
-					}else{
-						p.setFireTicks(250);
-						plugin.Main_ContribControl.sendSoundEffectToAllToLocation(p.getLocation(), "http://mineworld.fr/contrib/sound/Male_Death_"+showRandomInteger(1, 3, rand)+".wav");
-						int aie_lasttime = (Integer) plugin.getPlayerConfig(p, "time_sundead_aie", "int");
-						if((plugin.timetamps-aie_lasttime) > 15) {
-							plugin.Main_MessageControl.sendTaggedMessage(p, "Attention, le DeadSun vous brule !", 1, "[DEAD SUN]");
-							plugin.setPlayerConfig(p, "time_sundead_aie", plugin.timetamps);
-						}
-					}
-				}
-			}
-		}else if(plugin.timetamps >= (cycle_end-20) && plugin.timetamps < cycle_end && dead_sun) {
-    		dead_sun = false;
-			pre_dead_sun = false;
-			prepre_dead_sun = false;
-    		plugin.Main_ContribControl.setSunURLtoAll("http://mineworld.fr/contrib/sun/sun.png");
-			plugin.Main_ChunkControl.ResendAll.clear();
-			plugin.Main_ChunkControl.player_chunkupdate.clear();
-			plugin.Main_ContribControl.stopAllSound();
-			plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/sewerair.wav");
-			plugin.Main_ContribControl.sendNotificationToAll("Information", "Le DeadSun est parti!", Material.WATER);
-			Chat bb = new Chat((Player) plugin.chicken, "Le deadsun est parti...", "world");
-			bb.send();
-    		setTime("world", time + 37700);
-		}
-	}*/
 	
 	private void cycle_horde() {
 		if(horde_uid != cycle_uid) {
@@ -485,11 +390,6 @@ public class Main_TimeControl {
 				plugin.Main_ContribControl.set_fog(RenderDistance.TINY);
 			    setStorm(true);
 			    setThundering(false);
-				if(plugin.Main_NPC.HumanNPCList != null) {
-					plugin.Main_NPC.HumanNPCList.removeAllNpc();
-				}
-				plugin.Main_NPC.HumanNPCList = new BasicHumanNpcList();
-				plugin.Main_NPC.ReloadAllNpcs();
 		}else if(plugin.timetamps >= (cycle_start+25) && plugin.timetamps < (cycle_end-20)) {
 			if(!isStorm() || isThundering()) {
 		    	setStorm(true);
@@ -499,6 +399,8 @@ public class Main_TimeControl {
 				if(!p.getWorld().getName().contains("world")) {
 					player_horde.remove(p);
 				}
+			}
+			for (Player p : plugin.getServer().getOnlinePlayers()) {
 				if (is_goule.contains(p)) {
 	    			plugin.Main_ContribControl.setPlayerTitle(p, ChatColor.DARK_RED.toString() + "Infectée");
 				}else{
@@ -523,7 +425,7 @@ public class Main_TimeControl {
 				}else if(randthe == 5) {
 					plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/dist_pistol_0"+ showRandomInteger(1, 2, rand) +".wav", 30);
 				}else if(randthe == 6) {
-					plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/city_battle"+ showRandomInteger(1, 11, rand) +".wav", 30);
+					plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/city_battle"+ showRandomInteger(1, 19, rand) +".wav", 30);
 				}
 			}
 		}else if(plugin.timetamps >= (cycle_end-20) && plugin.timetamps < cycle_end && horde) {
@@ -563,7 +465,7 @@ public class Main_TimeControl {
 				{
 					plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/survival_teamrec.wav");
 					plugin.Main_MessageControl.sendTaggedMessageToAll(plugin.Main_EntityListener.mort+" morts au total.", 1, "[HORDE]");
-					Chat bb = new Chat((Player) plugin.zombie, "La horde est terminée, nombre de mort pendant cette attaque : "+ plugin.Main_EntityListener.mort+" Morts", "world");
+					Chat bb = new Chat((Player) plugin.zombie, "La horde est terminée, nombre de mort pendant cette attaque : "+ plugin.Main_EntityListener.mort +" Morts", "world");
 					bb.send();
 				}
 		}, (long) 50);
@@ -599,8 +501,17 @@ public class Main_TimeControl {
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			public void run()
 					{
+						int ratio = (Integer) plugin.getServerConfig("horde_ratio", "integer");
+						int heure = (60*60);
+						long next_horde = 0;
+						if(ratio > 5) {
+							next_horde = (plugin.timetamps+showRandomInteger(heure*3, heure*5, rand));
+						}else {
+							next_horde = (plugin.timetamps+showRandomInteger(heure, heure*3, rand));
+						}
+						plugin.setServerConfig("horde_limit", next_horde);
 						plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/pickup_misc42.wav");
-						plugin.Main_MessageControl.sendTaggedMessageToAll("Prochaine attaque dans << INDETERMINEE >>", 1, "[ESTIMATION-HORDE]");
+						plugin.Main_MessageControl.sendTaggedMessageToAll("Prochaine attaque dans << "+ (int) Math.floor(next_horde/60)+" Minutes >>", 1, "[ESTIMATION-HORDE]");
 					}
 		}, (long) 150);
 	}
@@ -611,7 +522,7 @@ public class Main_TimeControl {
 		cycle_id = 5;
 		cycle_end = 0;
 		cycle_start = 0;
-		last_horde = plugin.timetamps;
+		//last_horde = plugin.timetamps;
 		plugin.sendInfo("[CYCLE] New horde cycle ("+cycle_uid+").");
 	}
 	
@@ -620,9 +531,6 @@ public class Main_TimeControl {
 			if(cycle_end != 0 && plugin.timetamps >= cycle_end) {
 			    plugin.sendInfo("[CYCLE] STOP "+cycle_uid+".");
 				in_cycle = false;
-				pre_dead_sun = false;
-				prepre_dead_sun = false;
-				dead_sun = false;
 				horde = false;
 				prehorde = false;
 				next_cycle = (plugin.timetamps+showRandomInteger((60*5), (60*120), rand));
@@ -652,9 +560,6 @@ public class Main_TimeControl {
 							cycle_thewind();
 							cycle_wind();
 							break;
-						//case 5:
-						//	cycle_deadsun();
-						//	break;
 						case 5:
 							cycle_horde();
 							break;
@@ -680,33 +585,16 @@ public class Main_TimeControl {
 					plugin.Main_ContribControl.set_fog(RenderDistance.FAR);
 				    setStorm(false);
 				    setThundering(false);
-				/*}else if(current_gen_id == 5){
-					if(last_deadsun+((60*60)*4) < plugin.timetamps && (plugin.getServer().getOnlinePlayers().length >= 3)) {
-						in_cycle = true;
-						cycle_uid = plugin.timetamps;
-						cycle_id = current_gen_id;
-						cycle_end = 0;
-						cycle_start = 0;
-						last_deadsun = plugin.timetamps;
-						plugin.sendInfo("[CYCLE] New deadsun cycle ("+cycle_uid+").");
-						plugin.Main_ContribControl.bool_clouds(false);
-						plugin.Main_ContribControl.set_fog(RenderDistance.FAR);
-					    setStorm(false);
-					    setThundering(false);
-					}*/
 				}else if(current_gen_id == 5){
-					if(last_horde+((60*60)*2) < plugin.timetamps && (plugin.getServer().getOnlinePlayers().length >= 5)) {
+					int next = (Integer) plugin.getServerConfig("horde_next", "integer");
+					if(next < plugin.timetamps && (plugin.getServer().getOnlinePlayers().length >= 3)) {
 						in_cycle = true;
 						cycle_uid = plugin.timetamps;
 						cycle_id = current_gen_id;
 						cycle_end = 0;
 						cycle_start = 0;
-						last_horde = plugin.timetamps;
+						//last_horde = plugin.timetamps;
 						plugin.sendInfo("[CYCLE] New horde cycle ("+cycle_uid+").");
-						//plugin.Main_ContribControl.bool_clouds(true);
-						//plugin.Main_ContribControl.set_fog(RenderDistance.TINY);
-					    //setStorm(true);
-					    //setThundering(false);
 					}
 				}
 			}else{
