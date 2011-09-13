@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
@@ -80,22 +81,20 @@ public class Main extends JavaPlugin {
     public Main_Horde H;
     public Main_Items I;
     
-    public List<String> modo = new ArrayList<String>();
-    public List<String> correct = new ArrayList<String>();
-    public List<String> anim = new ArrayList<String>();
-    public List<Player> world_whitelist = new ArrayList<Player>();
-    public List<Player> block_player = new ArrayList<Player>();
-    public List<Player> alco_player = new ArrayList<Player>();
-    public List<Player> can_horde = new ArrayList<Player>();
-    public Map<Player, Integer> last_move = new HashMap<Player, Integer>();
-    public List<Player> spy_player = new ArrayList<Player>();
-    public List<Player> in_dark = new ArrayList<Player>();
-    public List<Player> iv_chat = new ArrayList<Player>();
-    public List<Player> iv_do = new ArrayList<Player>();
-    
-    public Map<Entity, Block> move_last = new HashMap<Entity, Block>();
-    
-    public Map<Player, String> last_region = new HashMap<Player, String>();
+    public List<String> modo 				= new ArrayList<String>();
+    public List<String> correct 			= new ArrayList<String>();
+    public List<String> anim 				= new ArrayList<String>();
+    public List<Integer> world_whitelist 	= new ArrayList<Integer>();
+    public List<UUID> block_player 			= new ArrayList<UUID>();
+    public List<UUID> alco_player 			= new ArrayList<UUID>();
+    public List<UUID> can_horde 			= new ArrayList<UUID>();
+    public Map<UUID, Integer> last_move 	= new HashMap<UUID, Integer>();
+    public List<UUID> spy_player 			= new ArrayList<UUID>();
+    public List<UUID> in_dark 				= new ArrayList<UUID>();
+    public List<UUID> iv_chat 				= new ArrayList<UUID>();
+    public List<UUID> iv_do 				= new ArrayList<UUID>();
+    public Map<UUID, Block> move_last 		= new HashMap<UUID, Block>();
+    public Map<UUID, String> last_region 	= new HashMap<UUID, String>();
 
 	protected static File maindir = new File("plugins" + File.separatorChar + "MineWorld");
 	protected File NPC_configFile = new File(maindir, "npc_config.yml");
@@ -266,25 +265,6 @@ public class Main extends JavaPlugin {
 		return this.t_03;
 	}
 	
-	public Runnable runThread_04() {
-		if(this.t_04 == null) {
-			this.t_04 = new Thread(new Runnable() {
-				public void run()
-				{
-			    	try {
-			    		do_cron_04();
-			        } catch (Exception e) {
-			        	e.printStackTrace();
-			        }
-		            return;
-				}
-			});
-			this.t_04.setPriority(Thread.MIN_PRIORITY);
-			this.t_04.setDaemon(true);
-		}
-		return this.t_04;
-	}
-	
 	public Runnable runThread_05() {
 		if(this.t_05 == null) {
 			this.t_05 = new Thread(new Runnable() {
@@ -349,19 +329,6 @@ public class Main extends JavaPlugin {
     		return true;
     	}
     	return false;
-    }
-    
-    public void removeallitems() {
-		for (World w : getServer().getWorlds()) {
-			for (Entity e : w.getEntities()) {
-				if (e instanceof Creature) {
-					((Creature) e).remove();
-				}
-				if (e instanceof Arrow || e instanceof Item) {
-					e.remove();
-				}
-			}
-		}
     }
     
     public boolean ismodo(Player p) {
@@ -634,32 +601,6 @@ public class Main extends JavaPlugin {
     		}
     	}
     }
-	
-    public void do_cron_04() { 
-		if(!world_whitelist.isEmpty()) {
-			for (Player player : world_whitelist) {
-				if(!player.isOnline()) {
-					world_whitelist.remove(player);
-				}
-			}
-		}
-		
-		if(!Main_ChunkControl.PlayerOR.isEmpty()) {
-			for (Player player : Main_ChunkControl.PlayerOR) {
-				if(!player.isOnline()) {
-					Main_ChunkControl.PlayerOR.remove(player);
-				}
-			}
-		}
-		
-		if(!Main_Visiteur.visiteur.isEmpty()) {
-			for (Player player : Main_Visiteur.visiteur) {
-				if(!player.isOnline()) {
-					Main_Visiteur.visiteur.remove(player);
-				}
-			}
-		}	
-    }
     
     public void do_cron_05() { 
     	timetamps();
@@ -682,8 +623,7 @@ public class Main extends JavaPlugin {
     	// Main
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_01(), 1, 10); 
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_02(), 1, 100); 
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_03(), 1, 20); 
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_04(), 1, 5000);
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_03(), 1, 20);
     	
     	// Main - UltraDO
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_05(), 1, 1);

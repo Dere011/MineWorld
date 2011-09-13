@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.server.Packet29DestroyEntity;
 
@@ -16,7 +17,7 @@ import org.bukkit.entity.Player;
 
 public class Main_Visiteur {
 	
-	public List<Player> visiteur = new ArrayList<Player>();
+	public List<UUID> visiteur = new ArrayList<UUID>();
 	public List<String> whitelist = new ArrayList<String>();
 	
 	Main plugin;
@@ -74,7 +75,7 @@ public class Main_Visiteur {
 			if(p.isOnline() && (!p.isOp() && !plugin.modo.contains(p.getName()))) {
 				for (Entity ent : p.getNearbyEntities(35, 35, 35)) {
 					if (ent instanceof Player) {
-						if(!plugin.is_spy((Player) ent) && !plugin.isbot((Player) ent)) { continue; }
+						if(!plugin.D.is_spy((Player) ent) && !plugin.isbot((Player) ent)) { continue; }
 						if(is_visiteur(p) && !is_visiteur((Player) ent)) { continue; }
 						if(!is_visiteur(p) && is_visiteur((Player) ent) && !plugin.iv_do.contains(p)) {
 							CraftPlayer unHide 		= (CraftPlayer) p;
@@ -88,7 +89,7 @@ public class Main_Visiteur {
     }
     
     public Boolean is_visiteur(Player player) {
-    	if (!visiteur.isEmpty() && visiteur.contains(player)) {
+    	if (!visiteur.isEmpty() && visiteur.contains(player.getUniqueId())) {
     		return true;
     	}
     	return false;
@@ -104,22 +105,22 @@ public class Main_Visiteur {
     
     public Boolean add_visiteur(Player player) {
     	if (!visiteur.isEmpty()) {
-	    	if (visiteur.contains(player)) {
+	    	if (visiteur.contains(player.getUniqueId())) {
 	    		return true;
 	    	}else{
-	    		visiteur.add(player);
+	    		visiteur.add(player.getUniqueId());
 	    		return true;
 	    	}
     	}else{
-    		visiteur.add(player);
+    		visiteur.add(player.getUniqueId());
     		return true;
     	}
     }
     
     public Boolean remove_visiteur(Player player) {
     	if (!visiteur.isEmpty()) {
-	    	if (visiteur.contains(player)) {
-	    		visiteur.remove(player);
+	    	if (visiteur.contains(player.getUniqueId())) {
+	    		visiteur.remove(player.getUniqueId());
 	    		return true;
 	    	}else{
 	    		return false;

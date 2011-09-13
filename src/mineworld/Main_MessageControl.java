@@ -145,7 +145,7 @@ public class Main_MessageControl {
     public void chatMessageToAllFreeBuild(Player player, String txt) {
     	txt = format_message(player, txt, "[FREEBUILD]");
 		for (Player p : plugin.getServer().getOnlinePlayers()) {
-			if(p.isOnline() && (p.isOp() || plugin.Main_PlayerListener.is_freebuild(p))) {
+			if(p.isOnline() && (p.isOp() || plugin.D.is_freebuild(p))) {
 				chatMessage(p, player, txt);
 			}
 		}

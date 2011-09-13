@@ -3,6 +3,7 @@
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.logging.Level;
 
 import me.desmin88.mobdisguise.api.MobDisguiseAPI;
@@ -226,7 +227,7 @@ public class Main_PlayerListener extends PlayerListener {
 				event.setCancelled(true);
 				return;
     		}
-			if (event.getPlayer().getItemInHand().getTypeId() == 324 || event.getPlayer().getItemInHand().getTypeId() == 330)
+			if (player.getItemInHand().getTypeId() == 324 || player.getItemInHand().getTypeId() == 330)
     	    {
     		    if (event.getClickedBlock().getRelative(event.getBlockFace()).getRelative(BlockFace.UP).getRelative(BlockFace.NORTH).getType() == Material.CACTUS)
         		{
@@ -258,22 +259,22 @@ public class Main_PlayerListener extends PlayerListener {
 	    	if(handid == 347) {
 	    		Location loc = event.getClickedBlock().getLocation();
 	    		plugin.CC.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/clock_use.wav");
-	    		event.getPlayer().sendMessage("Votre montre affiche les informations suivante :");
+	    		player.sendMessage("Votre montre affiche les informations suivante :");
 	    		Block blocksee = event.getClickedBlock().getWorld().getBlockAt(loc.getBlockX(), loc.getBlockY()+1, loc.getBlockZ());
-	    		event.getPlayer().sendMessage("Taux de lumière : "+ blocksee.getLightLevel());
-	    		event.getPlayer().sendMessage("Type d'environnement (Biome) : "+ blocksee.getBiome().name());
-	    		event.getPlayer().sendMessage("Heure : "+ event.getPlayer().getWorld().getTime());
+	    		player.sendMessage("Taux de lumière : "+ blocksee.getLightLevel());
+	    		player.sendMessage("Type d'environnement (Biome) : "+ blocksee.getBiome().name());
+	    		player.sendMessage("Heure : "+ player.getWorld().getTime());
 	    		event.setCancelled(true);
 	    	}
 		}
-		if(plugin.CC.isClient(event.getPlayer(), false)) {
-			int handid = plugin.CC.sp.getPlayer(event.getPlayer()).getItemInHand().getDurability();
+		if(plugin.CC.isClient(player, false)) {
+			int handid = plugin.CC.sp.getPlayer(player).getItemInHand().getDurability();
 	    	if(handid == 13371) {
-	    		event.getPlayer().getInventory().setItemInHand(plugin.D.decreaseItemStack(event.getPlayer().getInventory().getItemInHand()));
-	    	    plugin.CC.sendSoundEffectToAllToLocation(event.getPlayer().getLocation(), "http://mineworld.fr/contrib/sound/drink_beer.wav");
+	    		player.getInventory().setItemInHand(plugin.D.decreaseItemStack(player.getInventory().getItemInHand()));
+	    	    plugin.CC.sendSoundEffectToAllToLocation(player.getLocation(), "http://mineworld.fr/contrib/sound/drink_beer.wav");
 	    	    plugin.MC.sendTaggedMessage(event.getPlayer(), "Vous venez de boire une bière brune.", 1, "");
-	    	    plugin.setPlayerConfig(event.getPlayer(), "time_last_alco", plugin.timetamps);
-	    	    plugin.alco_player.add(event.getPlayer());
+	    	    plugin.setPlayerConfig(player, "time_last_alco", plugin.timetamps);
+	    	    plugin.alco_player.add(player.getUniqueId());
 	    	    event.setCancelled(true);
 	    	}
 		}
@@ -292,8 +293,8 @@ public class Main_PlayerListener extends PlayerListener {
     }
     
     public void onPlayerMove(PlayerMoveEvent event) {
-    	Player p = event.getPlayer();
-    	if(plugin.block_player.contains(p)) {
+    	Player player = event.getPlayer();
+    	if(plugin.block_player.contains(player.getUniqueId())) {
     		event.setCancelled(true);
     	}
     	// GESTION MUSIQUE PAR ZONE - START
@@ -309,12 +310,12 @@ public class Main_PlayerListener extends PlayerListener {
     		}
 		}
 		// GESTION MUSIQUE PAR ZONE - END
-    	if(!plugin.last_move.containsKey(p) || (plugin.last_move.get(p)+3) < plugin.timetamps) {
-    		plugin.last_move.put(p, (int) plugin.timetamps);
+    	if(!plugin.last_move.containsKey(player.getUniqueId()) || (plugin.last_move.get(player.getUniqueId())+3) < plugin.timetamps) {
+    		plugin.last_move.put(player.getUniqueId(), (int) plugin.timetamps);
     		Boolean stopdark = true;
     		Boolean client = false;
-	    	ApplicableRegionSet set = plugin.D.getregion(p);
-	    	if(plugin.CC.isClient(p, false)) {
+	    	ApplicableRegionSet set = plugin.D.getregion(player);
+	    	if(plugin.CC.isClient(player, false)) {
 	    		client = true;
 	    	}
 	    	for (ProtectedRegion pregion : set) {
@@ -322,37 +323,37 @@ public class Main_PlayerListener extends PlayerListener {
 	    		if(id.equals("stargate") || id.contains("client")) {
 	    			if(!client) {
 	    				Location spawnpoint = getSpawnLocation();
-		        		if(spawnpoint != null && !p.isOp()) {
-		        			p.teleport(spawnpoint);
+		        		if(spawnpoint != null && !player.isOp()) {
+		        			player.teleport(spawnpoint);
 		        		}
 	    			}
-	    		}else if(!plugin.TC.horde && (id.contains("horde_spawn") || p.getWorld().getName().contains("horde"))) {
+	    		}else if(!plugin.TC.horde && (id.contains("horde_spawn") || player.getWorld().getName().contains("horde"))) {
 					Location spawnpoint = getSpawnLocation();
-	        		if(spawnpoint != null && !p.isOp()) {
-	        			p.teleport(spawnpoint);
+	        		if(spawnpoint != null && !player.isOp()) {
+	        			player.teleport(spawnpoint);
 	        		}
 	    		}else if(client && !plugin.TC.horde && id.contains("spawn_protection")) {
-	    			if(plugin.last_region.get(p) == null || !plugin.last_region.get(p).contains("spawn_protection")) {
-	    				plugin.CC.sendPlayerSoundEffectToLocation(p, new Location(p.getWorld(), 185, 56, 94), "http://mineworld.fr/contrib/sound/dafa.ogg");
-	    				plugin.last_region.put(p, "spawn_protection");
+	    			if(plugin.last_region.get(player.getUniqueId()) == null || !plugin.last_region.get(player.getUniqueId()).contains("spawn_protection")) {
+	    				plugin.CC.sendPlayerSoundEffectToLocation(player, new Location(player.getWorld(), 185, 56, 94), "http://mineworld.fr/contrib/sound/dafa.ogg");
+	    				plugin.last_region.put(player.getUniqueId(), "spawn_protection");
 	    			}
 	    		}
-	    		if(id.contains("in_dark") && !plugin.in_dark.contains(p)) {
-	    			plugin.in_dark.add(p);
-	    			p.setPlayerTime(15000, false);
-	    			SpoutManager.getPlayer(p).setRenderDistance(RenderDistance.TINY);
+	    		if(id.contains("in_dark") && !plugin.in_dark.contains(player.getUniqueId())) {
+	    			plugin.in_dark.add(player.getUniqueId());
+	    			player.setPlayerTime(15000, false);
+	    			SpoutManager.getPlayer(player).setRenderDistance(RenderDistance.TINY);
 	    			stopdark = false;
-	    			plugin.CC.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/in_dark.wav");
-	    		}else if(id.contains("in_dark") && plugin.in_dark.contains(p)) {
-	    			p.setPlayerTime(15000, false);
-	    			SpoutManager.getPlayer(p).setRenderDistance(RenderDistance.TINY);
+	    			plugin.CC.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/in_dark.wav");
+	    		}else if(id.contains("in_dark") && plugin.in_dark.contains(player.getUniqueId())) {
+	    			player.setPlayerTime(15000, false);
+	    			SpoutManager.getPlayer(player).setRenderDistance(RenderDistance.TINY);
 	    			stopdark = false;
 	    		}
 	    		if(id.contains("bouncer")) {
 	 				Location spawnpoint = getSpawnLocation();
-	        		if(spawnpoint != null && !p.isOp()) {
-	        			p.teleport(spawnpoint);
-	        			plugin.CC.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/bouncer.wav");
+	        		if(spawnpoint != null && !player.isOp()) {
+	        			player.teleport(spawnpoint);
+	        			plugin.CC.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/bouncer.wav");
 	        		}
 	    		}
 	    		if(client && musiclist != null) {
@@ -360,18 +361,18 @@ public class Main_PlayerListener extends PlayerListener {
 						String name = node.getString(music + ".id");
 						String url = node.getString(music + ".url");
 						if(id.contains(name)) {
-							if(plugin.last_region.get(p) == null || !plugin.last_region.get(p).contains(name)) {
-								plugin.CC.sendPlayerSoundEffectToLocation(p, p.getLocation(), url);
-								plugin.last_region.put(p, name);
+							if(plugin.last_region.get(player.getUniqueId()) == null || !plugin.last_region.get(player.getUniqueId()).contains(name)) {
+								plugin.CC.sendPlayerSoundEffectToLocation(player, player.getLocation(), url);
+								plugin.last_region.put(player.getUniqueId(), name);
 							}
 						}
 					}
 	    		}
 	    	}
-	    	if(stopdark && plugin.in_dark.contains(p)) {
-		    	plugin.in_dark.remove(p);
-				p.resetPlayerTime();
-				SpoutManager.getPlayer(p).setRenderDistance(RenderDistance.FAR);
+	    	if(stopdark && plugin.in_dark.contains(player.getUniqueId())) {
+		    	plugin.in_dark.remove(player.getUniqueId());
+				player.resetPlayerTime();
+				SpoutManager.getPlayer(player).setRenderDistance(RenderDistance.FAR);
 	    	}
     	}
     }
@@ -383,13 +384,13 @@ public class Main_PlayerListener extends PlayerListener {
     		String message = event.getMessage();
       		plugin.logger.log(Level.INFO, "[CHAT] "+ player.getName() + " > "+ message);
     		if(plugin.TC.horde) {
-    			if (plugin.TC.is_goule.contains(player)) {
+    			if (plugin.TC.is_goule.contains(player.getUniqueId())) {
     				plugin.CC.sendSoundEffectToAllToLocation(player.getLocation(), "http://mineworld.fr/contrib/sound/hunter_attackmix_0"+ plugin.D.showRandomInteger(1, 3, rand) +".wav");
     			}else{
     				Boolean ok = false;
     				for(Entity nearby_entity : player.getNearbyEntities(10, 10, 10)){
     					if(nearby_entity instanceof Player) {
-    						if (!plugin.TC.is_goule.contains(player)) {
+    						if (!plugin.TC.is_goule.contains(player.getUniqueId())) {
     							plugin.MC.chatMessage((Player) nearby_entity, player, ChatColor.RED + player.getName() +" > "+ message);
     							plugin.MC.sendTaggedMessage(player, "Vous avez aggro une goule !", 1, "[HORDE]");
     						}else{
@@ -406,7 +407,7 @@ public class Main_PlayerListener extends PlayerListener {
     			plugin.MC.chatMessageToAll(player, event.getMessage());
     		}else if(plugin.D.is_freebuild(player)) {
     			plugin.MC.chatMessageToAllFreeBuild(player, event.getMessage());
-    		}else if(plugin.V.is_visiteur(player) || plugin.iv_chat.contains(player)) {
+    		}else if(plugin.V.is_visiteur(player) || plugin.iv_chat.contains(player.getUniqueId())) {
 				if((plugin.V.visiteur_number()+plugin.iv_chat.size()) > 1) {
 					plugin.MC.chatMessageToAllVisiteur(player, event.getMessage());
 				}else{
@@ -506,8 +507,8 @@ public class Main_PlayerListener extends PlayerListener {
     	}
     	if (event.getMessage().equals("/iv start")) {
     		if(plugin.CC.isClient(player, true)) {
-	    		if(!plugin.iv_do.contains(player)) {
-	    			plugin.iv_do.add(player);
+	    		if(!plugin.iv_do.contains(player.getUniqueId())) {
+	    			plugin.iv_do.add(player.getUniqueId());
 	    			plugin.MC.sendTaggedMessage(player, "Système inter-visiteur actif.", 1, "[IV]");
 	    		}else{
 	    			plugin.MC.sendTaggedMessage(player, "Système inter-visiteur actif.", 1, "[IV]");
@@ -518,10 +519,10 @@ public class Main_PlayerListener extends PlayerListener {
     	}
     	if (event.getMessage().equals("/iv stop")) {
     		if(plugin.CC.isClient(player, true)) {
-	    		if(plugin.iv_do.contains(player)) {
-	    			plugin.iv_do.remove(player);
-	    			if(plugin.iv_chat.contains(player)) {
-	    				plugin.iv_chat.remove(player);
+	    		if(plugin.iv_do.contains(player.getUniqueId())) {
+	    			plugin.iv_do.remove(player.getUniqueId());
+	    			if(plugin.iv_chat.contains(player.getUniqueId())) {
+	    				plugin.iv_chat.remove(player.getUniqueId());
 	    			}
 	    		}else{
 	    			plugin.MC.sendTaggedMessage(player, "Système inter-visiteur déjà innactif.", 1, "[IV]");
@@ -532,12 +533,12 @@ public class Main_PlayerListener extends PlayerListener {
     	}
     	if (event.getMessage().equals("/iv chat")) {
     		if(plugin.CC.isClient(player, true)) {
-    			if(plugin.iv_do.contains(player)) {
-		    		if(!plugin.iv_chat.contains(player)) {
-		    			plugin.iv_chat.add(player);
+    			if(plugin.iv_do.contains(player.getUniqueId())) {
+		    		if(!plugin.iv_chat.contains(player.getUniqueId())) {
+		    			plugin.iv_chat.add(player.getUniqueId());
 		    			plugin.MC.sendTaggedMessage(player, "Système inter-visiteur avec chat actif.", 1, "[IV]");
 		    		}else{
-		    			plugin.iv_chat.remove(player);
+		    			plugin.iv_chat.remove(player.getUniqueId());
 		    			plugin.MC.sendTaggedMessage(player, "Système inter-visiteur avec chat innactif.", 1, "[IV]");
 		    		}
     			}else{
@@ -710,8 +711,8 @@ public class Main_PlayerListener extends PlayerListener {
     		}
     	}
     	if (event.getMessage().contains("/goule") && player.isOp()) {
-    		plugin.can_horde.add(player);
-    		plugin.TC.is_goule.add(player);
+    		plugin.can_horde.add(player.getUniqueId());
+    		plugin.TC.is_goule.add(player.getUniqueId());
     		plugin.CC.sendSoundToAll("http://mineworld.fr/contrib/sound/orch_hit_csharp_short.wav");
     		event.setCancelled(true);
     		return;
@@ -737,34 +738,29 @@ public class Main_PlayerListener extends PlayerListener {
     }
     
     public void afterjoin(Player player, Boolean back) {
-		if(plugin.ismodo(player)) {
-			ctc.setPlayerTitle(player, ChatColor.GREEN.toString() + "[MODO]\n"+ player.getName());
-		}else if(player.isOp()) {
-			ctc.setPlayerTitle(player, ChatColor.RED.toString() + "[ADMIN]\n"+ player.getName());
-			ctc.setPlayerCape(player, "http://mineworld.fr/contrib/cape/admin.png");
-		}
-		ctc.setPlayerSunURL(player, "http://mineworld.fr/contrib/sun/sun.png");
-		if(plugin.mobcycle == 3) {
-			ctc.setPlayerMoonURL(player, "http://mineworld.fr/contrib/sun/new_deadmoon.png");
-		}else{
-			ctc.setPlayerMoonURL(player, "http://mineworld.fr/contrib/sun/new_moon.png");
-		}
-		if(!back) {
-	   	 	ctc.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/mineworld.ogg");
-	   	 	ctc.sendNotification(player, "Notification", "Bienvenue sur MineWorld!");
-		}
-		if(!plugin.Main_TimeControl.in_cycle) {
-			plugin.Main_ContribControl.set_fog(RenderDistance.FAR);
-		}
-		Boolean noclient = (Boolean) plugin.getPlayerConfig(player, "noclient", "boolean");
-		if(noclient && plugin.Main_ContribControl.isClient(player, false)) {
-			player.kickPlayer("Désolé, votre compte est interdit de client.");
-		}
+    	if(plugin.CC.isClient(player, false)) {
+			if(plugin.ismodo(player)) {
+				plugin.CC.setPlayerTitle(player, ChatColor.GREEN.toString() + "[MODO]\n"+ player.getName());
+			}else if(player.isOp()) {
+				plugin.CC.setPlayerTitle(player, ChatColor.RED.toString() + "[ADMIN]\n"+ player.getName());
+				plugin.CC.setPlayerCape(player, "http://mineworld.fr/contrib/cape/admin.png");
+			}
+			plugin.CC.setPlayerSunURL(player, "http://mineworld.fr/contrib/sun/sun.png");
+			if(plugin.mobcycle == 3) {
+				plugin.CC.setPlayerMoonURL(player, "http://mineworld.fr/contrib/sun/new_deadmoon.png");
+			}else{
+				plugin.CC.setPlayerMoonURL(player, "http://mineworld.fr/contrib/sun/new_moon.png");
+			}
+			if(!back) {
+				plugin.CC.sendPlayerSoundEffect(player, "http://mineworld.fr/contrib/sound/mineworld.ogg");
+				plugin.CC.sendNotification(player, "Notification", "Bienvenue sur MineWorld!");
+			}
+			if(plugin.D.is_alco(player) && !plugin.alco_player.contains(player.getUniqueId())) {
+				plugin.alco_player.add(player.getUniqueId());
+			}
+    	}
 		if (!player.isOp() && MobDisguiseAPI.isDisguised(player)) {
 			MobDisguiseAPI.undisguisePlayerAsPlayer(player, "zombie");
-		}
-		if(is_alco(player) && !plugin.alco_player.contains(player)) {
-			plugin.alco_player.add(player);
 		}
 	}
     
@@ -791,7 +787,6 @@ public class Main_PlayerListener extends PlayerListener {
 
     public void onPlayerJoin(PlayerJoinEvent event) {
     	final Player player = event.getPlayer();
-    	
     	boolean remove_me = (Boolean) plugin.getPlayerConfig(player, "remove_me", "boolean");
     	if(remove_me == true) {
     		player.kickPlayer("Votre compte est bloqué.");
@@ -850,29 +845,8 @@ public class Main_PlayerListener extends PlayerListener {
 
     	if(plugin.is_first_loaded == false) {
     		plugin.is_first_loaded = true;
-			plugin.removeallitems();
-    		Configuration conf = plugin.conf_items;
-    		if(plugin.ITEM_configFile.exists()){
-        		conf.load();
-				List<String> itemlist = conf.getKeys("load-items");
-				if(!itemlist.isEmpty()) {
-					ConfigurationNode node = conf.getNode("load-items");
-					for(String item : itemlist){
-						int id = node.getInt(item + ".id", 0);
-						String name = node.getString(item + ".name");
-						String url = node.getString(item + ".url");
-				    	SpoutManager.getItemManager().setCustomItemBlock(1, id, (short) 0);
-				    	SpoutManager.getItemManager().setItemTexture(id, null, url);
-				    	SpoutManager.getItemManager().setItemName(id, name);
-				    	plugin.sendInfo("[MwITEM] Chargement de l'objet "+ id +" ("+name+")");
-					}
-				}
-				try {
-				      buildDiamondQuartz();
-				} catch (Exception e) {
-				      e.printStackTrace();
-				}
-    		}
+			plugin.I.remove_all_items();
+    		plugin.I.load_items();
     	}
     	
     	int firsttime = (Integer) plugin.getPlayerConfig(player, "time_firsttime", "int");
@@ -908,6 +882,41 @@ public class Main_PlayerListener extends PlayerListener {
     	}else{
     		event.setQuitMessage(ChatColor.DARK_GRAY + event.getPlayer().getName() + " s'est deconnecté du serveur.");
     	}
+    	
+    	UUID uuid = event.getPlayer().getUniqueId();
+     	if(plugin.V.visiteur.contains(uuid)) {
+    		plugin.V.visiteur.remove(uuid);
+    	}
+     	if(plugin.block_player.contains(uuid)) {
+    		plugin.block_player.remove(uuid);
+    	}
+     	if(plugin.alco_player.contains(uuid)) {
+    		plugin.alco_player.remove(uuid);
+    	}
+     	if(plugin.alco_player.contains(uuid)) {
+    		plugin.alco_player.remove(uuid);
+    	}
+		if(plugin.iv_do.contains(uuid)) {
+			plugin.iv_do.remove(uuid);
+		}
+		if(plugin.iv_chat.contains(uuid)) {
+			plugin.iv_chat.remove(uuid);
+		}
+		if(plugin.spy_player.contains(uuid)) {
+			plugin.spy_player.remove(uuid);
+		}
+		if(plugin.TC.player_horde.contains(uuid)) {
+			plugin.TC.player_horde.remove(uuid);
+		}
+		if(plugin.last_region.containsKey(uuid)) {
+			plugin.last_region.remove(uuid);
+		}
+		if(plugin.anim.contains(event.getPlayer().getName())) {
+			plugin.anim.remove(event.getPlayer().getName());
+		}
+		
+		//////////////////////
+		
     	if(plugin.CHC.PlayerOR.contains(event.getPlayer())) {
     		plugin.CHC.PlayerOR.remove(event.getPlayer());
     	}
@@ -923,24 +932,7 @@ public class Main_PlayerListener extends PlayerListener {
 		if(plugin.anim.contains(event.getPlayer().getName())) {
 			plugin.anim.remove(event.getPlayer().getName());
 		}
-		if(plugin.last_region.containsKey(event.getPlayer())) {
-			plugin.last_region.remove(event.getPlayer());
-		}
-		if(plugin.Main_TimeControl.player_horde.contains(event.getPlayer())) {
-			plugin.Main_TimeControl.player_horde.remove(event.getPlayer());
-		}
-		if(plugin.alco_player.contains(event.getPlayer())) {
-			plugin.alco_player.remove(event.getPlayer());
-		}
-		if(plugin.spy_player.contains(event.getPlayer())) {
-			plugin.spy_player.remove(event.getPlayer());
-		}
-		if(plugin.iv_do.contains(event.getPlayer())) {
-			plugin.iv_do.remove(event.getPlayer());
-		}
-		if(plugin.iv_chat.contains(event.getPlayer())) {
-			plugin.iv_chat.remove(event.getPlayer());
-		}
+
 		plugin.setPlayerConfig(event.getPlayer(), "time_lastdeconnexion", plugin.timetamps);
     }
     

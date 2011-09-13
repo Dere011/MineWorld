@@ -19,9 +19,10 @@ public class Main_Horde {
     	plugin = parent;
     }
     
-    public void respawn(Player player) {
-	    plugin.Main_MessageControl.sendTaggedMessage(p, "Bienvenue au Bunker, une horde est en cours.", 1, "[HORDE]");
-		plugin.Main_MessageControl.sendTaggedMessage(p, "Vous pouvez sortir ou attendre la fin de l'apocalyspe.", 1, "[HORDE]");
+    public void respawn(final Player player) {
+	    plugin.MC.sendTaggedMessage(player, "Bienvenue dans le bunker 51", 1, "[BUNKER-51]");
+		plugin.MC.sendTaggedMessage(player, "Vous pouvez sortir ou attendre la fin de la horde.", 1, "[BUNKER-51]");
+		plugin.CC.sendPlayerSoundEffect(player, ""); // TODO
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			public void run()
 			{
@@ -30,8 +31,8 @@ public class Main_Horde {
 						Location spawnpoint = getHordeSpawn();
 		        		if(spawnpoint != null) {
 		        			player.teleport(spawnpoint);
-		        			if(plugin.can_horde.contains(player)) {
-		        				plugin.can_horde.remove(player);
+		        			if(plugin.can_horde.contains(player.getUniqueId())) {
+		        				plugin.can_horde.remove(player.getUniqueId());
 		        				MobDisguiseAPI.disguisePlayer(p, "zombie");
 		        			}
 		        		}
@@ -47,8 +48,8 @@ public class Main_Horde {
 						Location spawnpoint = getHordeSpawn();
 		        		if(spawnpoint != null) {
 		        			player.teleport(spawnpoint);
-		        			if(plugin.can_horde.contains(player)) {
-		        				plugin.can_horde.remove(player);
+		        			if(plugin.can_horde.contains(player.getUniqueId())) {
+		        				plugin.can_horde.remove(player.getUniqueId());
 		        				MobDisguiseAPI.disguisePlayer(p, "zombie");
 		        			}
 		        		}
@@ -60,18 +61,18 @@ public class Main_Horde {
     
     public void playerTogoule(Player player) {
     	String name = player.getName();
-		plugin.can_horde.add(player);
-		plugin.Main_TimeControl.is_goule.add(player);
+		plugin.can_horde.add(player.getUniqueId());
+		plugin.TC.is_goule.add(player.getUniqueId());
 		MobDisguiseAPI.disguisePlayer(player, "zombie");
-		plugin.Main_ContribControl.sendSoundToAll("http://mineworld.fr/contrib/sound/orch_hit_csharp_short.wav");
-		plugin.Main_MessageControl.sendTaggedMessageToAll(ChatColor.GREEN + name + " est devenu une " + ChatColor.RED + " goule " + ChatColor.GREEN + " !", 1, "[HORDE]");
+		plugin.CC.sendSoundToAll("http://mineworld.fr/contrib/sound/orch_hit_csharp_short.wav");
+		plugin.MC.sendTaggedMessageToAll(ChatColor.GREEN + name + " est devenu une " + ChatColor.RED + " goule " + ChatColor.GREEN + " !", 1, "[HORDE]");
 		Chat bb = new Chat((Player) plugin.zombie, name + " est devenu une goule.", "world");
 		bb.send();
     }
     
     public void gouleToPlayer(Player player) {
-		if(plugin.Main_TimeControl.is_goule.contains(player)) {
-			plugin.Main_TimeControl.is_goule.remove(player);
+		if(plugin.TC.is_goule.contains(player.getUniqueId())) {
+			plugin.TC.is_goule.remove(player.getUniqueId());
 		}
 		if(MobDisguiseAPI.isDisguised(player)) {
 			MobDisguiseAPI.undisguisePlayerAsPlayer(player, "zombie");
@@ -88,7 +89,7 @@ public class Main_Horde {
     }
     
     public boolean is_spawnhorde(Player player) {
-		ApplicableRegionSet set = getregion(player);
+		ApplicableRegionSet set = plugin.D.getregion(player);
     	for (ProtectedRegion pregion : set) {
     		if(pregion.getId().contains("horde_spawn")) {
         			return true;

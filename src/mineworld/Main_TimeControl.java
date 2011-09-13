@@ -3,6 +3,7 @@ package mineworld;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import me.desmin88.mobdisguise.api.MobDisguiseAPI;
 import me.taylorkelly.bigbrother.datablock.Chat;
@@ -17,13 +18,14 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.getspout.spoutapi.SpoutManager;
 import org.getspout.spoutapi.player.RenderDistance;
+import org.getspout.spoutapi.player.SpoutPlayer;
 
 public class Main_TimeControl {
 	
     private final Main plugin;
 	private final Random rand = new Random();
-	List<Player> player_horde = new ArrayList<Player>();
-	List<Player> is_goule = new ArrayList<Player>();
+	List<UUID> player_horde = new ArrayList<UUID>();
+	List<UUID> is_goule = new ArrayList<UUID>();
     
     Thread thread_01, thread_02;
     
@@ -371,7 +373,7 @@ public class Main_TimeControl {
 				Chat bb = new Chat((Player) plugin.zombie, "Oh non, une horde de monstre déferle sur MineWorld...", "world");
 				bb.send();
 				setTime("world", time + 37700);
-				plugin.Main_EntityListener.mort = 0;
+				plugin.H.mort = 0;
 				player_horde.clear();
 				is_goule.clear();
 				for (Player p : plugin.getServer().getOnlinePlayers()) {
@@ -379,7 +381,7 @@ public class Main_TimeControl {
 						continue;
 					}
 					if(plugin.Main_ContribControl.isClient(p, false)) {
-						player_horde.add(p);
+						player_horde.add(p.getUniqueId());
 					}else{
 						plugin.Main_MessageControl.sendTaggedMessage(p, "Vous n'avez pas le client MW.", 1, "[HORDE]");
 						plugin.Main_MessageControl.sendTaggedMessage(p, "Vous ne ferez pas partie de cette manche.", 1, "[HORDE]");
@@ -395,20 +397,21 @@ public class Main_TimeControl {
 		    	setStorm(true);
 		    	setThundering(false);
 			}
-			for (Player p : player_horde) {
-				if(!p.getWorld().getName().contains("world")) {
-					player_horde.remove(p);
+			for (UUID puuid : player_horde) {
+				SpoutPlayer player = plugin.CC.sp.getPlayerFromId(puuid);
+				if(!player.getWorld().getName().contains("world")) {
+					player_horde.remove(puuid);
 				}
 			}
 			for (Player p : plugin.getServer().getOnlinePlayers()) {
 				if (is_goule.contains(p)) {
-	    			plugin.Main_ContribControl.setPlayerTitle(p, ChatColor.DARK_RED.toString() + "Infectée");
+	    			plugin.CC.setPlayerTitle(p, ChatColor.DARK_RED.toString() + "Infectée");
 				}else{
-					plugin.Main_ContribControl.setPlayerTitle(p, ChatColor.DARK_GREEN.toString() + "Survivant");
+					plugin.CC.setPlayerTitle(p, ChatColor.DARK_GREEN.toString() + "Survivant");
 				}
 				SpoutManager.getPlayer(p).setWalkingMultiplier(0.5);
 			}
-			plugin.Main_ContribControl.set_fog(RenderDistance.TINY);
+			plugin.CC.set_fog(RenderDistance.TINY);
 			if(isDay()) {
 				setTime("world", time + 37700);
 			}
@@ -446,8 +449,8 @@ public class Main_TimeControl {
     			if (MobDisguiseAPI.isDisguised(p)) {
     				MobDisguiseAPI.undisguisePlayerAsPlayer(p, "zombie");
     			}
-    			if(plugin.can_horde.contains(p)) {
-    				plugin.can_horde.remove(p);
+    			if(plugin.can_horde.contains(p.getUniqueId())) {
+    				plugin.can_horde.remove(p.getUniqueId());
     			}
     			SpoutManager.getPlayer(p).setWalkingMultiplier(1);
     		}
@@ -464,8 +467,8 @@ public class Main_TimeControl {
 		public void run()
 				{
 					plugin.Main_ContribControl.sendSoundEffectToAll("http://mineworld.fr/contrib/sound/survival_teamrec.wav");
-					plugin.Main_MessageControl.sendTaggedMessageToAll(plugin.Main_EntityListener.mort+" morts au total.", 1, "[HORDE]");
-					Chat bb = new Chat((Player) plugin.zombie, "La horde est terminée, nombre de mort pendant cette attaque : "+ plugin.Main_EntityListener.mort +" Morts", "world");
+					plugin.Main_MessageControl.sendTaggedMessageToAll(plugin.H.mort +" morts au total.", 1, "[HORDE]");
+					Chat bb = new Chat((Player) plugin.zombie, "La horde est terminée, nombre de mort pendant cette attaque : "+ plugin.H.mort +" Morts", "world");
 					bb.send();
 				}
 		}, (long) 50);
@@ -475,18 +478,19 @@ public class Main_TimeControl {
 				String survivant = "";
 				plugin.conf_player.load();
 				Boolean first = true;
-				for (Player p : player_horde) {
+				for (UUID puuid : player_horde) {
+					SpoutPlayer player = plugin.CC.sp.getPlayerFromId(puuid);
 					if(first) {
-						survivant = p.getDisplayName();
+						survivant = player.getName();
 						first = false;
 					}else{
-						survivant = survivant + ", "+p.getDisplayName();
+						survivant = survivant + ", "+ player.getName();
 					}
-					int psurvie = plugin.conf_player.getInt("load-player."+ p.getName() +".psurvie", 0);
-					plugin.Main_MessageControl.sendTaggedMessage(p, "Vous avez reçut "+ ChatColor.GOLD + "1 point"+ ChatColor.WHITE + " de survie.", 1, "");
-					plugin.Main_ContribControl.sendNotification(p, "Bravo !", "+1 SPoint(s)", Material.GOLD_ORE);
+					int psurvie = plugin.conf_player.getInt("load-player."+ player.getName() +".psurvie", 0);
+					plugin.Main_MessageControl.sendTaggedMessage(player, "Vous avez reçut "+ ChatColor.GOLD + "1 point"+ ChatColor.WHITE + " de survie.", 1, "");
+					plugin.Main_ContribControl.sendNotification(player, "Bravo !", "+1 SPoint(s)", Material.GOLD_ORE);
 					psurvie++;
-					plugin.setPlayerConfig(p, "psurvie", psurvie);
+					plugin.setPlayerConfig(player, "psurvie", psurvie);
 				}
 				if(survivant == "") {
 					survivant = "Aucun survivant";

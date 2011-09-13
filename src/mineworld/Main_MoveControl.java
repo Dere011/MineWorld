@@ -198,7 +198,7 @@ public class Main_MoveControl {
     }
 
     private boolean isLastBlock(Entity entity, Block block) {
-    	if(plugin.move_last.containsKey(entity) && plugin.move_last.get(entity) == block) {
+    	if(plugin.move_last.containsKey(entity.getUniqueId()) && plugin.move_last.get(entity.getUniqueId()) == block) {
     		return true;
     	}else{
         	return false;
@@ -219,17 +219,17 @@ public class Main_MoveControl {
     	Location newloc = getTransformCloserToLocation(entity, entity.getLocation(), loc);
     	Material mat = entity.getLocation().getBlock().getType();
     	if((mat == Material.IRON_DOOR || mat == Material.IRON_DOOR_BLOCK) || (mat == Material.WOOD_DOOR || mat == Material.WOODEN_DOOR)) {
-    		if(plugin.move_last.get(entity) != null) {
-    			Location locforfaces = getFaceLocationFromMe(entity, plugin.move_last.get(entity).getLocation());
-    	    	Location modifiedlocs = new Location(plugin.move_last.get(entity).getLocation().getWorld(),plugin.move_last.get(entity).getLocation().getX(),plugin.move_last.get(entity).getLocation().getY(),plugin.move_last.get(entity).getLocation().getZ(),locforfaces.getYaw(),locforfaces.getPitch());
+    		if(plugin.move_last.get(entity.getUniqueId()) != null) {
+    			Location locforfaces = getFaceLocationFromMe(entity, plugin.move_last.get(entity.getUniqueId()).getLocation());
+    	    	Location modifiedlocs = new Location(plugin.move_last.get(entity.getUniqueId()).getLocation().getWorld(),plugin.move_last.get(entity.getUniqueId()).getLocation().getX(),plugin.move_last.get(entity.getUniqueId()).getLocation().getY(),plugin.move_last.get(entity.getUniqueId()).getLocation().getZ(),locforfaces.getYaw(),locforfaces.getPitch());
     			moveEntity(entity, modifiedlocs);
     			return;
     		}
     	}
-		if(plugin.move_last.containsKey(entity)) {
-			plugin.move_last.remove(entity);
+		if(plugin.move_last.containsKey(entity.getUniqueId())) {
+			plugin.move_last.remove(entity.getUniqueId());
 		}
-		plugin.move_last.put(entity, entity.getLocation().getBlock());
+		plugin.move_last.put(entity.getUniqueId(), entity.getLocation().getBlock());
     	Location locforface = getFaceLocationFromMe(entity, loc);
     	Location modifiedloc = new Location(newloc.getWorld(),newloc.getX(),newloc.getY(),newloc.getZ(),locforface.getYaw(),locforface.getPitch());
     	moveEntity(entity, modifiedloc);

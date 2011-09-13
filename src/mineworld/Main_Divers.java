@@ -23,14 +23,14 @@ public class Main_Divers {
 	}
 	
     public void freezePlayer(final Player player, Long time) {
-		if(!plugin.block_player.contains(player)) {
-			plugin.block_player.add(player);
+		if(!plugin.block_player.contains(player.getUniqueId())) {
+			plugin.block_player.add(player.getUniqueId());
 		}
     	player.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			public void run()
 			{
-				if(plugin.block_player.contains(player)) {
-					plugin.block_player.remove(player);
+				if(plugin.block_player.contains(player.getUniqueId())) {
+					plugin.block_player.remove(player.getUniqueId());
 				}
 			}
     	}, (long) time);
@@ -49,8 +49,8 @@ public class Main_Divers {
     public void remove_alco(Player p) {
     	if(plugin.CC.isClient(p, false)) {
     		plugin.setPlayerConfig(p, "time_last_alco", 0);
-    		if(plugin.alco_player.contains(p)){
-    			plugin.alco_player.remove(p);
+    		if(plugin.alco_player.contains(p.getUniqueId())){
+    			plugin.alco_player.remove(p.getUniqueId());
     		}
     	}
     }
