@@ -1,6 +1,8 @@
 package mineworld;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import org.bukkit.Location;
@@ -14,11 +16,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.config.Configuration;
 import org.bukkit.util.config.ConfigurationNode;
 import org.getspout.spoutapi.SpoutManager;
+import org.getspout.spoutapi.material.CustomBlock;
+import org.getspout.spoutapi.material.CustomItem;
 
 public class Main_Items {
 
 	Main plugin;
 	SpoutManager sp;
+	Map<String, CustomItem> CustomItemsList = new HashMap<String, CustomItem>();
 	
     public Main_Items(Main parent) {
     	plugin = parent;
@@ -35,10 +40,9 @@ public class Main_Items {
 					for(String item : itemlist){
 						int id = node.getInt(item + ".id", 0);
 						String name = node.getString(item + ".name");
-						String url = node.getString(item + ".url");
-				    	SpoutManager.getItemManager().setCustomItemBlock(1, id, (short) 0);
-				    	SpoutManager.getItemManager().setItemTexture(id, null, url);
-				    	SpoutManager.getItemManager().setItemName(id, name);
+						String url = node.getString(item + ".url");			
+						CustomItem temp = new CItem(plugin, name, url);
+						CustomItemsList.put(temp.getName(), temp);
 				    	plugin.logger.log(Level.INFO, "[MwITEM] Chargement de l'objet "+ id +" ("+name+")");
 					}
 				}
@@ -67,7 +71,8 @@ public class Main_Items {
     
     public void give(Player player, int itemid, int number) {
     	
-		ItemStack cadavre = sp.getItemManager().getCustomItemStack(itemid, number);
+    	sp.getItemManager().
+		ItemStack cadavre = sp.getItemManager().getCustomItemStack(arg0, arg1);
 		player.getWorld().dropItemNaturally(event.getEntity().getLocation(), cadavre);
     	
     }

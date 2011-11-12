@@ -27,7 +27,7 @@ public class Main_BlockListener extends BlockListener {
     		return;
     	}
 		int handid = event.getItemInHand().getDurability();
-    	if(handid > 13370) {
+    	if(handid > 13370 && handid < 80008) {
     		event.setCancelled(true);
     		return;
     	}
@@ -44,7 +44,7 @@ public class Main_BlockListener extends BlockListener {
     		return;
     	}
 		int handid = event.getItemInHand().getDurability();
-    	if(handid > 13370) {
+    	if(handid > 13370 && handid < 80008) {
     		event.setCancelled(true);
     		return;
     	}

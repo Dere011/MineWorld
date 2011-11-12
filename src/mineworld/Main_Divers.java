@@ -4,6 +4,12 @@ import static com.sk89q.worldguard.bukkit.BukkitUtil.toVector;
 
 import java.util.Random;
 
+import net.citizensnpcs.api.CitizensManager;
+import net.citizensnpcs.resources.npclib.HumanNPC;
+
+import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -135,5 +141,132 @@ public class Main_Divers {
 		}
 		return stack;
 	}
+	
+	public void kickall(String message, Boolean withop) {
+		for (Player p : plugin.getServer().getOnlinePlayers()) {
+			if(!p.isOp() || withop) {
+				p.kickPlayer(message);
+			}
+    	}
+	}
+	
+	public Location getPlayerHomeLocation(String name) {
+    	String config = "load-player."+ name +".home.";
+    	plugin.conf_player.load();
+    	int x = plugin.conf_player.getInt(config+ "x", 0);
+    	int y = plugin.conf_player.getInt(config+ "y", 0);
+    	int z = plugin.conf_player.getInt(config+ "z", 0);
+    	String world = plugin.conf_player.getString(config + "world");
+    	if(world == null) {
+    		return null;
+    	}
+    	Location location = new Location(plugin.getServer().getWorld(world), x, y, z);
+    	return location;
+    }
+	
+    public boolean checkLocation(Location loc, Location ploc, Double range) {
+    	if ((ploc.getX() <= loc.getX() + range && ploc.getX() >= loc.getX()
+    	- range)
+    	&& (ploc.getY() >= loc.getY() - range && ploc.getY() <= loc
+    	.getY() + range)
+    	&& (ploc.getZ() >= loc.getZ() - range && ploc.getZ() <= loc
+    	.getZ() + range))
+    	return true;
+    	else
+    	return false;
+    }
     
+    public double getdistance(Entity ent1, Location loc) {
+		double deltax = Math.abs(ent1.getLocation()
+				.getX() - loc.getX());
+		double deltay = Math.abs(ent1.getLocation()
+				.getY() - loc.getY());
+		double deltaz = Math.abs(ent1.getLocation()
+				.getZ() - loc.getZ());
+		double distance = Math
+				.sqrt((deltax * deltax)
+						+ (deltay * deltay)
+						+ (deltaz * deltaz));
+		return distance;
+    }
+    
+    public double getdistance(Location loc2, Location loc) {
+		double deltax = Math.abs(loc2
+				.getX() - loc.getX());
+		double deltay = Math.abs(loc2
+				.getY() - loc.getY());
+		double deltaz = Math.abs(loc2
+				.getZ() - loc.getZ());
+		double distance = Math
+				.sqrt((deltax * deltax)
+						+ (deltay * deltay)
+						+ (deltaz * deltaz));
+		return distance;
+    }
+    
+    public double getdistance(Entity ent1, Block ent2) {
+		double deltax = Math.abs(ent1.getLocation()
+				.getX() - ent2.getLocation().getX());
+		double deltay = Math.abs(ent1.getLocation()
+				.getY() - ent2.getLocation().getY());
+		double deltaz = Math.abs(ent1.getLocation()
+				.getZ() - ent2.getLocation().getZ());
+		double distance = Math
+				.sqrt((deltax * deltax)
+						+ (deltay * deltay)
+						+ (deltaz * deltaz));
+		return distance;
+    }
+    
+    public double getdistance(Player ent1, Block ent2) {
+		double deltax = Math.abs(ent1.getLocation()
+				.getX() - ent2.getLocation().getX());
+		double deltay = Math.abs(ent1.getLocation()
+				.getY() - ent2.getLocation().getY());
+		double deltaz = Math.abs(ent1.getLocation()
+				.getZ() - ent2.getLocation().getZ());
+		double distance = Math
+				.sqrt((deltax * deltax)
+						+ (deltay * deltay)
+						+ (deltaz * deltaz));
+		return distance;
+    }
+    
+    public double getdistance(Entity ent1, Entity ent2) {
+		double deltax = Math.abs(ent1.getLocation()
+				.getX() - ent2.getLocation().getX());
+		double deltay = Math.abs(ent1.getLocation()
+				.getY() - ent2.getLocation().getY());
+		double deltaz = Math.abs(ent1.getLocation()
+				.getZ() - ent2.getLocation().getZ());
+		double distance = Math
+				.sqrt((deltax * deltax)
+						+ (deltay * deltay)
+						+ (deltaz * deltaz));
+		return distance;
+    }
+    
+    public Boolean playerInServer() {
+    	if(plugin.getServer().getOnlinePlayers().length > 0) {
+    		return true;
+    	}
+    	return false;
+    }
+    
+    public boolean ismodo(Player p) {
+    	if(plugin.modo.contains(p.getName())) {
+    		return true;
+    	}else{
+    		return false;
+    	}
+    }
+    
+    public boolean isbot(Player p) {
+        HumanNPC npc = CitizensManager.get(p);
+        if (npc != null) {
+    		return true;
+    	}else{
+    		return false;
+    	}
+    }
 }

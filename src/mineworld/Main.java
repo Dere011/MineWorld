@@ -1,4 +1,4 @@
-package mineworld;
+   package mineworld;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,6 +64,7 @@ public class Main extends JavaPlugin {
     public Main_Divers Main_Divers;
     public Main_Horde Main_Horde;
     public Main_Items Main_Items;
+    public Main_Blocks Main_Blocks;
     
     public Main_ContribControl CC;
     public Main_TimeControl TC;
@@ -80,6 +81,7 @@ public class Main extends JavaPlugin {
     public Main_Divers D;
     public Main_Horde H;
     public Main_Items I;
+    public Main_Blocks B;
     
     public List<String> modo 				= new ArrayList<String>();
     public List<String> correct 			= new ArrayList<String>();
@@ -101,11 +103,13 @@ public class Main extends JavaPlugin {
 	protected File Player_configFile = new File(maindir, "player_config.yml");
 	protected File Server_configFile = new File(maindir, "server_config.yml");
 	protected File ITEM_configFile = new File(maindir, "item_config.yml");
+	protected File Bloc_configFile = new File(maindir, "bloc_config.yml");
 	
 	Configuration conf_player = new Configuration(Player_configFile);
 	Configuration conf_npc = new Configuration(NPC_configFile);
 	Configuration conf_server = new Configuration(Server_configFile);
 	Configuration conf_items = new Configuration(ITEM_configFile);
+	Configuration conf_blocs = new Configuration(Bloc_configFile);
 	
 	public Boolean is_first_loaded = false;
 	private Boolean debug_enable = false;
@@ -158,6 +162,7 @@ public class Main extends JavaPlugin {
         Main_Divers = new Main_Divers(this);
         Main_Horde = new Main_Horde(this);
         Main_Items = new Main_Items(this);
+        Main_Blocks = new Main_Blocks(this);
         
         CC = Main_ContribControl;
         TC = Main_TimeControl;
@@ -174,6 +179,7 @@ public class Main extends JavaPlugin {
         D = Main_Divers;
         H = Main_Horde;
         I = Main_Items;
+        B = Main_Blocks;
         
         pm.registerEvent(Type.PLAYER_JOIN, Main_PlayerListener, Priority.Normal, this); 
         pm.registerEvent(Type.PLAYER_QUIT, Main_PlayerListener, Priority.Normal, this); 
@@ -208,24 +214,15 @@ public class Main extends JavaPlugin {
         logger.log(Level.INFO, pdfFile.getName() + " version " + pdfFile.getVersion() + " enabled.");
     }
     
-	public Runnable runThread_01() {
-		if(this.t_01 == null) {
-			this.t_01 = new Thread(new Runnable() {
-				public void run()
-				{
-			    	try {
-			    		do_cron_01();
-			        } catch (Exception e) {
-			        	e.printStackTrace();
-			        }
-		            return;
-				}
-			});
-			this.t_01.setPriority(Thread.MIN_PRIORITY);
-			this.t_01.setDaemon(true);
-		}
-		return this.t_01;
-	}
+    public void onDisable() {
+        try {
+            logger.log(Level.INFO, "MineWorld disabled.");
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "MineWorld : error: " + e.getMessage() + e.getStackTrace().toString());
+            e.printStackTrace();
+            return;
+        }
+    }
 	
 	public Runnable runThread_02() {
 		if(this.t_02 == null) {
@@ -283,16 +280,6 @@ public class Main extends JavaPlugin {
 		}
 		return this.t_05;
 	}
-    
-	public int showRandomInteger(int aStart, int aEnd, Random aRandom){
-	    if ( aStart > aEnd ) {
-	      throw new IllegalArgumentException("Start cannot exceed End.");
-	    }
-	    long range = (long)aEnd - (long)aStart + 1;
-	    long fraction = (long)(range * aRandom.nextDouble());
-	    int randomNumber =  (int)(fraction + aStart);
-	    return randomNumber;
-	}
 	
 	public long timetamps() {
 		timetamps = System.currentTimeMillis() / 1000L;
@@ -307,104 +294,32 @@ public class Main extends JavaPlugin {
 	        Main_CommandsControl.Main_onCommand_do(sender, command, commandLabel, args);
 	        return true;
 	    } catch (Exception e) {
-	        sender.sendMessage("[MINEWORLD] Une erreur est survenue.");
+	        sender.sendMessage("[MINEWORLD] Une erreur interne est survenue, impossible de traiter votre demande.");
 	        sendError(e.getMessage() + e.getStackTrace().toString());
 	        e.printStackTrace();
 	        return true;
 	    }
     }
     
-    public void onDisable() {
-        try {
-            logger.log(Level.INFO, "MineWorld disabled.");
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "MineWorld : error: " + e.getMessage() + e.getStackTrace().toString());
-            e.printStackTrace();
-            return;
-        }
-    }
-    
-    public Boolean playerInServer() {
-    	if(getServer().getOnlinePlayers().length > 0) {
-    		return true;
-    	}
-    	return false;
-    }
-    
-    public boolean ismodo(Player p) {
-    	if(modo.contains(p.getName())) {
-    		return true;
-    	}else{
-    		return false;
-    	}
-    }
-    
-    public boolean isbot(Player p) {
-        HumanNPC npc = CitizensManager.get(p);
-        if (npc != null) {
-    		return true;
-    	}else{
-    		return false;
-    	}
-    }
-    
-    public void do_cron_01() {
-    	if(playerInServer()) {
-			if(cron_tick_heal > 15) {
-				Boolean isgood = true;
-				Boolean onlyvisitor = true;
-				cron_tick_heal = 0;
-				for (Player p : getServer().getOnlinePlayers()) {
-			    	if (Main_Visiteur.is_visiteur(p) || !p.getWorld().getName().contains("world")) {
-			    		continue;
-			    	}
-			    	onlyvisitor = false;
-					if(p.isSleeping()) {
-						if(p.getHealth() < 10) {
-							p.setHealth(p.getHealth()+1);
-						}
-					}else{
-						isgood = false;
-					}
-				}
-				if(isgood && !onlyvisitor) {
-					Main_MessageControl.sendTaggedMessageToAll("Après une longue nuit, voici le lever du jour...", 1, "[SUN]");
-					getServer().getWorld("world").setFullTime(23100);
-				}
-			}else{
-				cron_tick_heal++;
-			}
-			lastplayerleft = 0;
-    	}else{
-			if(lastplayerleft > 500) {
-				lastplayerleft = 0;
-				removeallitems();
-			}else{
-				lastplayerleft++;
-			}
-    	}
-    }
-    
     public void do_cron_02() {
-    	if(playerInServer()) {
+    	if(D.playerInServer()) {
     		if(cron_tick_extra > 1) {
     			cron_tick_extra = 0;
     			for (Player p : getServer().getOnlinePlayers()) {
+    				if(Main_TimeControl.horde) { continue; }
     				SpoutManager.getPlayer(p).setWalkingMultiplier(1);
-    				if(!Main_TimeControl.horde) {
-			    		if(alco_player.contains(p) && Main_PlayerListener.is_alco(p)) {
-			    			Main_ContribControl.setPlayerTitle(p, ChatColor.DARK_AQUA.toString() + p.getName());
-			    			Main_ContribControl.sp.getPlayer(p).setGravityMultiplier(0.3);
-			    			Main_ContribControl.sp.getPlayer(p).setJumpingMultiplier(1.1);
-			    		}else if(alco_player.contains(p) && !Main_PlayerListener.is_alco(p)) {
-			    			Main_ContribControl.setPlayerTitle(p, p.getName());
-			    			Main_ContribControl.sp.getPlayer(p).setGravityMultiplier(1);
-			    			Main_ContribControl.sp.getPlayer(p).setJumpingMultiplier(1);
-			    			alco_player.remove(p);
-			    		}
-    				}
+		    		if(alco_player.contains(p) && Main_PlayerListener.is_alco(p)) {
+		    			Main_ContribControl.setPlayerTitle(p, ChatColor.DARK_AQUA.toString() + p.getName());
+		    			Main_ContribControl.sp.getPlayer(p).setGravityMultiplier(0.3);
+		    			Main_ContribControl.sp.getPlayer(p).setJumpingMultiplier(1.1);
+		    		}else if(alco_player.contains(p) && !Main_PlayerListener.is_alco(p)) {
+		    			Main_ContribControl.setPlayerTitle(p, p.getName());
+		    			Main_ContribControl.sp.getPlayer(p).setGravityMultiplier(1);
+		    			Main_ContribControl.sp.getPlayer(p).setJumpingMultiplier(1);
+		    			alco_player.remove(p);
+		    		}
     			}
-    			if(!Main_TimeControl.horde) {
+    			/*if(!Main_TimeControl.horde) {
     	    		NPCList npclist = CitizensManager.getList();
     	    		int i = 0;
     	    		for(final Entry<Integer, HumanNPC> npc : npclist.entrySet()){
@@ -429,10 +344,11 @@ public class Main extends JavaPlugin {
     		            	}, (long) 30);
     	    			}
     	    		}
-        		}
+        		}*/
     		}else{
     			cron_tick_extra++;
     		}
+    		
 	    	if(cron_tick_gen > 15) {
 				cron_tick_gen = 0;
 				number_creature = 0;
@@ -478,23 +394,10 @@ public class Main extends JavaPlugin {
 			}else{
 				cron_tick_gen++;
 			}
+	    	
 			if(cron_tick_stats > 220) {
 				cron_tick_stats = 0;
-				for (Player p : getServer().getOnlinePlayers()) {
-			    	if (Main_Visiteur.is_visiteur(p) || !Main_ContribControl.isClient(p, false)) {
-			    		continue;
-			    	}
-					if(Main_ChunkControl.error_tick.containsKey(p)) {
-						Main_ChunkControl.error_tick.remove(p);
-					}
-					conf_player.load();
-					int ppresences = conf_player.getInt("load-player."+ p.getName() +".ppresences", 0);
-					Main_MessageControl.sendTaggedMessage(p, "Vous avez reçut "+ ChatColor.DARK_GREEN + "1 point"+ ChatColor.WHITE + " de présence.", 1, "");
-					Main_ContribControl.sendNotification(p, "MONEY Transaction", "+1 PPoint(s)");
-					Main_ContribControl.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/money.wav");
-					ppresences++;
-					setPlayerConfig(p, "ppresences", ppresences);
-				}
+				PL.give_ppoint();
 			}else{
 				cron_tick_stats++;
 			}
@@ -605,7 +508,7 @@ public class Main extends JavaPlugin {
     public void do_cron_05() { 
     	timetamps();
     	if(!spy_player.isEmpty()) {
-	    	for (Player player : spy_player) {
+	    	for (UUID player : spy_player) {
 	    		for (Entity entity : player.getNearbyEntities(24, 24, 24)) {
 	    			if (entity instanceof Player) {
 						if(!((Player) entity).isOp()) {
@@ -621,7 +524,6 @@ public class Main extends JavaPlugin {
     
     private void runAllThread() {
     	// Main
-    	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_01(), 1, 10); 
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_02(), 1, 100); 
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, runThread_03(), 1, 20);
     	
@@ -705,87 +607,5 @@ public class Main extends JavaPlugin {
     	if(debug_enable) {
     		logger.log(Level.INFO, "MineWorld debug: " + msg);
     	}
-    }
-    
-    public boolean checkLocation(Location loc, Location ploc, Double range) {
-    	if ((ploc.getX() <= loc.getX() + range && ploc.getX() >= loc.getX()
-    	- range)
-    	&& (ploc.getY() >= loc.getY() - range && ploc.getY() <= loc
-    	.getY() + range)
-    	&& (ploc.getZ() >= loc.getZ() - range && ploc.getZ() <= loc
-    	.getZ() + range))
-    	return true;
-    	else
-    	return false;
-    }
-    
-    public double getdistance(Entity ent1, Location loc) {
-		double deltax = Math.abs(ent1.getLocation()
-				.getX() - loc.getX());
-		double deltay = Math.abs(ent1.getLocation()
-				.getY() - loc.getY());
-		double deltaz = Math.abs(ent1.getLocation()
-				.getZ() - loc.getZ());
-		double distance = Math
-				.sqrt((deltax * deltax)
-						+ (deltay * deltay)
-						+ (deltaz * deltaz));
-		return distance;
-    }
-    
-    public double getdistance(Location loc2, Location loc) {
-		double deltax = Math.abs(loc2
-				.getX() - loc.getX());
-		double deltay = Math.abs(loc2
-				.getY() - loc.getY());
-		double deltaz = Math.abs(loc2
-				.getZ() - loc.getZ());
-		double distance = Math
-				.sqrt((deltax * deltax)
-						+ (deltay * deltay)
-						+ (deltaz * deltaz));
-		return distance;
-    }
-    
-    public double getdistance(Entity ent1, Block ent2) {
-		double deltax = Math.abs(ent1.getLocation()
-				.getX() - ent2.getLocation().getX());
-		double deltay = Math.abs(ent1.getLocation()
-				.getY() - ent2.getLocation().getY());
-		double deltaz = Math.abs(ent1.getLocation()
-				.getZ() - ent2.getLocation().getZ());
-		double distance = Math
-				.sqrt((deltax * deltax)
-						+ (deltay * deltay)
-						+ (deltaz * deltaz));
-		return distance;
-    }
-    
-    public double getdistance(Player ent1, Block ent2) {
-		double deltax = Math.abs(ent1.getLocation()
-				.getX() - ent2.getLocation().getX());
-		double deltay = Math.abs(ent1.getLocation()
-				.getY() - ent2.getLocation().getY());
-		double deltaz = Math.abs(ent1.getLocation()
-				.getZ() - ent2.getLocation().getZ());
-		double distance = Math
-				.sqrt((deltax * deltax)
-						+ (deltay * deltay)
-						+ (deltaz * deltaz));
-		return distance;
-    }
-    
-    public double getdistance(Entity ent1, Entity ent2) {
-		double deltax = Math.abs(ent1.getLocation()
-				.getX() - ent2.getLocation().getX());
-		double deltay = Math.abs(ent1.getLocation()
-				.getY() - ent2.getLocation().getY());
-		double deltaz = Math.abs(ent1.getLocation()
-				.getZ() - ent2.getLocation().getZ());
-		double distance = Math
-				.sqrt((deltax * deltax)
-						+ (deltay * deltay)
-						+ (deltaz * deltaz));
-		return distance;
     }
 }

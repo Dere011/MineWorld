@@ -1,4 +1,4 @@
- package mineworld;
+package mineworld;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,7 +11,6 @@ import me.desmin88.mobdisguise.api.MobDisguiseAPI;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace; 
 import org.bukkit.entity.Entity;
@@ -20,19 +19,13 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerPreLoginEvent.Result;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.util.config.Configuration;
 import org.bukkit.util.config.ConfigurationNode;
 import org.getspout.spoutapi.SpoutManager;
-import org.getspout.spoutapi.inventory.SpoutCustomBlockDesign;
 import org.getspout.spoutapi.player.RenderDistance;
 
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import static com.sk89q.worldguard.bukkit.BukkitUtil.toVector;
 
 public class Main_PlayerListener extends PlayerListener {
 	
@@ -75,6 +68,21 @@ public class Main_PlayerListener extends PlayerListener {
 				}
     	}, (long) time);
 	}
+    
+    public void give_ppoint() {
+    	for (Player p : plugin.getServer().getOnlinePlayers()) {
+	    	if (plugin.V.is_visiteur(p) || !plugin.CC.isClient(p, false)) {
+	    		continue;
+	    	}
+	    	plugin.conf_player.load();
+			int ppresences = plugin.conf_player.getInt("load-player."+ p.getName() +".ppresences", 0);
+			plugin.MC.sendTaggedMessage(p, "Vous avez reçut "+ ChatColor.DARK_GREEN + "1 point"+ ChatColor.WHITE + " de présence.", 1, "");
+			plugin.CC.sendNotification(p, "MONEY Transaction", "+1 PPoint(s)");
+			plugin.CC.sendPlayerSoundEffect(p, "http://mineworld.fr/contrib/sound/money.wav");
+			ppresences++;
+			plugin.setPlayerConfig(p, "ppresences", ppresences);
+		}
+    }
     
     public Location getSpawnLocation() {
     	String config = "spawn.";
@@ -181,34 +189,6 @@ public class Main_PlayerListener extends PlayerListener {
     		}
     		if(block.getType() == Material.CHEST) {
     			plugin.CC.sendSoundEffectToAllToLocation(block.getLocation(), "http://mineworld.fr/contrib/sound/open_chest.wav");
-    			// EVENT START
-    			int coffre = (block.getX()-block.getY()-block.getZ());
-    			if(coffre == 1254) {
-        			Boolean time_customaction = (Boolean) plugin.getPlayerConfig(player, "event_01", "boolean");
-                	if(!time_customaction) {
-            			ItemStack item = plugin.Main_ContribControl.sp.getItemManager().getCustomItemStack(13374, 1);
-            			player.getInventory().addItem(item);
-            			ItemStack item2 = plugin.Main_ContribControl.sp.getItemManager().getCustomItemStack(13375, 1);
-            			player.getInventory().addItem(item2);
-            			plugin.MC.sendTaggedMessage(player, "Vous avez découvert un artefact rare.", 1, "");
-            			plugin.MC.sendMessageToAll(player.getName()+" vient de découvrire un artefact rare.");
-                		plugin.Main_ContribControl.sendSoundEffectToAllToLocation(player.getLocation(), "http://mineworld.fr/contrib/sound/gnomeftw.wav");
-                		plugin.setPlayerConfig(player, "event_01", true);
-                	}
-    			}else if(coffre == 1485) {
-    				Boolean time_customaction = (Boolean) plugin.getPlayerConfig(player, "event_02", "boolean");
-        			if(!time_customaction) {
-            			ItemStack item = plugin.Main_ContribControl.sp.getItemManager().getCustomItemStack(13374, 1);
-            			player.getInventory().addItem(item);
-            			ItemStack item2 = plugin.Main_ContribControl.sp.getItemManager().getCustomItemStack(13375, 1);
-            			player.getInventory().addItem(item2);
-            			plugin.MC.sendTaggedMessage(player, "Vous avez découvert un artefact rare.", 1, "");
-            			plugin.MC.sendMessageToAll(player.getName()+" vient de découvrire un artefact rare.");
-                		plugin.Main_ContribControl.sendSoundEffectToAllToLocation(player.getLocation(), "http://mineworld.fr/contrib/sound/gnomeftw.wav");
-                		plugin.setPlayerConfig(player, "event_02", true);
-                	}
-    			}
-    			// EVENT STOP
     		}
     	}
 		if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
@@ -267,6 +247,7 @@ public class Main_PlayerListener extends PlayerListener {
 	    		event.setCancelled(true);
 	    	}
 		}
+		// START CUSTOM ITEM
 		if(plugin.CC.isClient(player, false)) {
 			int handid = plugin.CC.sp.getPlayer(player).getItemInHand().getDurability();
 	    	if(handid == 13371) {
@@ -278,6 +259,7 @@ public class Main_PlayerListener extends PlayerListener {
 	    	    event.setCancelled(true);
 	    	}
 		}
+		// END CUSTOM ITEM
     }
     
     public void Main_onPlayerJoin_do(PlayerJoinEvent event) {
@@ -595,7 +577,7 @@ public class Main_PlayerListener extends PlayerListener {
        			for (Player p : plugin.getServer().getOnlinePlayers()) {
        				if(p.isOp()) {
        					list = list + ChatColor.RED + p.getName() + ChatColor.WHITE +", ";
-       				}else if(plugin.ismodo(p)) {
+       				}else if(plugin.D.ismodo(p)) {
        					list = list + ChatColor.GREEN + p.getName() + ChatColor.WHITE +", ";
        				}else if(plugin.Main_Visiteur.is_visiteur(p)) {
        					visiteur++;
@@ -666,50 +648,6 @@ public class Main_PlayerListener extends PlayerListener {
 	    		return;
     		}
     	}
-    	if (event.getMessage().contains("/gives")) {
-    		if(!player.isOp()) {
-    			player.kickPlayer("Erreur securité 5003.");
-	    		event.setCancelled(true);
-	    		return;
-    		}else{
-    			ItemStack item = plugin.Main_ContribControl.sp.getItemManager().getCustomItemStack(Integer.parseInt(event.getMessage().replace("/gives ", "")), 1);
-    			player.getInventory().addItem(item);
-    		}
-    	}
-    	if (event.getMessage().contains("/override")) {
-    		if(!player.isOp()) {
-    			player.kickPlayer("Erreur securité 5003.");
-	    		event.setCancelled(true);
-	    		return;
-    		}else{
-    			Block target = player.getTargetBlock(null, 100);
-    		    overrideBlock(target);
-    		}
-    	}
-       	if (event.getMessage().contains("/reloadgives")) {
-    		if(!player.isOp()) {
-    			player.kickPlayer("Erreur securité 5003.");
-	    		event.setCancelled(true);
-	    		return;
-    		}else{
-        		Configuration conf = plugin.conf_items;
-		    	if(plugin.ITEM_configFile.exists()){
-		    		conf.load();
-					List<String> itemlist = conf.getKeys("load-items");
-					if(!itemlist.isEmpty()) {
-						ConfigurationNode node = conf.getNode("load-items");
-						for(String item : itemlist){
-							int id = node.getInt(item + ".id", 0);
-							String name = node.getString(item + ".name");
-							String url = node.getString(item + ".url");
-					    	SpoutManager.getItemManager().setCustomItemBlock(1, id, (short) 0);
-					    	SpoutManager.getItemManager().setItemTexture(id, null, url);
-					    	SpoutManager.getItemManager().setItemName(id, name);
-						}
-					}
-				}
-    		}
-    	}
     	if (event.getMessage().contains("/goule") && player.isOp()) {
     		plugin.can_horde.add(player.getUniqueId());
     		plugin.TC.is_goule.add(player.getUniqueId());
@@ -739,7 +677,7 @@ public class Main_PlayerListener extends PlayerListener {
     
     public void afterjoin(Player player, Boolean back) {
     	if(plugin.CC.isClient(player, false)) {
-			if(plugin.ismodo(player)) {
+			if(plugin.D.ismodo(player)) {
 				plugin.CC.setPlayerTitle(player, ChatColor.GREEN.toString() + "[MODO]\n"+ player.getName());
 			}else if(player.isOp()) {
 				plugin.CC.setPlayerTitle(player, ChatColor.RED.toString() + "[ADMIN]\n"+ player.getName());
@@ -763,27 +701,6 @@ public class Main_PlayerListener extends PlayerListener {
 			MobDisguiseAPI.undisguisePlayerAsPlayer(player, "zombie");
 		}
 	}
-    
-    public void overrideBlock(Block block){
-        SpoutManager.getItemManager().overrideBlock(block, 456, 0);
-    }
-    
-    public void buildDiamondQuartz() throws Exception {
-        SpoutCustomBlockDesign diamondQuartz = new SpoutCustomBlockDesign();
-        diamondQuartz.setBrightness(100);
-        diamondQuartz.setBoundingBox(0, 0, 0, 1, 1, 1);
-        diamondQuartz.setQuadNumber(2);
-        diamondQuartz.setTexture(plugin.getDescription().getName(), "http://dl.dropbox.com/u/7238554/diamond.png");
-        diamondQuartz.setMinBrightness(0.3F);
-        diamondQuartz.setMaxBrightness(1F);
-        diamondQuartz.setVertex(0, 0, 0.5F, 1F, 0.5F, 8, 0, 16, 16);
-        diamondQuartz.setVertex(0, 1, 0.25F, 0.5F, 0F, 4, 8, 16, 16);
-        diamondQuartz.setVertex(0, 2, 0.75F, 0.5F, 0F, 12, 8, 16, 16);
-        diamondQuartz.setVertex(1, 0, 0.25F, 0.5F, 0F, 4, 8, 16, 16);
-        diamondQuartz.setVertex(1, 1, 0.5F, 0F, 0.5F, 8, 16, 16, 16);
-        diamondQuartz.setVertex(1, 2, 0.75F, 0.5F, 0F, 12, 8, 16, 16);
-        SpoutManager.getItemManager().setCustomBlockDesign(456, 0, diamondQuartz);
-    }
 
     public void onPlayerJoin(PlayerJoinEvent event) {
     	final Player player = event.getPlayer();
@@ -884,6 +801,7 @@ public class Main_PlayerListener extends PlayerListener {
     	}
     	
     	UUID uuid = event.getPlayer().getUniqueId();
+    	
      	if(plugin.V.visiteur.contains(uuid)) {
     		plugin.V.visiteur.remove(uuid);
     	}
@@ -914,15 +832,6 @@ public class Main_PlayerListener extends PlayerListener {
 		if(plugin.anim.contains(event.getPlayer().getName())) {
 			plugin.anim.remove(event.getPlayer().getName());
 		}
-		
-		//////////////////////
-		
-    	if(plugin.CHC.PlayerOR.contains(event.getPlayer())) {
-    		plugin.CHC.PlayerOR.remove(event.getPlayer());
-    	}
-		if(plugin.CHC.error_tick.containsKey(event.getPlayer())) {
-			plugin.CHC.error_tick.remove(event.getPlayer());
-		}
 		if(plugin.modo.contains(event.getPlayer().getName())) {
 			plugin.modo.remove(event.getPlayer().getName());
 		}
@@ -932,6 +841,16 @@ public class Main_PlayerListener extends PlayerListener {
 		if(plugin.anim.contains(event.getPlayer().getName())) {
 			plugin.anim.remove(event.getPlayer().getName());
 		}
+		
+		//////////////////////
+		
+    	if(plugin.CHC.PlayerOR.contains(event.getPlayer())) {
+    		plugin.CHC.PlayerOR.remove(event.getPlayer());
+    	}
+		if(plugin.CHC.error_tick.containsKey(event.getPlayer())) {
+			plugin.CHC.error_tick.remove(event.getPlayer());
+		}
+
 
 		plugin.setPlayerConfig(event.getPlayer(), "time_lastdeconnexion", plugin.timetamps);
     }
@@ -975,28 +894,16 @@ public class Main_PlayerListener extends PlayerListener {
     } 
 
     public void onPlayerTeleport (PlayerTeleportEvent event) {
-    	final Player player = event.getPlayer();
-    	if (plugin.Main_Visiteur.is_visiteur(player)) {
-    		if(!event.getTo().getWorld().getName().contains("world") || event.getTo().getWorld().getName().contains("oldworld")) {
-	        	int time_last_vdteleport = (Integer) plugin.getPlayerConfig(player, "time_last_vdteleport", "int");
-	    	    if((plugin.timetamps-time_last_vdteleport) > 20) {
-	    	    	msg.sendTaggedMessage(player, "Les visiteurs ne peuvent pas prendre ce téléporteur.", 1, "[DENIED]");
-	    	    	plugin.setPlayerConfig(player, "time_last_vdteleport", plugin.timetamps);
-	    	    }
-	    	    respawn_player(player);
-	    		event.setCancelled(true);
-	    		return;
-    		}
-    	}
+    	// TODO: RIEN
     }
     
     public void onPlayerPickupItem(PlayerPickupItemEvent event) {
-    	if (plugin.Main_Visiteur.is_visiteur(event.getPlayer()) || (!event.getPlayer().isOp() && plugin.is_spy(event.getPlayer()))) {
+    	if (plugin.V.is_visiteur(event.getPlayer()) || plugin.D.is_spy(event.getPlayer())) {
     		event.setCancelled(true);
     		return;
     	}
 		int handid = event.getItem().getItemStack().getDurability();
-    	if(handid > 13370 && !plugin.Main_ContribControl.isClient(event.getPlayer(), false)) {
+    	if(handid > 13370 && !plugin.CC.isClient(event.getPlayer(), false)) {
     		event.setCancelled(true);
     		return;
     	}

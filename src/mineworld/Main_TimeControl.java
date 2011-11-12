@@ -79,7 +79,7 @@ public class Main_TimeControl {
 				public void run()
 				{
 			    	try {
-			    		if (plugin.playerInServer()) {
+			    		if (plugin.D.playerInServer()) {
 			    			do_meteo();
 			    		}
 			        } catch (Exception e) {
@@ -169,14 +169,14 @@ public class Main_TimeControl {
                 Block block = world.getBlockAt(new Location(world, x, (world.getHighestBlockYAt(x, z)-1), z));
                 int bid = block.getTypeId();
                 if(bid == 42 || (bid == 27 && block.isBlockPowered())) {
-	                double distance = plugin.getdistance(location, block.getLocation());
+	                double distance = plugin.D.getdistance(location, block.getLocation());
 	                if(lastdistance > distance) {
 	                	lastdistance = distance;
 	                	lastlocation = block.getLocation();
 	                	lasttype = 1;
 	                }
                 }else if(bid == 23 || bid == 61 || bid == 62 || bid == 33 || bid == 29 || bid == 66 || bid == 28) {
-	                double distance = plugin.getdistance(location, block.getLocation());
+	                double distance = plugin.D.getdistance(location, block.getLocation());
 	                if((lastdistance > distance && lasttype > 1) || ((lastdistance+5) > distance && lasttype == 1)) {
 	                	lastdistance = distance;
 	                	lastlocation = block.getLocation();
@@ -351,6 +351,7 @@ public class Main_TimeControl {
 		}
 	}
 	
+	// HORDE START
 	private void cycle_horde() {
 		if(horde_uid != cycle_uid) {
 			cycle_start = plugin.timetamps;
@@ -526,9 +527,9 @@ public class Main_TimeControl {
 		cycle_id = 5;
 		cycle_end = 0;
 		cycle_start = 0;
-		//last_horde = plugin.timetamps;
 		plugin.sendInfo("[CYCLE] New horde cycle ("+cycle_uid+").");
 	}
+	// HORDE END
 	
 	private void do_meteo() {
 		if(in_cycle) {
@@ -597,7 +598,6 @@ public class Main_TimeControl {
 						cycle_id = current_gen_id;
 						cycle_end = 0;
 						cycle_start = 0;
-						//last_horde = plugin.timetamps;
 						plugin.sendInfo("[CYCLE] New horde cycle ("+cycle_uid+").");
 					}
 				}

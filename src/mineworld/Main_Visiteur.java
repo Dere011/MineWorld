@@ -75,7 +75,7 @@ public class Main_Visiteur {
 			if(p.isOnline() && (!p.isOp() && !plugin.modo.contains(p.getName()))) {
 				for (Entity ent : p.getNearbyEntities(35, 35, 35)) {
 					if (ent instanceof Player) {
-						if(!plugin.D.is_spy((Player) ent) && !plugin.isbot((Player) ent)) { continue; }
+						if(!plugin.D.is_spy((Player) ent) && !plugin.D.isbot((Player) ent)) { continue; }
 						if(is_visiteur(p) && !is_visiteur((Player) ent)) { continue; }
 						if(!is_visiteur(p) && is_visiteur((Player) ent) && !plugin.iv_do.contains(p)) {
 							CraftPlayer unHide 		= (CraftPlayer) p;

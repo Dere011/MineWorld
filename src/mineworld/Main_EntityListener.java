@@ -49,8 +49,8 @@ public class Main_EntityListener extends EntityListener {
 			if(MobDisguiseAPI.isDisguised((Player) event.getEntity())) {
 				MobDisguiseAPI.undisguisePlayerAsPlayer((Player) event.getEntity(), "zombie");
 			}
-			if(plugin.PL.is_alco((Player) event.getEntity())) {
-				plugin.PL.remove_alco((Player) event.getEntity());
+			if(plugin.D.is_alco((Player) event.getEntity())) {
+				plugin.D.remove_alco((Player) event.getEntity());
 			}
 			if(plugin.TC.horde) {
 				plugin.H.mort++;
@@ -123,7 +123,7 @@ public class Main_EntityListener extends EntityListener {
 					if(plugin.Main_TimeControl.player_horde.contains(event.getEntity())) {
 						plugin.Main_TimeControl.player_horde.remove(event.getEntity());
 					}
-					plugin.Main_TimeControl.is_goule.add((Player) event.getEntity());
+					plugin.H.is_goule.add((Player) event.getEntity());
 				}
 	    	}
         	if (dmgByEntity instanceof Player) {

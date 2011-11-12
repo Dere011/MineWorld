@@ -73,7 +73,7 @@ public class Main_ChunkControl {
 			public void run()
 			{
 			    	try {
-			    		if (plugin.playerInServer()) {
+			    		if (plugin.D.playerInServer()) {
 			    			do_orcontrol();
 			    		}
 			        } catch (Exception e) {
@@ -133,7 +133,7 @@ public class Main_ChunkControl {
 				if(aiming != null) {
 			        Block theblock = aiming.getTargetBlock();
 			        if(theblock != null) {
-						if(plugin.checkLocation(location, theblock.getLocation(), 10.0)) {
+						if(plugin.D.checkLocation(location, theblock.getLocation(), 10.0)) {
 							int vpx = theblock.getLocation().getBlockX();
 							int vpz = theblock.getLocation().getBlockZ();
 							int vpy = theblock.getLocation().getBlockY();
@@ -165,7 +165,7 @@ public class Main_ChunkControl {
 			                	Block block = p.getWorld().getBlockAt(x, y, z);
 			                	int bid = block.getTypeId();
 				                if(bid != 0 && is_blocs(bid)) {
-					                if(plugin.checkLocation(location, block.getLocation(), get_rangebyid(bid))) {
+					                if(plugin.D.checkLocation(location, block.getLocation(), get_rangebyid(bid))) {
 					                	if(player_blocs.get(p) == null || !player_blocs.get(p).contains(block)) {
 					                		p.sendBlockChange(block.getLocation(), bid, block.getData());
 					                	}
@@ -197,8 +197,6 @@ public class Main_ChunkControl {
 			}
 		}
 	}
-	
-  
 	
     public boolean sendChunkChange(CraftPlayer player, Location loc, int sx, int sy, int sz, byte[] data) {
         int x = loc.getBlockX();
@@ -266,7 +264,7 @@ public class Main_ChunkControl {
             }
         }
         if(lastlocation != null && chunkcopy.getBlockTypeId(0, 0, 0) != 0) {
-    			sendChunkChange((CraftPlayer) player, new Location(lastlocation.getWorld(), lastlocation.getBlockX(), 0, lastlocation.getBlockZ()), 16, 128, 16, chunkcopy.getdata());
+    		sendChunkChange((CraftPlayer) player, new Location(lastlocation.getWorld(), lastlocation.getBlockX(), 0, lastlocation.getBlockZ()), 16, 128, 16, chunkcopy.getdata());
         }else{
         	if(error_tick.containsKey(player)) {
         		int count = error_tick.get(player);
